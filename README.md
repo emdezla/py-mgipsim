@@ -16,14 +16,14 @@ To run it locally:
 streamlit run interface_gui.py
 ```
 
-![](docs/source/imgs/gui.gif)
+![](static/gui.gif)
 
 ### Command Line - Interactive
 Provides an interactive prompt environment to set the simulation settings.
 
 Start by running ``interface_cmd.py``.
 
-![](docs/source/imgs/2024-11-2111-28-48conv.gif)
+![](static/cmd.gif)
 
 ### Command Line - single command
 Simulation settings are defined in a single command line.
