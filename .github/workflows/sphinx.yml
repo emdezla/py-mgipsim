@@ -16,7 +16,7 @@ jobs:
       with:
           python-version: '3.12'
     - name: Build HTML
-      uses: ammaraskar/sphinx-action@master
+      uses: ammaraskar/sphinx-action@7.2.6
       with:
         docs-folder: "docs/source/"
     - name: Upload artifacts
