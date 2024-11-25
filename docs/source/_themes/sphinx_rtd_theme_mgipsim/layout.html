@@ -137,7 +137,7 @@
           {%- set _logo_url = logo_url|default(pathto('_static/' + (logo or ""), 1)) %}
           {%- set _root_doc = root_doc|default(master_doc) %}
           <a href="{{ pathto(_root_doc) }}">
-            <img src = "/Flag_of_Chicago,_Illinois2.svg" alt="**" style="padding: 0px 0px 0px 0px; margin: 0; max-height: 20px; width:auto; height:auto; display: inline-block; object-fit: contain; border-radius: 0;" />
+            <img src = "Flag_of_Chicago,_Illinois2.svg" alt="**" style="padding: 0px 0px 0px 0px; margin: 0; max-height: 20px; width:auto; height:auto; display: inline-block; object-fit: contain; border-radius: 0;" />
             {% if not theme_logo_only %}{{ project }}{% endif %}
             {# <i class="fa fa-cubes"></i> #}
             {%- if logo or logo_url %}

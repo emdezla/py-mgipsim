@@ -35,7 +35,7 @@ add_module_names = False
 #extensions.append("maisie_sphinx_theme")
 html_theme = 'sphinx_rtd_theme_mgipsim'
 html_theme_path = ["_themes"]
-html_extra_path = ['imgs/Flag_of_Chicago,_Illinois2red.svg']
+html_extra_path = ['imgs/Flag_of_Chicago,_Illinois2.svg','imgs/Flag_of_Chicago,_Illinois2red.svg']
 
 #html_theme = 'alabaster'
 #html_static_path = ['_static']
