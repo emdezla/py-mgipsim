@@ -1,4 +1,0 @@
-🌬️🌁 About us
-=====
-
-Lab description ...

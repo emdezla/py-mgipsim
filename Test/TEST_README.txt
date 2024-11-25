@@ -1,1 +1,0 @@
-From the root directory run 'python -m unittest discover' to run all of the tests.
