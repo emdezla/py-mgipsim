@@ -1,4 +1,4 @@
-pymgipsim.VirtualPatient
+﻿pymgipsim.VirtualPatient
 ========================
 
 ========================
@@ -32,8 +32,6 @@ pymgipsim.VirtualPatient
       pymgipsim.VirtualPatient.Models
    
       pymgipsim.VirtualPatient.VirtualPatient
-   
-      pymgipsim.VirtualPatient.model_names
    
       pymgipsim.VirtualPatient.parser
 

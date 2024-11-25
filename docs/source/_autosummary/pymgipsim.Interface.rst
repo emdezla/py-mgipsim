@@ -1,0 +1,37 @@
+﻿pymgipsim.Interface
+===================
+
+===================
+
+.. automodule:: pymgipsim.Interface
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   
+      pymgipsim.Interface.BaseClassesCMD
+   
+      pymgipsim.Interface.GUI
+   
+      pymgipsim.Interface.parser
+
