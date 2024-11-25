@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e21422de" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            <img src = "/Flag_of_Chicago,_Illinois2.svg" alt="**" style="padding: 0px 0px 0px 0px; margin: 0; max-height: 20px; width:auto; height:auto; display: inline-block; object-fit: contain; border-radius: 0;" />
+            mGIPsim
+            
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">🦮 Guide dog</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../userinterface.html">User interface</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🐱‍💻 Hacker cat</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../detailed.html">For the curious ones</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../pymgipsim.html">For developers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">------------------</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../aboutus.html">🌬️🌁 About us</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">mGIPsim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pymgipsim.Utilities.Scenario</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article" >
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pymgipsim.Utilities.Scenario</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span> <span class="nn">pymgipsim.InputGeneration.signal</span> <span class="kn">import</span> <span class="n">Events</span>
+<span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">json</span><span class="o">,</span> <span class="nn">numpy</span>
+
+<div class="viewcode-block" id="settings">
+<a class="viewcode-back" href="../../../_autosummary/pymgipsim.Utilities.Scenario.settings.html#pymgipsim.Utilities.Scenario.settings">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">settings</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; General, simulator wide settings.</span>
+
+<span class="sd">            Mirrors the settings field of the scenario JSON file.</span>
+
+<span class="sd">            Parameters:</span>
+<span class="sd">                sampling_time : Sampling time of the simulation [min].</span>
+<span class="sd">                solver_name : ODE solver name (Euler or RK4)</span>
+<span class="sd">                number_of_subjects : Cohort simulation size.</span>
+<span class="sd">                start_time : Start time of the simulation in %d-%m-%Y %H:%M:%S datetime format.</span>
+<span class="sd">                end_time : End time of the simulation in %d-%m-%Y %H:%M:%S datetime format.</span>
+<span class="sd">                simulator_name : Currently openloop single scale, will be extended with more capabilities.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sampling_time</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">simulator_name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">solver_name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">save_directory</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">start_time</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">end_time</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">random_state</span><span class="p">:</span> <span class="nb">dict</span></div>
+
+
+<div class="viewcode-block" id="controller">
+<a class="viewcode-back" href="../../../_autosummary/pymgipsim.Utilities.Scenario.controller.html#pymgipsim.Utilities.Scenario.controller">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">controller</span><span class="p">():</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">parameters</span><span class="p">:</span> <span class="nb">list</span></div>
+
+
+
+<div class="viewcode-block" id="model">
+<a class="viewcode-back" href="../../../_autosummary/pymgipsim.Utilities.Scenario.model.html#pymgipsim.Utilities.Scenario.model">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">model</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Model descriptor.</span>
+
+<span class="sd">            Mirrors the model field of the scenario JSON file.</span>
+
+<span class="sd">            Parameters:</span>
+<span class="sd">                name : Name of the model (T1DM.ExtHovorka, T1DM.IVP, T2DM.Jauslin)</span>
+<span class="sd">                parameters : Array of model specific parameter values.</span>
+<span class="sd">                initial_conditions : Array of initial states for the simulation</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">parameters</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">initial_conditions</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="mscale">
+<a class="viewcode-back" href="../../../_autosummary/pymgipsim.Utilities.Scenario.mscale.html#pymgipsim.Utilities.Scenario.mscale">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">mscale</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Model descriptor.</span>
+
+<span class="sd">            Mirrors the model field of the scenario JSON file.</span>
+
+<span class="sd">            Parameters:</span>
+<span class="sd">                name : Name of the model (T1DM.Hovorka, T1DM.IVP, T2DM.Jauslin)</span>
+<span class="sd">                parameters : Array of model specific parameter values.</span>
+<span class="sd">                initial_conditions : Array of initial states for the simulation</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">models</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">parameters</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+
+<div class="viewcode-block" id="demographic_info">
+<a class="viewcode-back" href="../../../_autosummary/pymgipsim.Utilities.Scenario.demographic_info.html#pymgipsim.Utilities.Scenario.demographic_info">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">demographic_info</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Model independent patient information.</span>
+
+<span class="sd">            Mirrors the demographic info field of the scenario JSON file.</span>
+
+<span class="sd">            Parameters:</span>
+<span class="sd">                body_weight : Body weights of the patients [kg].</span>
+<span class="sd">                egfr : Glomural filtration rates [mL/min/1.73 m^2 BSA]</span>
+<span class="sd">                basal : Basal insulin rates [U/hr].</span>
+<span class="sd">                height : Height [m].</span>
+<span class="sd">                total_daily_basal : [U]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">body_weight_range</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">body_weight</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">renal_function_category</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">egfr</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">basal</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">height</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">total_daily_basal</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">carb_insulin_ratio</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">resting_heart_rate</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">correction_bolus</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">HbA1c</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">waist_size</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+    <span class="n">baseline_daily_energy_intake</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">baseline_daily_energy_expenditure</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">baseline_daily_urinary_glucose_excretion</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="patient">
+<a class="viewcode-back" href="../../../_autosummary/pymgipsim.Utilities.Scenario.patient.html#pymgipsim.Utilities.Scenario.patient">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">patient</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Describes the patient/cohort.</span>
+
+<span class="sd">            Mirrors the patient field of the scenario JSON file.</span>
+
+<span class="sd">            Parameters:</span>
+<span class="sd">                demographic_info (demographic_info) : Stores the model independent patient information.</span>
+<span class="sd">                model (model) : Model descriptor.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">demographic_info</span><span class="p">:</span> <span class="n">demographic_info</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">model</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">mscale</span><span class="p">:</span> <span class="n">mscale</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">files</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">number_of_subjects</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">scenario_module</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="vm">__name__</span><span class="p">]</span>
+        <span class="c1"># Casts imported dictionaries to corresponding dataclasses</span>
+        <span class="k">for</span> <span class="n">attribute</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__slots__</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">attribute</span> <span class="o">==</span> <span class="s1">&#39;files&#39;</span> <span class="ow">or</span> <span class="n">attribute</span> <span class="o">==</span> <span class="s1">&#39;number_of_subjects&#39;</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">scenario_module</span><span class="p">,</span> <span class="n">attribute</span><span class="p">)(</span><span class="o">**</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">)))</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+
+                    <span class="c1"># print(&quot;Loaded scenario lacks: &quot; + attribute + &quot; information.&quot;)</span>
+
+
+
+<div class="viewcode-block" id="inputs">
+<a class="viewcode-back" href="../../../_autosummary/pymgipsim.Utilities.Scenario.inputs.html#pymgipsim.Utilities.Scenario.inputs">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">inputs</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Stores all the possible inputs to all the possible models.</span>
+
+<span class="sd">            Mirrors the patient field of the scenario JSON file.</span>
+
+<span class="sd">            Note:</span>
+<span class="sd">                Undefined/ not required inputs for a specific model are None.</span>
+
+<span class="sd">            Parameters:</span>
+<span class="sd">                meal_carb (Events) : Carb content of the meals [g].</span>
+<span class="sd">                snack_carb (Events) : Carb content of the snacks [g].</span>
+<span class="sd">                sgl2i (Events) : SGL2i drug intakes [mg].</span>
+<span class="sd">                basal_insulin (Events) : Basal insulin rates [U/hr].</span>
+<span class="sd">                bolus_insulin (Events) : Bolus insulin intakes [U].</span>
+<span class="sd">                heart_rate (Events) : Heart rate values [BPM].</span>
+<span class="sd">                taud (Events) : Meal carb absorption times [min].</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">meal_carb</span><span class="p">:</span> <span class="n">Events</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">snack_carb</span><span class="p">:</span> <span class="n">Events</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">sgl2i</span><span class="p">:</span> <span class="n">Events</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">basal_insulin</span><span class="p">:</span> <span class="n">Events</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">bolus_insulin</span><span class="p">:</span> <span class="n">Events</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">bodyweighteffect</span><span class="p">:</span> <span class="n">Events</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">heart_rate</span><span class="p">:</span> <span class="n">Events</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">taud</span><span class="p">:</span> <span class="n">Events</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">running_speed</span><span class="p">:</span> <span class="n">Events</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">running_incline</span><span class="p">:</span> <span class="n">Events</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">cycling_power</span><span class="p">:</span> <span class="n">Events</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">METACSM</span><span class="p">:</span> <span class="n">Events</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">energy_expenditure</span><span class="p">:</span> <span class="n">Events</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">daily_energy_intake</span><span class="p">:</span> <span class="n">Events</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">daily_energy_expenditure</span><span class="p">:</span> <span class="n">Events</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">daily_urinary_glucose_excretion</span><span class="p">:</span> <span class="n">Events</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Casts imported dictionaries to Events classes</span>
+        <span class="k">for</span> <span class="n">attribute</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__slots__</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">Events</span><span class="p">(</span><span class="o">**</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">))</span><span class="o">.</span><span class="n">as_dict</span><span class="p">())</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+
+                <span class="c1"># print(&quot;Loaded inputs lacks: &quot; + attribute + &quot; information.&quot;)</span>
+
+
+<div class="viewcode-block" id="input_generation">
+<a class="viewcode-back" href="../../../_autosummary/pymgipsim.Utilities.Scenario.input_generation.html#pymgipsim.Utilities.Scenario.input_generation">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">input_generation</span><span class="p">():</span>
+
+    <span class="n">fraction_cho_intake</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">fraction_cho_as_snack</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">net_calorie_balance</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">daily_energy_intake</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">meal_duration</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">snack_duration</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">breakfast_time_range</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">lunch_time_range</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">dinner_time_range</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">total_carb_range</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">am_snack_time_range</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">pm_snack_time_range</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">sglt2i_dose_magnitude</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">sglt2i_dose_time_range</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">breakfast_carb_range</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">lunch_carb_range</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">dinner_carb_range</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">am_snack_carb_range</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">pm_snack_carb_range</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">running_start_time</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">running_duration</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">running_incline</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">running_speed</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">cycling_start_time</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">cycling_duration</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">cycling_power</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="scenario">
+<a class="viewcode-back" href="../../../_autosummary/pymgipsim.Utilities.Scenario.scenario.html#pymgipsim.Utilities.Scenario.scenario">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">scenario</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Stores all the necessary information to uniquely define a simulation.</span>
+
+<span class="sd">            Mirrors the scenario JSON file.</span>
+
+<span class="sd">            Note:</span>
+<span class="sd">                Undefined/ not required field are None.</span>
+
+<span class="sd">            Parameters:</span>
+<span class="sd">                settings (settings) : General, simulator wide settings.</span>
+<span class="sd">                input_generation (input_generation) : Defines parameters for random input generation.</span>
+<span class="sd">                inputs (inputs) : Defines the events (start time, magnitude and duration) of specific inputs.</span>
+<span class="sd">                patient (patient) : Describes the simulated virtual cohort.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">settings</span><span class="p">:</span> <span class="n">settings</span>
+    <span class="n">input_generation</span><span class="p">:</span> <span class="n">input_generation</span>
+    <span class="n">inputs</span><span class="p">:</span> <span class="n">inputs</span>
+    <span class="n">patient</span><span class="p">:</span> <span class="n">patient</span>
+    <span class="n">controller</span><span class="p">:</span> <span class="n">controller</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">scenario_module</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="vm">__name__</span><span class="p">]</span>
+        <span class="c1"># Casts imported dictionaries to corresponding dataclasses</span>
+        <span class="k">for</span> <span class="n">attribute</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__slots__</span><span class="p">:</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">scenario_module</span><span class="p">,</span> <span class="n">attribute</span><span class="p">)(</span><span class="o">**</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">)))</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+
+                <span class="c1"># print(&quot;Loaded scenario lacks: &quot; + attribute + &quot; information.&quot;)</span>
+
+
+<div class="viewcode-block" id="load_scenario">
+<a class="viewcode-back" href="../../../_autosummary/pymgipsim.Utilities.Scenario.load_scenario.html#pymgipsim.Utilities.Scenario.load_scenario">[docs]</a>
+<span class="k">def</span> <span class="nf">load_scenario</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span> <span class="c1">#</span>
+        <span class="n">loaded_scenario</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="n">scenario_instance</span> <span class="o">=</span> <span class="n">scenario</span><span class="p">(</span><span class="o">**</span><span class="n">loaded_scenario</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">scenario_instance</span></div>
+
+    
+<div class="viewcode-block" id="save_scenario">
+<a class="viewcode-back" href="../../../_autosummary/pymgipsim.Utilities.Scenario.save_scenario.html#pymgipsim.Utilities.Scenario.save_scenario">[docs]</a>
+<span class="k">def</span> <span class="nf">save_scenario</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">scenario</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">scenario</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andy, Mate.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a customized 
+    theme
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

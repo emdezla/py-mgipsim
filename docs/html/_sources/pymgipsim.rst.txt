@@ -1,0 +1,75 @@
+For developers
+=====================
+
+REST API
+---------------------
+
+The simulator can be used in a client-server communication. The API currently supports a single functionality, the simulation of a virtual cohort parameterized by the scenario.
+
+.. note::
+   As opposed to the command line interface, where inputs and patient parameters can be generated randomly, here the endpoint expect specific values for the fields of the scenario. Such as specific meal values, start times, patient files.
+
+.. list-table:: **Endpoint:**
+   :widths: 10 10 50
+   :header-rows: 0
+
+   * - POST
+     - :code:`scenario` JSON object
+     - Defines the simulation parameters with the fields listed below.
+
+**Description of the scenario JSON object**
+
+.. csv-table:: :code:`scenario` JSON object
+   :file: imgs/scenario_api_fields.csv
+   :width: 100%
+   :header-rows: 1
+
+.. csv-table:: :code:`settings` JSON object
+   :file: imgs/settings_api_fields.csv
+   :width: 100%
+   :header-rows: 1
+
+.. csv-table:: :code:`patient` JSON object
+   :file: imgs/patient_api_fields.csv
+   :width: 100%
+   :header-rows: 1
+
+.. csv-table:: :code:`model` JSON object
+   :file: imgs/model_api_fields.csv
+   :width: 100%
+   :header-rows: 1
+
+.. csv-table:: :code:`inputs` JSON object
+   :file: imgs/inputs_api_fields.csv
+   :width: 100%
+   :header-rows: 1
+
+.. csv-table:: :code:`Events` JSON object
+   :file: imgs/events_api_fields.csv
+   :width: 100%
+   :header-rows: 1
+
+
+
+
+.. list-table:: **Returns:**
+   :widths: 15 15 35
+   :header-rows: 0
+
+   * - multidimensional array
+     - 1st dim: patient, 2nd dim: state variable, 3rd dim: sample time
+     - Example:
+
+
+PYmGIPsim package
+---------------------
+
+.. autosummary::
+   :toctree:_autosummary
+   :template: custom-module-template.rst
+   :recursive:
+
+   pymgipsim
+
+
+

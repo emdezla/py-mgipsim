@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e21422de" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html">
+            <img src = "/Flag_of_Chicago,_Illinois2.svg" alt="**" style="padding: 0px 0px 0px 0px; margin: 0; max-height: 20px; width:auto; height:auto; display: inline-block; object-fit: contain; border-radius: 0;" />
+            mGIPsim
+            
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">🦮 Guide dog</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../userinterface.html">User interface</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🐱‍💻 Hacker cat</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../detailed.html">For the curious ones</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pymgipsim.html">For developers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">------------------</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../aboutus.html">🌬️🌁 About us</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">mGIPsim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pymgipsim.Controllers.mvAP.UKF_Observer</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article" >
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pymgipsim.Controllers.mvAP.UKF_Observer</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pymgipsim.Controllers.mvAP.DataContainer</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">pymgipsim.Controllers.mvAP.Math_Tools</span> <span class="kn">import</span> <span class="n">cholesky_decomposition</span>
+<span class="kn">from</span> <span class="nn">pymgipsim.Controllers.mvAP.Hovorka_Model</span> <span class="kn">import</span> <span class="n">get_hovorka_model_ukf_observer</span>
+
+
+<div class="viewcode-block" id="ukf_observer">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.UKF_Observer.ukf_observer.html#pymgipsim.Controllers.mvAP.UKF_Observer.ukf_observer">[docs]</a>
+<span class="k">def</span> <span class="nf">ukf_observer</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">noise_error_cov_mat</span><span class="p">:</span> <span class="n">Noise_Error_Covariance_Matrix</span><span class="p">,</span> <span class="n">hovorka_params</span><span class="p">:</span> <span class="n">Hovorka_Parameters</span><span class="p">):</span>
+    <span class="c1"># z is the measured output (z=Glucose concentration in mmol/L)</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">L_X</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">L</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">ki</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">beta</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="n">P</span> <span class="o">=</span> <span class="n">noise_error_cov_mat</span><span class="o">.</span><span class="n">P_UKF</span>
+    <span class="n">Q</span> <span class="o">=</span> <span class="n">noise_error_cov_mat</span><span class="o">.</span><span class="n">Q_UKF</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="n">noise_error_cov_mat</span><span class="o">.</span><span class="n">R_UKF</span>
+
+    <span class="n">lambda_</span> <span class="o">=</span> <span class="n">alpha</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">L</span> <span class="o">+</span> <span class="n">ki</span><span class="p">)</span> <span class="o">-</span> <span class="n">L</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">L</span> <span class="o">+</span> <span class="n">lambda_</span>
+    <span class="n">Wm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(([</span><span class="n">lambda_</span> <span class="o">/</span> <span class="n">c</span><span class="p">],</span> <span class="mf">0.5</span> <span class="o">/</span> <span class="n">c</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">L</span><span class="p">)))</span>
+    <span class="c1"># Wm = np.array([lambda_ / c, 0.5 / c * np.ones((1, 2 * L))])</span>
+
+    <span class="n">Wc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">Wm</span><span class="p">)</span>
+    <span class="n">Wc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">Wc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">beta</span><span class="p">)</span>
+
+    <span class="n">c</span> <span class="o">=</span> <span class="n">c</span> <span class="o">**</span> <span class="mf">0.5</span>
+
+    <span class="n">A</span> <span class="o">=</span> <span class="n">c</span> <span class="o">*</span> <span class="n">cholesky_decomposition</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">],</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">L</span><span class="p">))</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">Y</span> <span class="o">+</span> <span class="n">A</span><span class="p">,</span> <span class="n">Y</span> <span class="o">-</span> <span class="n">A</span><span class="p">])</span>
+
+    <span class="n">X_priori</span> <span class="o">=</span> <span class="n">get_hovorka_model_ukf_observer</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">hovorka_params</span><span class="p">)</span>
+    <span class="n">X_priori</span> <span class="o">=</span> <span class="n">saturate_states</span><span class="p">(</span><span class="n">X_priori</span><span class="p">,</span> <span class="n">hovorka_params</span><span class="p">)</span>
+
+    <span class="n">x_averaged</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">Wm</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="n">X_priori</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">X_centered</span> <span class="o">=</span> <span class="n">X_priori</span> <span class="o">-</span> <span class="n">x_averaged</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="n">P_X</span> <span class="o">=</span> <span class="n">X_centered</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">Wc</span><span class="p">)</span> <span class="o">@</span> <span class="n">X_centered</span><span class="o">.</span><span class="n">T</span> <span class="o">+</span> <span class="n">Q</span>
+
+    <span class="n">Y_priori</span> <span class="o">=</span> <span class="n">X_priori</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="n">Y_output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">Y_priori</span> <span class="o">*</span> <span class="n">Wm</span><span class="p">)</span>
+
+    <span class="n">Y_centered</span> <span class="o">=</span> <span class="n">Y_priori</span> <span class="o">-</span> <span class="n">Y_output</span>
+    <span class="n">P_Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">Y_centered</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">Wc</span><span class="p">)</span> <span class="o">+</span> <span class="n">R</span>
+
+    <span class="n">Pxx_yy</span> <span class="o">=</span> <span class="n">X_centered</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">Wc</span><span class="p">)</span> <span class="o">@</span> <span class="n">Y_centered</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="n">Pxx_yy</span> <span class="o">/</span> <span class="n">P_Y</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x_averaged</span> <span class="o">+</span> <span class="n">K</span> <span class="o">*</span> <span class="p">(</span><span class="n">z</span> <span class="o">-</span> <span class="n">Y_output</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">saturate_states</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">],</span> <span class="n">hovorka_params</span><span class="p">)</span>
+    <span class="n">P</span> <span class="o">=</span> <span class="n">P_X</span> <span class="o">-</span> <span class="n">K</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">@</span> <span class="n">Pxx_yy</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+
+    <span class="n">noise_error_cov_mat</span><span class="o">.</span><span class="n">P_UKF</span> <span class="o">=</span> <span class="n">P</span>
+
+    <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="saturate_states">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.UKF_Observer.saturate_states.html#pymgipsim.Controllers.mvAP.UKF_Observer.saturate_states">[docs]</a>
+<span class="k">def</span> <span class="nf">saturate_states</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">hovorka_params</span><span class="p">:</span> <span class="n">Hovorka_Parameters</span><span class="p">):</span>
+    <span class="n">num_row</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># number of states</span>
+    <span class="n">num_col</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># number of particles</span>
+    <span class="n">SIT</span> <span class="o">=</span> <span class="n">hovorka_params</span><span class="o">.</span><span class="n">SIT</span>
+    <span class="n">SID</span> <span class="o">=</span> <span class="n">hovorka_params</span><span class="o">.</span><span class="n">SID</span>
+    <span class="n">SIE</span> <span class="o">=</span> <span class="n">hovorka_params</span><span class="o">.</span><span class="n">SIE</span>
+    <span class="n">gain</span> <span class="o">=</span> <span class="n">hovorka_params</span><span class="o">.</span><span class="n">gain</span>
+    <span class="n">BW</span> <span class="o">=</span> <span class="n">hovorka_params</span><span class="o">.</span><span class="n">BW</span>
+
+    <span class="n">Upper_scale</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">Lower_scale</span> <span class="o">=</span> <span class="mi">3</span>
+
+    <span class="c1"># Upper and lower bound values</span>
+    <span class="n">insulin_to_carb_ratio</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">40</span>  <span class="c1"># unit per gram of carbs</span>
+    <span class="n">max_meal_size</span> <span class="o">=</span> <span class="mi">90</span>  <span class="c1"># grams</span>
+    <span class="n">Meal_max</span> <span class="o">=</span> <span class="n">max_meal_size</span> <span class="o">/</span> <span class="mi">5</span>  <span class="c1"># gr/min carbs   ==&gt; the maximum amount of meal</span>
+    <span class="n">s1_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span>
+    <span class="n">s1_max</span> <span class="o">=</span> <span class="n">Meal_max</span> <span class="o">*</span> <span class="n">insulin_to_carb_ratio</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">*</span> <span class="mi">65</span>  <span class="c1"># with 20 percent above threshold values</span>
+    <span class="n">s2_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span>
+    <span class="n">s2_max</span> <span class="o">=</span> <span class="n">s1_max</span>
+
+    <span class="n">ke_min</span> <span class="o">=</span> <span class="mf">0.175</span> <span class="o">/</span> <span class="n">Lower_scale</span>
+    <span class="n">ke_max</span> <span class="o">=</span> <span class="mf">0.2</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span>
+
+    <span class="n">I_min</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">I_max</span> <span class="o">=</span> <span class="mi">160</span>
+
+    <span class="n">G_min</span> <span class="o">=</span> <span class="p">(</span><span class="mi">40</span> <span class="o">/</span> <span class="mi">18</span><span class="p">)</span>
+    <span class="n">G_max</span> <span class="o">=</span> <span class="p">(</span><span class="mi">400</span> <span class="o">/</span> <span class="mi">18</span><span class="p">)</span>
+
+    <span class="n">Q2_min</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">Q2_max</span> <span class="o">=</span> <span class="mf">0.16</span> <span class="o">*</span> <span class="n">BW</span> <span class="o">*</span> <span class="p">(</span><span class="n">G_max</span><span class="p">)</span> <span class="o">/</span> <span class="mf">0.066</span>
+
+    <span class="n">Tmaxe_max</span> <span class="o">=</span> <span class="mi">10</span>
+
+    <span class="n">EE_max</span> <span class="o">=</span> <span class="mi">20</span>
+    <span class="n">R1_min</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">R1_max</span> <span class="o">=</span> <span class="n">gain</span> <span class="o">*</span> <span class="n">EE_max</span> <span class="o">*</span> <span class="n">Tmaxe_max</span>
+
+    <span class="n">R2_min</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">R2_max</span> <span class="o">=</span> <span class="n">R1_max</span>
+
+    <span class="n">Tmaxi_min</span> <span class="o">=</span> <span class="mf">62.8</span> <span class="o">/</span> <span class="n">Lower_scale</span>
+    <span class="n">Tmaxi_max</span> <span class="o">=</span> <span class="mf">62.8</span> <span class="o">*</span> <span class="n">Upper_scale</span>
+
+    <span class="n">x1_min</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">x1_max</span> <span class="o">=</span> <span class="n">I_max</span> <span class="o">*</span> <span class="n">SIT</span>
+
+    <span class="n">x2_min</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">x2_max</span> <span class="o">=</span> <span class="n">I_max</span> <span class="o">*</span> <span class="n">SID</span>
+
+    <span class="n">x3_min</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">x3_max</span> <span class="o">=</span> <span class="n">I_max</span> <span class="o">*</span> <span class="n">SIE</span>
+
+    <span class="n">Ug_min</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">Ug_max</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
+
+    <span class="n">lolim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">s1_min</span><span class="p">,</span> <span class="n">s2_min</span><span class="p">,</span> <span class="n">I_min</span><span class="p">,</span> <span class="n">G_min</span><span class="p">,</span> <span class="n">Q2_min</span><span class="p">,</span> <span class="n">R1_min</span><span class="p">,</span> <span class="n">R2_min</span><span class="p">,</span> <span class="n">x1_min</span><span class="p">,</span> <span class="n">x2_min</span><span class="p">,</span> <span class="n">x3_min</span><span class="p">,</span> <span class="n">Tmaxi_min</span><span class="p">,</span> <span class="n">ke_min</span><span class="p">,</span> <span class="n">Ug_min</span><span class="p">])</span>
+    <span class="n">uplim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">s1_max</span><span class="p">,</span> <span class="n">s2_max</span><span class="p">,</span> <span class="n">I_max</span><span class="p">,</span> <span class="n">G_max</span><span class="p">,</span> <span class="n">Q2_max</span><span class="p">,</span> <span class="n">R1_max</span><span class="p">,</span> <span class="n">R2_max</span><span class="p">,</span> <span class="n">x1_max</span><span class="p">,</span> <span class="n">x2_max</span><span class="p">,</span> <span class="n">x3_max</span><span class="p">,</span> <span class="n">Tmaxi_max</span><span class="p">,</span> <span class="n">ke_max</span><span class="p">,</span> <span class="n">Ug_max</span><span class="p">])</span>
+
+    <span class="n">LO</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">lolim</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">num_row</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">num_col</span><span class="p">)</span>
+    <span class="n">UP</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">uplim</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">num_row</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">num_col</span><span class="p">)</span>
+
+    <span class="n">lolimbreach</span> <span class="o">=</span> <span class="n">X</span> <span class="o">&lt;</span> <span class="n">LO</span>
+    <span class="n">uplimbreach</span> <span class="o">=</span> <span class="n">X</span> <span class="o">&gt;</span> <span class="n">UP</span>
+
+    <span class="n">X</span><span class="p">[</span><span class="n">lolimbreach</span><span class="p">]</span> <span class="o">=</span> <span class="n">LO</span><span class="p">[</span><span class="n">lolimbreach</span><span class="p">]</span>
+    <span class="n">X</span><span class="p">[</span><span class="n">uplimbreach</span><span class="p">]</span> <span class="o">=</span> <span class="n">UP</span><span class="p">[</span><span class="n">uplimbreach</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">X</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andy, Mate.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a customized 
+    theme
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

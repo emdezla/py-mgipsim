@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/css/theme.css?v=e21422de" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../../index.html">
+            <img src = "/Flag_of_Chicago,_Illinois2.svg" alt="**" style="padding: 0px 0px 0px 0px; margin: 0; max-height: 20px; width:auto; height:auto; display: inline-block; object-fit: contain; border-radius: 0;" />
+            mGIPsim
+            
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">🦮 Guide dog</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../usage.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../userinterface.html">User interface</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🐱‍💻 Hacker cat</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../detailed.html">For the curious ones</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../pymgipsim.html">For developers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">------------------</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../aboutus.html">🌬️🌁 About us</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../index.html">mGIPsim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pymgipsim.VirtualPatient.Models.T2DM.Jauslin.Model</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article" >
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pymgipsim.VirtualPatient.Models.T2DM.Jauslin.Model</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">pymgipsim.Utilities.units_conversions_constants</span> <span class="kn">import</span> <span class="n">UnitConversion</span>
+<span class="kn">from</span> <span class="nn">.States</span> <span class="kn">import</span> <span class="n">States</span>
+<span class="kn">from</span> <span class="nn">.Parameters</span> <span class="kn">import</span> <span class="n">Parameters</span>
+<span class="kn">from</span> <span class="nn">.Inputs</span> <span class="kn">import</span> <span class="n">Inputs</span>
+<span class="kn">from</span> <span class="nn">pymgipsim.Utilities.Timestamp</span> <span class="kn">import</span> <span class="n">Timestamp</span>
+<span class="kn">from</span> <span class="nn">pymgipsim.VirtualPatient.Models.Model</span> <span class="kn">import</span> <span class="n">BaseModel</span>
+<span class="kn">from</span> <span class="nn">pymgipsim.Utilities.Scenario</span> <span class="kn">import</span> <span class="n">scenario</span>
+<span class="kn">from</span> <span class="nn">pymgipsim.InputGeneration.signal</span> <span class="kn">import</span> <span class="n">Signal</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">njit</span>
+
+<div class="viewcode-block" id="Model">
+<a class="viewcode-back" href="../../../../../../_autosummary/pymgipsim.VirtualPatient.Models.T2DM.Jauslin.Model.html#pymgipsim.VirtualPatient.Models.T2DM.Jauslin.Model.Model">[docs]</a>
+<span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">UnitConversion</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;T2DM.Jauslin&quot;</span>
+    <span class="n">glucose_state</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">output_state</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sampling_time</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span> <span class="o">=</span> <span class="n">Inputs</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="n">Parameters</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">states</span> <span class="o">=</span> <span class="n">States</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initial_conditions</span> <span class="o">=</span> <span class="n">States</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">Timestamp</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sampling_time</span> <span class="o">=</span> <span class="n">sampling_time</span>
+
+
+<div class="viewcode-block" id="Model.preprocessing">
+<a class="viewcode-back" href="../../../../../../_autosummary/pymgipsim.VirtualPatient.Models.T2DM.Jauslin.Model.html#pymgipsim.VirtualPatient.Models.T2DM.Jauslin.Model.Model.preprocessing">[docs]</a>
+    <span class="k">def</span> <span class="nf">preprocessing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This is going to function similar to &#39;initialize&#39; the way I had it before. output_equilibrium does the initial condition</span>
+<span class="sd">        calculation so this will just call that static method for this model.</span>
+
+<span class="sd">        The values in self.initial_conditions can be assigned individually based on that the output_equilibrium (e.g. self.initial_conditions</span>
+<span class="sd">        .Sg = 0)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initial_conditions</span><span class="o">.</span><span class="n">as_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_equilibrium</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">as_array</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">as_array</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">as_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">as_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_conditions</span><span class="o">.</span><span class="n">as_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">as_unix</span><span class="o">.</span><span class="n">size</span><span class="p">))</span></div>
+
+
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@njit</span><span class="p">(</span><span class="n">cache</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">model</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        
+        <span class="c1"># States </span>
+        <span class="n">Sg</span><span class="p">,</span> <span class="n">Cp</span><span class="p">,</span> <span class="n">Ga</span><span class="p">,</span> <span class="n">Gt</span><span class="p">,</span> <span class="n">Gc</span><span class="p">,</span> <span class="n">Gp</span><span class="p">,</span> <span class="n">GE</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">IE</span> <span class="o">=</span> <span class="n">states</span><span class="o">.</span><span class="n">T</span>
+        
+        <span class="c1"># Parameters</span>
+        <span class="n">BW0</span><span class="p">,</span> <span class="n">RTG0</span><span class="p">,</span> <span class="n">GFR0</span><span class="p">,</span> <span class="n">RTG_Max</span><span class="p">,</span> <span class="n">EC50</span><span class="p">,</span> <span class="n">ksa</span><span class="p">,</span> <span class="n">ke</span><span class="p">,</span> <span class="n">Vd</span><span class="p">,</span> <span class="n">ka</span><span class="p">,</span> <span class="n">Gprod0</span><span class="p">,</span> <span class="n">Q</span><span class="p">,</span> <span class="n">Vp</span><span class="p">,</span> <span class="n">Vg</span><span class="p">,</span> <span class="n">ClG</span><span class="p">,</span> <span class="n">ClGI</span><span class="p">,</span> <span class="n">kGE</span><span class="p">,</span> <span class="n">GSS</span><span class="p">,</span> <span class="n">ISS</span><span class="p">,</span> <span class="n">IPRG</span><span class="p">,</span> <span class="n">Sincr</span><span class="p">,</span> <span class="n">Isec0</span><span class="p">,</span> <span class="n">ClI</span><span class="p">,</span> <span class="n">Vi</span><span class="p">,</span> <span class="n">kIE</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">T</span>
+        
+        <span class="c1"># Inputs</span>
+        <span class="n">uFastCarbs</span><span class="p">,</span> <span class="n">uSlowCarbs</span><span class="p">,</span> <span class="n">uSGLT2I</span><span class="p">,</span> <span class="n">uBWE</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="n">uCarb</span> <span class="o">=</span> <span class="p">(</span><span class="n">uFastCarbs</span> <span class="o">+</span> <span class="n">uSlowCarbs</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">/</span> <span class="mf">180.156</span>
+
+        <span class="n">uSGLT2I</span> <span class="o">*=</span> <span class="mf">1e6</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Canagliflozin equations &quot;&quot;&quot;</span>
+        <span class="n">dSgdt</span> <span class="o">=</span> <span class="n">uSGLT2I</span> <span class="o">-</span> <span class="n">ksa</span><span class="o">*</span><span class="n">Sg</span>
+        
+        <span class="n">dCpdt</span> <span class="o">=</span> <span class="n">ksa</span><span class="o">*</span><span class="n">Sg</span> <span class="o">/</span> <span class="n">Vd</span> <span class="o">-</span> <span class="n">ke</span><span class="o">*</span><span class="n">Cp</span>
+            
+        <span class="n">RTG</span> <span class="o">=</span> <span class="n">RTG0</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">RTG_Max</span><span class="o">*</span><span class="n">Cp</span><span class="o">/</span><span class="p">(</span><span class="n">Cp</span><span class="o">+</span><span class="n">EC50</span><span class="p">))</span>
+<span class="w">        </span>
+<span class="w">        </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Renal Equations &quot;&quot;&quot;</span>
+        <span class="n">RC</span> <span class="o">=</span> <span class="n">RTG</span><span class="o">*</span><span class="n">GFR0</span>
+        
+        <span class="n">GluFR</span> <span class="o">=</span> <span class="n">GFR0</span> <span class="o">*</span> <span class="p">(</span><span class="n">Gc</span><span class="o">/</span><span class="n">Vg</span><span class="p">)</span>
+            
+        <span class="n">Rreab</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">GluFR</span><span class="p">,</span> <span class="n">RC</span><span class="p">)</span>
+        
+        <span class="n">RUGE</span> <span class="o">=</span> <span class="n">GluFR</span> <span class="o">-</span> <span class="n">Rreab</span>
+<span class="w">        </span>
+<span class="w">        </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Glucose Equations &quot;&quot;&quot;</span>
+        <span class="c1"># Ga</span>
+        <span class="n">dGadt</span> <span class="o">=</span> <span class="n">uCarb</span> <span class="o">-</span> <span class="n">ka</span><span class="o">*</span><span class="n">Ga</span>
+        
+        <span class="c1"># Gt</span>
+        <span class="n">dGtdt</span> <span class="o">=</span> <span class="n">ka</span> <span class="o">*</span> <span class="p">(</span><span class="n">Ga</span> <span class="o">-</span> <span class="n">Gt</span><span class="p">)</span>
+    
+        <span class="c1"># Central compartment</span>
+        <span class="n">dGcdt</span> <span class="o">=</span> <span class="mf">0.78</span><span class="o">*</span><span class="n">ka</span><span class="o">*</span><span class="n">Gt</span> <span class="o">+</span> <span class="n">Gprod0</span> <span class="o">+</span> <span class="p">(</span><span class="n">Q</span><span class="o">/</span><span class="n">Vp</span><span class="p">)</span><span class="o">*</span><span class="n">Gp</span> <span class="o">-</span> <span class="p">(</span><span class="n">ClG</span> <span class="o">+</span> <span class="n">ClGI</span><span class="o">*</span><span class="n">IE</span> <span class="o">+</span> <span class="n">Q</span><span class="p">)</span> <span class="o">*</span> <span class="n">Gc</span> <span class="o">/</span> <span class="n">Vg</span> <span class="o">-</span> <span class="n">RUGE</span>
+        
+        <span class="c1"># Peripheral compartment</span>
+        <span class="n">dGpdt</span> <span class="o">=</span> <span class="n">Q</span> <span class="o">*</span> <span class="p">(</span><span class="n">Gc</span><span class="o">/</span><span class="n">Vg</span> <span class="o">-</span> <span class="n">Gp</span><span class="o">/</span><span class="n">Vp</span><span class="p">)</span>
+        
+        <span class="c1"># Effect 1</span>
+        <span class="n">dGEdt</span> <span class="o">=</span> <span class="n">kGE</span><span class="o">*</span><span class="n">Gc</span><span class="o">/</span><span class="n">Vg</span> <span class="o">-</span> <span class="n">kGE</span><span class="o">*</span><span class="n">GE</span>
+                    
+        <span class="n">GCM</span>   <span class="o">=</span> <span class="p">(</span><span class="n">GE</span> <span class="o">/</span> <span class="n">GSS</span><span class="p">)</span><span class="o">**</span><span class="n">IPRG</span>
+<span class="w">            </span>
+<span class="w">        </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Insulin Equations &quot;&quot;&quot;</span>
+        <span class="c1"># Secretion</span>
+        <span class="n">Iabsg</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">Sincr</span><span class="o">*</span><span class="n">Gt</span>
+        
+        <span class="n">Isec</span> <span class="o">=</span> <span class="n">Isec0</span> <span class="o">*</span> <span class="n">GCM</span> <span class="o">*</span> <span class="n">Iabsg</span>
+    
+        <span class="c1"># Insulin</span>
+        <span class="n">dIdt</span> <span class="o">=</span> <span class="n">Isec</span> <span class="o">-</span> <span class="p">(</span><span class="n">ClI</span><span class="o">/</span><span class="n">Vi</span><span class="p">)</span><span class="o">*</span><span class="n">I</span>
+        
+        <span class="c1"># Effect</span>
+        <span class="n">dIEdt</span> <span class="o">=</span> <span class="n">kIE</span> <span class="o">*</span> <span class="p">(</span><span class="n">I</span> <span class="o">/</span> <span class="p">(</span><span class="n">Vi</span> <span class="o">*</span> <span class="n">uBWE</span><span class="p">)</span>  <span class="o">-</span> <span class="n">IE</span><span class="p">)</span>
+                
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">dSgdt</span><span class="p">,</span> <span class="n">dCpdt</span><span class="p">,</span> <span class="n">dGadt</span><span class="p">,</span> <span class="n">dGtdt</span><span class="p">,</span> <span class="n">dGcdt</span><span class="p">,</span> <span class="n">dGpdt</span><span class="p">,</span> <span class="n">dGEdt</span><span class="p">,</span> <span class="n">dIdt</span><span class="p">,</span> <span class="n">dIEdt</span><span class="p">))</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">rate_equations</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+        
+        <span class="n">Sg</span><span class="p">,</span> <span class="n">Cp</span><span class="p">,</span> <span class="n">Ga</span><span class="p">,</span> <span class="n">Gt</span><span class="p">,</span> <span class="n">Gc</span><span class="p">,</span> <span class="n">Gp</span><span class="p">,</span> <span class="n">GE</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">IE</span> <span class="o">=</span> <span class="n">states</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        
+        <span class="c1"># Parameters</span>
+        <span class="n">BW0</span><span class="p">,</span> <span class="n">RTG0</span><span class="p">,</span> <span class="n">GFR0</span><span class="p">,</span> <span class="n">RTG_Max</span><span class="p">,</span> <span class="n">EC50</span><span class="p">,</span> <span class="n">ksa</span><span class="p">,</span> <span class="n">ke</span><span class="p">,</span> <span class="n">Vd</span><span class="p">,</span> <span class="n">ka</span><span class="p">,</span> <span class="n">Gprod0</span><span class="p">,</span> <span class="n">Q</span><span class="p">,</span> <span class="n">Vp</span><span class="p">,</span> <span class="n">Vg</span><span class="p">,</span> <span class="n">ClG</span><span class="p">,</span> <span class="n">ClGI</span><span class="p">,</span> <span class="n">kGE</span><span class="p">,</span> <span class="n">GSS</span><span class="p">,</span> <span class="n">ISS</span><span class="p">,</span> <span class="n">IPRG</span><span class="p">,</span> <span class="n">Sincr</span><span class="p">,</span> <span class="n">Isec0</span><span class="p">,</span> <span class="n">ClI</span><span class="p">,</span> <span class="n">Vi</span><span class="p">,</span> <span class="n">kIE</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">T</span>
+                            
+        <span class="n">GCM</span>   <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">GE</span><span class="p">,</span> <span class="n">GSS</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]),</span> <span class="n">IPRG</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])</span>
+
+        <span class="n">Iabsg</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">Sincr</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span><span class="o">*</span><span class="n">Gt</span>
+        
+        <span class="n">Isec</span> <span class="o">=</span> <span class="n">Isec0</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">GCM</span> <span class="o">*</span> <span class="n">Iabsg</span>
+<span class="w">        </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Renal Equations &quot;&quot;&quot;</span>
+        
+        <span class="n">RTG</span> <span class="o">=</span> <span class="n">RTG0</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">RTG_Max</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span><span class="o">*</span><span class="n">Cp</span><span class="o">/</span><span class="p">(</span><span class="n">Cp</span><span class="o">+</span><span class="n">EC50</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]))</span>
+        
+        <span class="n">RC</span> <span class="o">=</span> <span class="n">RTG</span><span class="o">*</span><span class="n">GFR0</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+        
+        <span class="n">GluFR</span> <span class="o">=</span> <span class="n">GFR0</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">Gc</span><span class="o">/</span><span class="n">Vg</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])</span>
+        
+        <span class="n">Rreab</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">RC</span><span class="p">,</span> <span class="n">GluFR</span><span class="p">)</span>
+        
+        <span class="n">RUGE</span> <span class="o">=</span> <span class="n">GluFR</span> <span class="o">-</span> <span class="n">Rreab</span>
+
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">((</span><span class="n">GCM</span><span class="p">,</span> <span class="n">Iabsg</span><span class="p">,</span> <span class="n">Isec</span><span class="p">,</span> <span class="n">RTG</span><span class="p">,</span> <span class="n">RC</span><span class="p">,</span> <span class="n">GluFR</span><span class="p">,</span> <span class="n">Rreab</span><span class="p">,</span> <span class="n">RUGE</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="Model.output_equilibrium">
+<a class="viewcode-back" href="../../../../../../_autosummary/pymgipsim.VirtualPatient.Models.T2DM.Jauslin.Model.html#pymgipsim.VirtualPatient.Models.T2DM.Jauslin.Model.Model.output_equilibrium">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">output_equilibrium</span><span class="p">(</span><span class="n">parameters</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This calculates the steady state values for each state variable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">BW0</span><span class="p">,</span> <span class="n">RTG0</span><span class="p">,</span> <span class="n">GFR0</span><span class="p">,</span> <span class="n">RTG_Max</span><span class="p">,</span> <span class="n">EC50</span><span class="p">,</span> <span class="n">ksa</span><span class="p">,</span> <span class="n">ke</span><span class="p">,</span> <span class="n">Vd</span><span class="p">,</span> <span class="n">ka</span><span class="p">,</span> <span class="n">Gprod0</span><span class="p">,</span> <span class="n">Q</span><span class="p">,</span> <span class="n">Vp</span><span class="p">,</span> <span class="n">Vg</span><span class="p">,</span> <span class="n">ClG</span><span class="p">,</span> <span class="n">ClGI</span><span class="p">,</span> <span class="n">kGE</span><span class="p">,</span> <span class="n">GSS</span><span class="p">,</span> <span class="n">ISS</span><span class="p">,</span> <span class="n">IPRG</span><span class="p">,</span> <span class="n">Sincr</span><span class="p">,</span> <span class="n">Isec0</span><span class="p">,</span> <span class="n">ClI</span><span class="p">,</span> <span class="n">Vi</span><span class="p">,</span> <span class="n">kIE</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="n">N</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">Sg0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+        <span class="n">Cp0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+        <span class="n">Ga0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+        <span class="n">Gt0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+        <span class="n">Gc0</span> <span class="o">=</span> <span class="n">GSS</span> <span class="o">*</span> <span class="n">Vg</span>
+        <span class="n">Gp0</span> <span class="o">=</span> <span class="n">GSS</span> <span class="o">*</span> <span class="n">Vp</span>
+        <span class="n">GE0</span> <span class="o">=</span> <span class="n">GSS</span>
+        <span class="n">I0</span>  <span class="o">=</span> <span class="n">ISS</span> <span class="o">*</span> <span class="n">Vi</span>
+        <span class="n">IE0</span> <span class="o">=</span> <span class="n">ISS</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">Sg0</span><span class="p">,</span> <span class="n">Cp0</span><span class="p">,</span> <span class="n">Ga0</span><span class="p">,</span> <span class="n">Gt0</span><span class="p">,</span> <span class="n">Gc0</span><span class="p">,</span> <span class="n">Gp0</span><span class="p">,</span> <span class="n">GE0</span><span class="p">,</span> <span class="n">I0</span><span class="p">,</span> <span class="n">IE0</span><span class="p">))</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">from_scenario</span><span class="p">(</span><span class="n">scenario_instance</span><span class="p">:</span> <span class="n">scenario</span><span class="p">):</span>
+        <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">scenario_instance</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span>
+                         <span class="n">scenario_instance</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">end_time</span><span class="p">,</span>
+                         <span class="n">scenario_instance</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">sampling_time</span>
+                         <span class="p">)</span>
+
+        <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">sampling_time</span><span class="o">=</span><span class="n">scenario_instance</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">sampling_time</span><span class="p">)</span>
+
+        <span class="n">events</span> <span class="o">=</span> <span class="n">scenario_instance</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">meal_carb</span>
+        <span class="n">meal_carb</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">,</span> <span class="n">sampling_time</span><span class="o">=</span><span class="n">scenario_instance</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">sampling_time</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="n">events</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+                           <span class="n">start_time</span><span class="o">=</span><span class="n">events</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span> <span class="n">magnitude</span><span class="o">=</span><span class="n">events</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span>
+        
+        <span class="n">events</span> <span class="o">=</span> <span class="n">scenario_instance</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">snack_carb</span>
+        <span class="n">snack_carb</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">,</span> <span class="n">sampling_time</span><span class="o">=</span><span class="n">scenario_instance</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">sampling_time</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="n">events</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+                            <span class="n">start_time</span><span class="o">=</span><span class="n">events</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span> <span class="n">magnitude</span><span class="o">=</span><span class="n">events</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span>
+        
+        <span class="n">events</span> <span class="o">=</span> <span class="n">scenario_instance</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">sgl2i</span>
+        <span class="n">sglt2i</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">,</span> <span class="n">sampling_time</span><span class="o">=</span><span class="n">scenario_instance</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">sampling_time</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="n">events</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+                        <span class="n">start_time</span><span class="o">=</span><span class="n">events</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span> <span class="n">magnitude</span><span class="o">=</span><span class="n">events</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span>
+        
+        <span class="n">events</span> <span class="o">=</span> <span class="n">scenario_instance</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">bodyweighteffect</span>
+        <span class="n">bodyweighteffect</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">,</span> <span class="n">sampling_time</span><span class="o">=</span><span class="n">scenario_instance</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">sampling_time</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="n">events</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+                                <span class="n">start_time</span><span class="o">=</span><span class="n">events</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span> <span class="n">magnitude</span><span class="o">=</span><span class="n">events</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span>
+        
+
+        <span class="n">model</span><span class="o">.</span><span class="n">inputs</span> <span class="o">=</span> <span class="n">Inputs</span><span class="p">(</span><span class="n">sglt2i</span><span class="o">=</span><span class="n">sglt2i</span><span class="p">,</span> <span class="n">slow_carbs</span><span class="o">=</span><span class="n">meal_carb</span><span class="p">,</span> <span class="n">fast_carbs</span><span class="o">=</span><span class="n">snack_carb</span><span class="p">,</span> <span class="n">bodyweighteffect</span> <span class="o">=</span> <span class="n">bodyweighteffect</span><span class="p">)</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="n">Parameters</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">scenario_instance</span><span class="o">.</span><span class="n">patient</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">))</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">Timestamp</span><span class="p">()</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">as_unix</span> <span class="o">=</span> <span class="n">time</span>
+
+        <span class="k">return</span> <span class="n">model</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andy, Mate.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a customized 
+    theme
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

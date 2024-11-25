@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e21422de" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html">
+            <img src = "/Flag_of_Chicago,_Illinois2.svg" alt="**" style="padding: 0px 0px 0px 0px; margin: 0; max-height: 20px; width:auto; height:auto; display: inline-block; object-fit: contain; border-radius: 0;" />
+            mGIPsim
+            
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">🦮 Guide dog</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../userinterface.html">User interface</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🐱‍💻 Hacker cat</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../detailed.html">For the curious ones</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pymgipsim.html">For developers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">------------------</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../aboutus.html">🌬️🌁 About us</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">mGIPsim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pymgipsim.Controllers.mvAP.controller</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article" >
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pymgipsim.Controllers.mvAP.controller</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">pymgipsim.Utilities.Scenario</span> <span class="kn">import</span> <span class="n">demographic_info</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">UKF_Observer</span>
+<span class="kn">from</span> <span class="nn">.DataContainer</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">Hovorka_Model</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">UKF_Observer</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">Model_Identification</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">Hypoglycemia_Hyperglycemia</span>
+<span class="kn">from</span> <span class="nn">.Disturbance_Prediction</span> <span class="kn">import</span> <span class="n">ar_gut_absorption_rate_predictor</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">MPC_Controller</span>
+<span class="kn">from</span> <span class="nn">pymgipsim.Utilities.Scenario</span> <span class="kn">import</span> <span class="n">scenario</span>
+<span class="kn">from</span> <span class="nn">pymgipsim.Utilities.units_conversions_constants</span> <span class="kn">import</span> <span class="n">UnitConversion</span>
+<span class="kn">from</span> <span class="nn">pymgipsim.InputGeneration.signal</span> <span class="kn">import</span> <span class="n">Signal</span>
+
+<div class="viewcode-block" id="Controller">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.controller.Controller.html#pymgipsim.Controllers.mvAP.controller.Controller">[docs]</a>
+<span class="k">class</span> <span class="nc">Controller</span><span class="p">:</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;mvAP&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scenario_instance</span><span class="p">:</span> <span class="n">scenario</span><span class="p">,</span> <span class="n">initital_glucose</span><span class="p">):</span>
+        <span class="n">demographic_info</span> <span class="o">=</span> <span class="n">scenario_instance</span><span class="o">.</span><span class="n">patient</span><span class="o">.</span><span class="n">demographic_info</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">basal_vector</span> <span class="o">=</span> <span class="n">UnitConversion</span><span class="o">.</span><span class="n">insulin</span><span class="o">.</span><span class="n">Uhr_to_mUmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">demographic_info</span><span class="o">.</span><span class="n">basal</span><span class="p">))</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="o">*</span> <span class="mi">4</span>  <span class="c1"># [1, 1, 1, 1] * virtual_patient.demo_info.get_basal_rate_mU_min()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bolus_vector</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">4</span>  <span class="c1"># [0, 0, 0, 0]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fast_carb_vector</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">4</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sampling_time</span> <span class="o">=</span> <span class="n">scenario_instance</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">sampling_time</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">demographic_info</span> <span class="o">=</span> <span class="n">Demographic_Information</span><span class="p">(</span><span class="n">BW</span><span class="o">=</span><span class="n">demographic_info</span><span class="o">.</span><span class="n">body_weight</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">height</span><span class="o">=</span><span class="n">demographic_info</span><span class="o">.</span><span class="n">height</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">insulin2carb_ratio</span><span class="o">=</span><span class="n">demographic_info</span><span class="o">.</span><span class="n">carb_insulin_ratio</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                                        <span class="n">correction_factor</span><span class="o">=</span><span class="n">demographic_info</span><span class="o">.</span><span class="n">correction_bolus</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">basal_rate</span><span class="o">=</span><span class="n">demographic_info</span><span class="o">.</span><span class="n">basal</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                                        <span class="n">HbA1c</span><span class="o">=</span><span class="n">demographic_info</span><span class="o">.</span><span class="n">HbA1c</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">waist_size</span><span class="o">=</span><span class="n">demographic_info</span><span class="o">.</span><span class="n">waist_size</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="c1"># sample time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delta</span> <span class="o">=</span> <span class="mi">5</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">measurement_counter</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">num_observer_states</span> <span class="o">=</span> <span class="mi">13</span>
+        <span class="n">n_Ug</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="n">model_NRLS</span> <span class="o">=</span> <span class="mi">2</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">noise_error_cov_mat</span> <span class="o">=</span> <span class="n">Noise_Error_Covariance_Matrix</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">noise_error_cov_mat</span><span class="o">.</span><span class="n">P_UKF</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">num_observer_states</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">noise_error_cov_mat</span><span class="o">.</span><span class="n">Q_UKF</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span>
+            <span class="p">[</span><span class="mf">1e-10</span><span class="p">,</span> <span class="mf">1e-10</span><span class="p">,</span> <span class="mf">1e-10</span><span class="p">,</span> <span class="mf">1e-10</span><span class="p">,</span> <span class="mf">1e-10</span><span class="p">,</span> <span class="mf">2.668e-08</span><span class="p">,</span> <span class="mf">1e-10</span><span class="p">,</span> <span class="mf">1e-10</span><span class="p">,</span> <span class="mf">1e-10</span><span class="p">,</span> <span class="mf">1e-10</span><span class="p">,</span> <span class="mf">4.65612656105701</span><span class="p">,</span> <span class="mf">1e-10</span><span class="p">,</span>
+             <span class="mf">0.138709042564221</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">noise_error_cov_mat</span><span class="o">.</span><span class="n">R_UKF</span> <span class="o">=</span> <span class="mf">0.4</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">noise_error_cov_mat</span><span class="o">.</span><span class="n">P_NRLS</span> <span class="o">=</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pw_data</span> <span class="o">=</span> <span class="n">Data_PW</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pw_data</span><span class="o">.</span><span class="n">cgm_pw</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">initital_glucose</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="o">*</span> <span class="mi">36</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pw_data</span><span class="o">.</span><span class="n">push_basal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">demographic_info</span><span class="o">.</span><span class="n">basal_rate</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pw_data</span><span class="o">.</span><span class="n">push_gut_absorption_rate</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">hovorka_params</span> <span class="o">=</span> <span class="n">Hovorka_Parameters</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hovorka_params</span><span class="o">.</span><span class="n">BW</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">demographic_info</span><span class="o">.</span><span class="n">BW</span>
+
+        <span class="c1"># finding steady_state condition as the initial condition</span>
+        <span class="n">xss</span> <span class="o">=</span> <span class="n">Hovorka_Model</span><span class="o">.</span><span class="n">get_hovorka_model_steady_state_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hovorka_params</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pw_data</span><span class="o">.</span><span class="n">get_last_cgm</span><span class="p">(),</span>
+                                                                  <span class="bp">self</span><span class="o">.</span><span class="n">pw_data</span><span class="o">.</span><span class="n">get_last_basal_mU_min</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">Hovorka_Model_Extended_States_Matrix</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">push_current_state_vector</span><span class="p">(</span><span class="n">xss</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">gut_absorption_rate_predictor</span> <span class="o">=</span> <span class="n">ar_gut_absorption_rate_predictor</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gut_absorption_rate_predictor</span><span class="o">.</span><span class="n">P_Ug</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n_Ug</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">observer_convergence_sample_time</span> <span class="o">=</span> <span class="mi">18</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">measurements</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">sample</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">sample</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">G</span> <span class="o">=</span> <span class="n">UnitConversion</span><span class="o">.</span><span class="n">glucose</span><span class="o">.</span><span class="n">concentration_mmolL_to_mgdL</span><span class="p">(</span><span class="n">measurements</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="n">uFastCarbs</span><span class="p">,</span> <span class="n">uSlowCarbs</span><span class="p">,</span> <span class="n">uHR</span><span class="p">,</span> <span class="n">uInsulin</span><span class="p">,</span> <span class="n">energy_expenditure</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="n">energy_expenditure</span> <span class="o">=</span> <span class="n">energy_expenditure</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="c1"># pushing the currently measured cgm</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pw_data</span><span class="o">.</span><span class="n">push_cgm</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+
+            <span class="c1"># main algorithm</span>
+            <span class="n">cgm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pw_data</span><span class="o">.</span><span class="n">get_last_cgm</span><span class="p">()</span>
+            <span class="n">G</span> <span class="o">=</span> <span class="n">cgm</span> <span class="o">/</span> <span class="mf">18.0</span>
+            <span class="n">insulin_mU_min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pw_data</span><span class="o">.</span><span class="n">get_last_insulin_input_mU_min</span><span class="p">()</span>
+            <span class="n">gut_absorption_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pw_data</span><span class="o">.</span><span class="n">get_last_gut_absorption_rate</span><span class="p">()</span>
+            <span class="n">input_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">insulin_mU_min</span><span class="p">,</span> <span class="n">gut_absorption_rate</span><span class="p">,</span> <span class="n">energy_expenditure</span><span class="p">])</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">pw_data</span><span class="o">.</span><span class="n">push_energy_expenditure</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">energy_expenditure</span><span class="p">))</span>
+
+            <span class="n">current_states</span> <span class="o">=</span> <span class="n">UKF_Observer</span><span class="o">.</span><span class="n">ukf_observer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">get_current_state_vector</span><span class="p">(),</span> <span class="n">G</span><span class="p">,</span>
+                                                       <span class="n">input_vector</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_error_cov_mat</span><span class="p">,</span>
+                                                       <span class="bp">self</span><span class="o">.</span><span class="n">hovorka_params</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">push_current_state_vector</span><span class="p">(</span><span class="n">current_states</span><span class="p">)</span>
+
+            <span class="c1"># creating a state-object for estimated states</span>
+            <span class="n">current_states_object</span> <span class="o">=</span> <span class="n">Hovorka_Model_Extended_States_Object</span><span class="p">(</span><span class="n">current_states</span><span class="p">)</span>
+
+            <span class="c1"># updating hovorka parameters</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hovorka_params</span><span class="o">.</span><span class="n">TmaxI</span> <span class="o">=</span> <span class="n">current_states_object</span><span class="o">.</span><span class="n">TmaxI</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hovorka_params</span><span class="o">.</span><span class="n">Ke</span> <span class="o">=</span> <span class="n">current_states_object</span><span class="o">.</span><span class="n">Ke</span>
+
+            <span class="c1"># pushing estimated gut_absorption_rate</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pw_data</span><span class="o">.</span><span class="n">push_gut_absorption_rate</span><span class="p">(</span><span class="n">current_states_object</span><span class="o">.</span><span class="n">Ug</span><span class="p">)</span>
+
+            <span class="c1"># update parameters by recursive least square</span>
+            <span class="n">Model_Identification</span><span class="o">.</span><span class="n">nonlinear_recursive_least_square</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pw_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hovorka_params</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_error_cov_mat</span><span class="p">)</span>
+
+            <span class="c1"># calculating the linear model</span>
+            <span class="n">linear_model</span> <span class="o">=</span> <span class="n">Hovorka_Model</span><span class="o">.</span><span class="n">get_hovorka_linear_model</span><span class="p">(</span><span class="n">current_states_object</span><span class="p">,</span> <span class="n">input_vector</span><span class="p">,</span>
+                                                                  <span class="bp">self</span><span class="o">.</span><span class="n">pw_data</span><span class="o">.</span><span class="n">get_last_cgm</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">hovorka_params</span><span class="p">)</span>
+
+            <span class="c1"># calling mpc_execute</span>
+            <span class="n">basal_out</span><span class="p">,</span> <span class="n">bolus_out</span> <span class="o">=</span> <span class="n">MPC_Controller</span><span class="o">.</span><span class="n">mpc_execute</span><span class="p">(</span><span class="n">linear_model</span><span class="o">=</span><span class="n">linear_model</span><span class="p">,</span> <span class="n">pw_data_object</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pw_data</span><span class="p">,</span>
+                                                              <span class="n">hovorka_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hovorka_params</span><span class="p">,</span>
+                                                              <span class="n">demo_info</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">demographic_info</span><span class="p">,</span>
+                                                              <span class="n">model_states</span><span class="o">=</span><span class="n">current_states_object</span><span class="o">.</span><span class="n">get_short_state_object</span><span class="p">(),</span>
+                                                              <span class="n">noise_error_cov_mat</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_error_cov_mat</span><span class="p">,</span>
+                                                              <span class="n">gut_absorption_rate_predictor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gut_absorption_rate_predictor</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">sample</span> <span class="o">&gt;</span>  <span class="bp">self</span><span class="o">.</span><span class="n">observer_convergence_sample_time</span><span class="p">:</span>
+                <span class="c1"># basal_out, bolus_out, fast_carb_out = MPC_Controller.safety_constraints(pw_data, basal_out, bolus_out)</span>
+                <span class="n">fast_carb_out</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">basal_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">demographic_info</span><span class="o">.</span><span class="n">get_basal_rate</span><span class="p">()</span>
+                <span class="n">bolus_out</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">fast_carb_out</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">pw_data</span><span class="o">.</span><span class="n">push_basal</span><span class="p">(</span><span class="n">basal_out</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pw_data</span><span class="o">.</span><span class="n">push_bolus</span><span class="p">(</span><span class="n">bolus_out</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pw_data</span><span class="o">.</span><span class="n">push_fast_carb</span><span class="p">(</span><span class="n">fast_carb_out</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">basal_vector</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">basal_out</span><span class="p">]</span> <span class="o">*</span> <span class="mi">5</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bolus_vector</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">bolus_out</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fast_carb_vector</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">fast_carb_out</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">counter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">counter</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">insulin_rate</span> <span class="o">=</span> <span class="n">UnitConversion</span><span class="o">.</span><span class="n">insulin</span><span class="o">.</span><span class="n">Uhr_to_mUmin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">demographic_info</span><span class="o">.</span><span class="n">basal_rate</span><span class="p">)</span><span class="o">+</span><span class="n">UnitConversion</span><span class="o">.</span><span class="n">insulin</span><span class="o">.</span><span class="n">U_to_mU</span><span class="p">(</span><span class="n">bolus_out</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">delta</span>
+            <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="n">sample</span><span class="p">:</span><span class="n">sample</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">delta</span><span class="p">]</span> <span class="o">=</span> <span class="n">insulin_rate</span>
+        <span class="k">return</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andy, Mate.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a customized 
+    theme
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

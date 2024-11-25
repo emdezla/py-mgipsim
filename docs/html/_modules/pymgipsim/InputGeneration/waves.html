@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e21422de" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            <img src = "/Flag_of_Chicago,_Illinois2.svg" alt="**" style="padding: 0px 0px 0px 0px; margin: 0; max-height: 20px; width:auto; height:auto; display: inline-block; object-fit: contain; border-radius: 0;" />
+            mGIPsim
+            
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">🦮 Guide dog</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../userinterface.html">User interface</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🐱‍💻 Hacker cat</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../detailed.html">For the curious ones</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../pymgipsim.html">For developers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">------------------</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../aboutus.html">🌬️🌁 About us</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">mGIPsim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pymgipsim.InputGeneration.waves</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article" >
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pymgipsim.InputGeneration.waves</h1><div class="highlight"><pre>
+<span></span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">ceil</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">njit</span>
+
+<div class="viewcode-block" id="create_square_wave">
+<a class="viewcode-back" href="../../../_autosummary/pymgipsim.InputGeneration.waves.create_square_wave.html#pymgipsim.InputGeneration.waves.create_square_wave">[docs]</a>
+<span class="nd">@njit</span>
+<span class="k">def</span> <span class="nf">create_square_wave</span><span class="p">(</span>
+                        <span class="n">time</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>           <span class="c1"># Time array for the signal</span>
+                        <span class="n">start_times</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>    <span class="c1"># 3D array of start times for each event</span>
+                        <span class="n">durations</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>      <span class="c1"># 3D array of durations for each event</span>
+                        <span class="n">amounts</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>        <span class="c1"># 3D array of amounts for each event</span>
+                        <span class="n">sampling_time</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>       <span class="c1"># Sampling time for the signal</span>
+                        <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a scenario signal based on event start times, durations, and amounts.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    - time: np.ndarray</span>
+<span class="sd">        Time array for the signal.</span>
+<span class="sd">    - start_times: np.ndarray</span>
+<span class="sd">        3D array of start times for each event.</span>
+<span class="sd">    - durations: np.ndarray</span>
+<span class="sd">        3D array of durations for each event.</span>
+<span class="sd">    - amounts: np.ndarray</span>
+<span class="sd">        3D array of amounts for each event.</span>
+<span class="sd">    - sampling_time: float</span>
+<span class="sd">        Sampling time for the signal.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    - np.ndarray</span>
+<span class="sd">        3D array representing the generated scenario signal.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># assert start_times.shape == amounts.shape, f&quot;{start_times.shape}, {amounts.shape}&quot;</span>
+    <span class="c1"># assert np.all(start_times == np.sort(start_times, axis = -1)), f&quot;start_times ({start_times.shape}) is not sorted in ascending order. {start_times}&quot;</span>
+
+    <span class="c1"># Initialize the signal array with zeros</span>
+    <span class="n">signal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">amounts</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">time</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+    <span class="n">with_duration</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="c1"># If durations are undefined it is assumed to be a measurement</span>
+    <span class="k">if</span> <span class="n">durations</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">durations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">start_times</span><span class="p">)</span>
+        <span class="n">with_duration</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">amounts</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="k">for</span> <span class="n">event_number</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">amounts</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="c1"># Calculate start and stop indices based on start times and durations</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">ceil</span><span class="p">((</span><span class="n">start_times</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span><span class="n">event_number</span><span class="p">]</span> <span class="o">-</span> <span class="n">time</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">sampling_time</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span> <span class="c1"># Ceil ensures that the input won&#39;t start before the defined timepoint due to sampling</span>
+            <span class="n">duration</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">durations</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span><span class="n">event_number</span><span class="p">]</span> <span class="o">/</span> <span class="n">sampling_time</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>  <span class="c1"># max(,1) ensures that impulsive inputs also appear in the signal</span>
+            <span class="n">stop</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">start</span> <span class="o">+</span> <span class="n">duration</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>  <span class="c1"># Min ensures to not index outside the array</span>
+
+            <span class="k">if</span> <span class="n">with_duration</span><span class="p">:</span>
+                <span class="c1"># Calculate magnitude of the event signal</span>
+                <span class="n">magnitude</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">amounts</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span><span class="n">event_number</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">duration</span> <span class="o">*</span> <span class="n">sampling_time</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="c1"># Assign the magnitude to the corresponding time indices in the signal array</span>
+                <span class="n">signal</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">]</span> <span class="o">=</span> <span class="n">signal</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">]</span> <span class="o">+</span> <span class="n">magnitude</span> <span class="c1"># Sum ensures that overlapping inputs dont exclude each other out</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Calculate magnitude of the event signal</span>
+                <span class="n">magnitude</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">amounts</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="n">event_number</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="c1"># Assign the magnitude to the corresponding time indices in the signal array</span>
+                <span class="n">signal</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">]</span> <span class="o">=</span> <span class="n">magnitude</span>  <span class="c1"># Holds the current value until the new one</span>
+
+
+    <span class="k">return</span> <span class="n">signal</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andy, Mate.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a customized 
+    theme
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e21422de" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html">
+            <img src = "/Flag_of_Chicago,_Illinois2.svg" alt="**" style="padding: 0px 0px 0px 0px; margin: 0; max-height: 20px; width:auto; height:auto; display: inline-block; object-fit: contain; border-radius: 0;" />
+            mGIPsim
+            
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">🦮 Guide dog</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../userinterface.html">User interface</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🐱‍💻 Hacker cat</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../detailed.html">For the curious ones</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pymgipsim.html">For developers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">------------------</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../aboutus.html">🌬️🌁 About us</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">mGIPsim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article" >
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="get_hyperglycemia_probability">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.get_hyperglycemia_probability.html#pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.get_hyperglycemia_probability">[docs]</a>
+<span class="k">def</span> <span class="nf">get_hyperglycemia_probability</span><span class="p">(</span><span class="n">cgm</span><span class="p">,</span> <span class="n">predicted_cgm</span><span class="p">):</span>
+    <span class="c1"># This is optional, you can make the CGM signal smoother by doing this</span>
+    <span class="n">cgm_con</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">cgm</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;valid&#39;</span><span class="p">)</span>
+    <span class="n">cgm_con</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">cgm_con</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">cgm</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">cgm</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">cgm_con</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cgm_con</span><span class="p">,</span> <span class="p">(</span><span class="n">cgm</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">cgm</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">cgm</span> <span class="o">=</span> <span class="n">cgm_con</span>
+
+    <span class="n">delt</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="c1"># Calculating the first derivative of CGM at the last 2 sample times</span>
+    <span class="n">cgm_fd</span> <span class="o">=</span> <span class="p">[(</span><span class="n">cgm</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">cgm</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="o">+</span><span class="n">cgm</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">])</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">delt</span><span class="p">),</span> <span class="p">(</span><span class="n">cgm</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span><span class="o">-</span><span class="mi">4</span><span class="o">*</span><span class="n">cgm</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="o">+</span><span class="mi">3</span><span class="o">*</span><span class="n">cgm</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">delt</span><span class="p">)]</span>
+    <span class="c1"># Calculating the CGM second derivative at the last sample time</span>
+    <span class="n">cgm_sd</span> <span class="o">=</span> <span class="p">(</span><span class="n">cgm_fd</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">cgm_fd</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="n">delt</span>
+
+    <span class="n">prob_cgm_trend</span> <span class="o">=</span> <span class="n">get_hyper_prob_cgm_trend</span><span class="p">([</span><span class="n">cgm</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">cgm_fd</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">cgm_sd</span><span class="p">])</span>
+    <span class="n">prob_cgm_prediction</span> <span class="o">=</span> <span class="n">get_hyper_prob_cgm_prediction</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">predicted_cgm</span><span class="p">))</span>
+
+    <span class="n">prob</span> <span class="o">=</span> <span class="n">get_hyper_prob</span><span class="p">([</span><span class="n">prob_cgm_trend</span><span class="p">,</span> <span class="n">prob_cgm_prediction</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">prob</span></div>
+
+
+
+<span class="c1"># Get Hyperglycemia Probability from CGM Trend</span>
+<div class="viewcode-block" id="get_hyper_prob_cgm_trend">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.get_hyper_prob_cgm_trend.html#pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.get_hyper_prob_cgm_trend">[docs]</a>
+<span class="k">def</span> <span class="nf">get_hyper_prob_cgm_trend</span><span class="p">(</span><span class="n">input_val</span><span class="p">):</span>
+    <span class="c1"># CGM Fuzzy_sets</span>
+    <span class="n">cgm_fuzzy_sets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">100</span><span class="p">,</span> <span class="mi">120</span><span class="p">,</span> <span class="mi">140</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">180</span><span class="p">])</span>
+    <span class="c1"># CGM first derivative Fuzzy_sets</span>
+    <span class="n">cgm_fd_fuzzy_sets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="c1"># CGM second derivative Fuzzy_sets</span>
+    <span class="n">cgm_sd_fuzzy_sets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">])</span>
+    <span class="c1"># output Fuzzy_sets</span>
+    <span class="n">output_fuzzy_sets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.1667</span><span class="p">,</span> <span class="mf">0.3333</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.6667</span><span class="p">,</span> <span class="mf">0.8333</span><span class="p">])</span>
+
+    <span class="n">rule_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">]])</span>
+
+    <span class="c1"># input consist of cgm, first derivative of cgm, and second derivative of cgm</span>
+    <span class="n">cgm</span> <span class="o">=</span> <span class="n">input_val</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">cgm_fd</span> <span class="o">=</span> <span class="n">input_val</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">cgm_sd</span> <span class="o">=</span> <span class="n">input_val</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="n">fuzzified_cgm</span> <span class="o">=</span> <span class="n">fuzzify_input</span><span class="p">(</span><span class="n">cgm</span><span class="p">,</span> <span class="n">cgm_fuzzy_sets</span><span class="p">)</span>
+    <span class="n">fuzzified_cgm_fd</span> <span class="o">=</span> <span class="n">fuzzify_input</span><span class="p">(</span><span class="n">cgm_fd</span><span class="p">,</span> <span class="n">cgm_fd_fuzzy_sets</span><span class="p">)</span>
+    <span class="n">fuzzified_cgm_sd</span> <span class="o">=</span> <span class="n">fuzzify_input</span><span class="p">(</span><span class="n">cgm_sd</span><span class="p">,</span> <span class="n">cgm_sd_fuzzy_sets</span><span class="p">)</span>
+
+    <span class="n">fuzzified_output</span> <span class="o">=</span> <span class="n">fuzzy_inference</span><span class="p">(</span><span class="n">rule_list</span><span class="p">,</span> <span class="n">fuzzified_cgm</span><span class="p">,</span> <span class="n">fuzzified_cgm_fd</span><span class="p">,</span> <span class="n">fuzzified_cgm_sd</span><span class="p">)</span>
+
+    <span class="n">prob</span> <span class="o">=</span> <span class="n">defuzzify_output</span><span class="p">(</span><span class="n">fuzzified_output</span><span class="p">,</span> <span class="n">output_fuzzy_sets</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">prob</span></div>
+
+
+
+<span class="c1"># Get Hyperglycemia Probability from CGM Prediction</span>
+<div class="viewcode-block" id="get_hyper_prob_cgm_prediction">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.get_hyper_prob_cgm_prediction.html#pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.get_hyper_prob_cgm_prediction">[docs]</a>
+<span class="k">def</span> <span class="nf">get_hyper_prob_cgm_prediction</span><span class="p">(</span><span class="n">input_val</span><span class="p">):</span>
+    <span class="c1"># CGM Fuzzy_sets</span>
+    <span class="n">cgm_fuzzy_sets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">140</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">180</span><span class="p">])</span>
+    <span class="c1"># output Fuzzy_sets</span>
+    <span class="n">output_fuzzy_sets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">])</span>
+
+    <span class="n">rule_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                         <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+                         <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]])</span>
+
+    <span class="n">cgm</span> <span class="o">=</span> <span class="n">input_val</span>
+
+    <span class="n">fuzzified_cgm</span> <span class="o">=</span> <span class="n">fuzzify_input</span><span class="p">(</span><span class="n">cgm</span><span class="p">,</span> <span class="n">cgm_fuzzy_sets</span><span class="p">)</span>
+
+    <span class="n">fuzzified_output</span> <span class="o">=</span> <span class="n">fuzzy_inference</span><span class="p">(</span><span class="n">rule_list</span><span class="p">,</span> <span class="n">fuzzified_cgm</span><span class="p">)</span>
+
+    <span class="n">prob</span> <span class="o">=</span> <span class="n">defuzzify_output</span><span class="p">(</span><span class="n">fuzzified_output</span><span class="p">,</span> <span class="n">output_fuzzy_sets</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">prob</span></div>
+
+
+
+<span class="c1"># Get Hyperglycemia Probability</span>
+<div class="viewcode-block" id="get_hyper_prob">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.get_hyper_prob.html#pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.get_hyper_prob">[docs]</a>
+<span class="k">def</span> <span class="nf">get_hyper_prob</span><span class="p">(</span><span class="n">input_val</span><span class="p">):</span>
+    <span class="c1"># CGM trend probability Fuzzy_sets</span>
+    <span class="n">cgm_trend_prob_fuzzy_sets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">])</span>
+    <span class="c1"># CGM prediction probability Fuzzy_sets</span>
+    <span class="n">cgm_prediction_prob_fuzzy_sets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">])</span>
+    <span class="c1"># output Fuzzy_sets</span>
+    <span class="n">output_fuzzy_sets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.1667</span><span class="p">,</span> <span class="mf">0.3333</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.6667</span><span class="p">,</span> <span class="mf">0.8333</span><span class="p">])</span>
+
+    <span class="n">ruleList</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                         <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+                         <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+                         <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+                         <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+                         <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
+                         <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+                         <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
+                         <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">]])</span>
+
+    <span class="c1"># input consists of cgm trend probability and cgm prediction probability</span>
+    <span class="n">cgm_trend_prob</span> <span class="o">=</span> <span class="n">input_val</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">cgm_prediction_prob</span> <span class="o">=</span> <span class="n">input_val</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">fuzzified_cgm_trend_prob</span> <span class="o">=</span> <span class="n">fuzzify_input</span><span class="p">(</span><span class="n">cgm_trend_prob</span><span class="p">,</span> <span class="n">cgm_trend_prob_fuzzy_sets</span><span class="p">)</span>
+    <span class="n">fuzzified_cgm_prediction_prob</span> <span class="o">=</span> <span class="n">fuzzify_input</span><span class="p">(</span><span class="n">cgm_prediction_prob</span><span class="p">,</span> <span class="n">cgm_prediction_prob_fuzzy_sets</span><span class="p">)</span>
+
+    <span class="n">fuzzified_output</span> <span class="o">=</span> <span class="n">fuzzy_inference</span><span class="p">(</span><span class="n">ruleList</span><span class="p">,</span> <span class="n">fuzzified_cgm_trend_prob</span><span class="p">,</span> <span class="n">fuzzified_cgm_prediction_prob</span><span class="p">)</span>
+
+    <span class="n">prob</span> <span class="o">=</span> <span class="n">defuzzify_output</span><span class="p">(</span><span class="n">fuzzified_output</span><span class="p">,</span> <span class="n">output_fuzzy_sets</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">prob</span></div>
+
+
+
+<span class="c1"># ====================================================================================================================</span>
+
+
+<span class="c1"># Get hypoglycemia probability</span>
+<div class="viewcode-block" id="get_hypoglycemia_probability">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.get_hypoglycemia_probability.html#pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.get_hypoglycemia_probability">[docs]</a>
+<span class="k">def</span> <span class="nf">get_hypoglycemia_probability</span><span class="p">(</span><span class="n">cgm</span><span class="p">,</span> <span class="n">predicted_cgm</span><span class="p">):</span>
+    <span class="c1"># Optional: Make the CGM signal more smooth</span>
+    <span class="n">cgm_con</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">cgm</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;valid&#39;</span><span class="p">)</span>
+    <span class="n">cgm_con</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">cgm_con</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">cgm</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">cgm</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">cgm_con</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cgm_con</span><span class="p">,</span> <span class="p">(</span><span class="n">cgm</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">cgm</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">cgm</span> <span class="o">=</span> <span class="n">cgm_con</span>
+
+    <span class="n">delt</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="c1"># Calculating the first derivative of CGM at the last 2 sample times</span>
+    <span class="n">cgm_fd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="n">cgm</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">cgm</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="o">+</span><span class="n">cgm</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">])</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">delt</span><span class="p">),</span> <span class="p">(</span><span class="n">cgm</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span><span class="o">-</span><span class="mi">4</span><span class="o">*</span><span class="n">cgm</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="o">+</span><span class="mi">3</span><span class="o">*</span><span class="n">cgm</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">delt</span><span class="p">)])</span>
+    <span class="c1"># Calculating the CGM second derivative at the last sample time</span>
+    <span class="n">cgm_sd</span> <span class="o">=</span> <span class="p">(</span><span class="n">cgm_fd</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">cgm_fd</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="n">delt</span>
+
+    <span class="n">prob_cgm_trend</span> <span class="o">=</span> <span class="n">get_hypo_prob_cgm_trend</span><span class="p">([</span><span class="n">cgm</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">cgm_fd</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">cgm_sd</span><span class="p">])</span>
+    <span class="n">prob_cgm_prediction</span> <span class="o">=</span> <span class="n">get_hypo_prob_cgm_prediction</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">predicted_cgm</span><span class="p">))</span>
+
+    <span class="n">prob</span> <span class="o">=</span> <span class="n">get_hypo_prob</span><span class="p">([</span><span class="n">prob_cgm_trend</span><span class="p">,</span> <span class="n">prob_cgm_prediction</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">prob</span></div>
+
+
+
+<span class="c1"># Get Hypoglycemia Probability from CGM Trend</span>
+<div class="viewcode-block" id="get_hypo_prob_cgm_trend">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.get_hypo_prob_cgm_trend.html#pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.get_hypo_prob_cgm_trend">[docs]</a>
+<span class="k">def</span> <span class="nf">get_hypo_prob_cgm_trend</span><span class="p">(</span><span class="n">input_vals</span><span class="p">):</span>
+    <span class="c1"># CGM Fuzzy_sets</span>
+    <span class="n">cgm_fuzzy_sets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">70</span><span class="p">,</span> <span class="mi">90</span><span class="p">,</span> <span class="mi">110</span><span class="p">,</span> <span class="mi">130</span><span class="p">,</span> <span class="mi">160</span><span class="p">])</span>
+    <span class="c1"># CGM first derivative Fuzzy_sets</span>
+    <span class="n">cgm_fd_fuzzy_sets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="c1"># CGM second derivative Fuzzy_sets</span>
+    <span class="n">cgm_sd_fuzzy_sets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">])</span>
+    <span class="c1"># Output Fuzzy_sets</span>
+    <span class="n">output_fuzzy_sets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.1667</span><span class="p">,</span> <span class="mf">0.3333</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.6667</span><span class="p">,</span> <span class="mf">0.8333</span><span class="p">])</span>
+
+    <span class="n">rule_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+
+    <span class="c1"># input consists of cgm, first derivative of cgm, and second derivative of cgm</span>
+    <span class="n">cgm</span><span class="p">,</span> <span class="n">cgm_fd</span><span class="p">,</span> <span class="n">cgm_sd</span> <span class="o">=</span> <span class="n">input_vals</span>
+
+    <span class="n">fuzzified_cgm</span> <span class="o">=</span> <span class="n">fuzzify_input</span><span class="p">(</span><span class="n">cgm</span><span class="p">,</span> <span class="n">cgm_fuzzy_sets</span><span class="p">)</span>
+    <span class="n">fuzzified_cgm_fd</span> <span class="o">=</span> <span class="n">fuzzify_input</span><span class="p">(</span><span class="n">cgm_fd</span><span class="p">,</span> <span class="n">cgm_fd_fuzzy_sets</span><span class="p">)</span>
+    <span class="n">fuzzified_cgm_sd</span> <span class="o">=</span> <span class="n">fuzzify_input</span><span class="p">(</span><span class="n">cgm_sd</span><span class="p">,</span> <span class="n">cgm_sd_fuzzy_sets</span><span class="p">)</span>
+
+    <span class="n">fuzzified_output</span> <span class="o">=</span> <span class="n">fuzzy_inference</span><span class="p">(</span><span class="n">rule_list</span><span class="p">,</span> <span class="n">fuzzified_cgm</span><span class="p">,</span> <span class="n">fuzzified_cgm_fd</span><span class="p">,</span> <span class="n">fuzzified_cgm_sd</span><span class="p">)</span>
+
+    <span class="n">prob</span> <span class="o">=</span> <span class="n">defuzzify_output</span><span class="p">(</span><span class="n">fuzzified_output</span><span class="p">,</span> <span class="n">output_fuzzy_sets</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">prob</span></div>
+
+
+
+<span class="c1"># Get Hypoglycemia Probability from CGM Prediction</span>
+<div class="viewcode-block" id="get_hypo_prob_cgm_prediction">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.get_hypo_prob_cgm_prediction.html#pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.get_hypo_prob_cgm_prediction">[docs]</a>
+<span class="k">def</span> <span class="nf">get_hypo_prob_cgm_prediction</span><span class="p">(</span><span class="n">input_val</span><span class="p">):</span>
+    <span class="c1"># CGM Fuzzy_sets</span>
+    <span class="n">cgm_fuzzy_sets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">70</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">130</span><span class="p">])</span>
+    <span class="c1"># Output Fuzzy_sets</span>
+    <span class="n">output_fuzzy_sets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">])</span>
+
+    <span class="n">rule_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+
+    <span class="n">cgm</span> <span class="o">=</span> <span class="n">input_val</span>
+
+    <span class="n">fuzzified_cgm</span> <span class="o">=</span> <span class="n">fuzzify_input</span><span class="p">(</span><span class="n">cgm</span><span class="p">,</span> <span class="n">cgm_fuzzy_sets</span><span class="p">)</span>
+
+    <span class="n">fuzzified_output</span> <span class="o">=</span> <span class="n">fuzzy_inference</span><span class="p">(</span><span class="n">rule_list</span><span class="p">,</span> <span class="n">fuzzified_cgm</span><span class="p">)</span>
+
+    <span class="n">prob</span> <span class="o">=</span> <span class="n">defuzzify_output</span><span class="p">(</span><span class="n">fuzzified_output</span><span class="p">,</span> <span class="n">output_fuzzy_sets</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">prob</span></div>
+
+
+
+<span class="c1"># Get Hypoglycemia Probability</span>
+<div class="viewcode-block" id="get_hypo_prob">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.get_hypo_prob.html#pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.get_hypo_prob">[docs]</a>
+<span class="k">def</span> <span class="nf">get_hypo_prob</span><span class="p">(</span><span class="n">input_val</span><span class="p">):</span>
+    <span class="c1"># CGM trend probability Fuzzy_sets</span>
+    <span class="n">cgm_trend_prob_fuzzy_sets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">])</span>
+    <span class="c1"># CGM prediction probability Fuzzy_sets</span>
+    <span class="n">cgm_prediction_prob_fuzzy_sets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">])</span>
+    <span class="c1"># Output Fuzzy_sets</span>
+    <span class="n">output_fuzzy_sets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.1667</span><span class="p">,</span> <span class="mf">0.3333</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.6667</span><span class="p">,</span> <span class="mf">0.8333</span><span class="p">])</span>
+
+    <span class="n">rule_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">]])</span>
+
+    <span class="c1"># Input consists of CGM trend probability and CGM prediction probability</span>
+    <span class="n">cgm_trend_prob</span> <span class="o">=</span> <span class="n">input_val</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">cgm_prediction_prob</span> <span class="o">=</span> <span class="n">input_val</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">fuzzified_cgm_trend_prob</span> <span class="o">=</span> <span class="n">fuzzify_input</span><span class="p">(</span><span class="n">cgm_trend_prob</span><span class="p">,</span> <span class="n">cgm_trend_prob_fuzzy_sets</span><span class="p">)</span>
+    <span class="n">fuzzified_cgm_prediction_prob</span> <span class="o">=</span> <span class="n">fuzzify_input</span><span class="p">(</span><span class="n">cgm_prediction_prob</span><span class="p">,</span> <span class="n">cgm_prediction_prob_fuzzy_sets</span><span class="p">)</span>
+
+    <span class="n">fuzzified_output</span> <span class="o">=</span> <span class="n">fuzzy_inference</span><span class="p">(</span><span class="n">rule_list</span><span class="p">,</span> <span class="n">fuzzified_cgm_trend_prob</span><span class="p">,</span> <span class="n">fuzzified_cgm_prediction_prob</span><span class="p">)</span>
+
+    <span class="n">prob</span> <span class="o">=</span> <span class="n">defuzzify_output</span><span class="p">(</span><span class="n">fuzzified_output</span><span class="p">,</span> <span class="n">output_fuzzy_sets</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">prob</span></div>
+
+
+
+<span class="c1"># ====================================================================================================================</span>
+
+
+<span class="c1"># Fuzzify input</span>
+<div class="viewcode-block" id="fuzzify_input">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.fuzzify_input.html#pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.fuzzify_input">[docs]</a>
+<span class="k">def</span> <span class="nf">fuzzify_input</span><span class="p">(</span><span class="n">input_val</span><span class="p">,</span> <span class="n">fuzzy_sets</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    number of fuzzy membership functions is equal to the number of Fuzzy_sets entries. For example when Fuzzy_sets contain 3 elements, this means there</span>
+<span class="sd">    are 3 fuzzy membership functions consisting of 2 trapezoid and 1 triangle. On the other hand when number of elements in Fuzzy_sets is 5, it means there are</span>
+<span class="sd">    5 memebership functions consisting of 2 trapezoid and 3 triangles each entery of Fuzzy_sets is the point at which the fuzzy membership function is max</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">num_fuzzy_sets</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fuzzy_sets</span><span class="p">)</span>
+    <span class="n">fuzzified_input</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_fuzzy_sets</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">fuzzy_sets</span> <span class="o">&gt;</span> <span class="n">input_val</span><span class="p">):</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">fuzzy_sets</span> <span class="o">&gt;</span> <span class="n">input_val</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+
+    <span class="k">if</span> <span class="n">index</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">fuzzified_input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">elif</span> <span class="n">index</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">fuzzified_input</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fuzzified_input</span><span class="p">[</span><span class="n">index</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">input_val</span> <span class="o">-</span> <span class="n">fuzzy_sets</span><span class="p">[</span><span class="n">index</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="n">fuzzy_sets</span><span class="p">[</span><span class="n">index</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">fuzzy_sets</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
+        <span class="n">fuzzified_input</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">input_val</span> <span class="o">-</span> <span class="n">fuzzy_sets</span><span class="p">[</span><span class="n">index</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="n">fuzzy_sets</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">-</span> <span class="n">fuzzy_sets</span><span class="p">[</span><span class="n">index</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">fuzzified_input</span></div>
+
+
+
+<span class="c1"># Infer the fuzzified inputs by the rule_list to make fuzzified output</span>
+<div class="viewcode-block" id="fuzzy_inference">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.fuzzy_inference.html#pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.fuzzy_inference">[docs]</a>
+<span class="k">def</span> <span class="nf">fuzzy_inference</span><span class="p">(</span><span class="n">rule_list</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="n">num_output_Fuzzy_sets</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">rule_list</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="n">fuzzified_output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_output_Fuzzy_sets</span><span class="p">)</span>
+
+    <span class="n">num_inputs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="n">num_rules</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">rule_list</span><span class="p">)</span>
+    <span class="n">rule_list_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_rules</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_rules</span><span class="p">):</span>
+        <span class="n">input_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_inputs</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_inputs</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">rule_list</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">input_val</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">rule_list</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">input_val</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="n">rule_list_value</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">input_val</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_output_Fuzzy_sets</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">rule_list</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">i</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">index</span><span class="p">):</span>
+            <span class="n">fuzzified_output</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">rule_list_value</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">fuzzified_output</span></div>
+
+
+
+<span class="c1"># Defuzzify output</span>
+<div class="viewcode-block" id="defuzzify_output">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.defuzzify_output.html#pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.defuzzify_output">[docs]</a>
+<span class="k">def</span> <span class="nf">defuzzify_output</span><span class="p">(</span><span class="n">fuzzified_Output</span><span class="p">,</span> <span class="n">Fuzzy_sets</span><span class="p">):</span>
+    <span class="n">num_output_Fuzzy_sets</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fuzzified_Output</span><span class="p">)</span>
+
+    <span class="n">Area</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_output_Fuzzy_sets</span><span class="p">)</span>
+    <span class="n">Center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_output_Fuzzy_sets</span><span class="p">)</span>
+
+    <span class="n">Area</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_trapezoid_fmf_area</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">Fuzzy_sets</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Fuzzy_sets</span><span class="p">[</span><span class="mi">1</span><span class="p">]]),</span> <span class="n">fuzzified_Output</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;left&quot;</span><span class="p">)</span>
+    <span class="n">Center</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_trapezoid_fmf_center</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">Fuzzy_sets</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Fuzzy_sets</span><span class="p">[</span><span class="mi">1</span><span class="p">]]),</span> <span class="s2">&quot;left&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_output_Fuzzy_sets</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">Area</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_triangle_fmf_area</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">Fuzzy_sets</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">Fuzzy_sets</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">Fuzzy_sets</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]]),</span> <span class="n">fuzzified_Output</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">Center</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_triangle_fmf_center</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">Fuzzy_sets</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">Fuzzy_sets</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">Fuzzy_sets</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]]))</span>
+
+    <span class="n">Area</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_trapezoid_fmf_area</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">Fuzzy_sets</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="n">Fuzzy_sets</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">]),</span> <span class="n">fuzzified_Output</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;right&quot;</span><span class="p">)</span>
+    <span class="n">Center</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_trapezoid_fmf_center</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">Fuzzy_sets</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="n">Fuzzy_sets</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">]),</span> <span class="s2">&quot;right&quot;</span><span class="p">)</span>
+
+    <span class="n">defuzzified_output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">Area</span> <span class="o">*</span> <span class="n">Center</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">Area</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">defuzzified_output</span></div>
+
+
+
+<span class="c1"># Get triangular fuzzy membership function area</span>
+<div class="viewcode-block" id="get_triangle_fmf_area">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.get_triangle_fmf_area.html#pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.get_triangle_fmf_area">[docs]</a>
+<span class="k">def</span> <span class="nf">get_triangle_fmf_area</span><span class="p">(</span><span class="n">Fuzzy_set</span><span class="p">,</span> <span class="n">membership_val</span><span class="p">):</span>
+    <span class="n">triangle_base</span> <span class="o">=</span> <span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">triangle_area</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="o">*</span> <span class="n">triangle_base</span>  <span class="c1"># height is 1</span>
+
+    <span class="n">top_triangle_height</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">membership_val</span>
+    <span class="n">top_triangle_base</span> <span class="o">=</span> <span class="n">triangle_base</span> <span class="o">*</span> <span class="n">top_triangle_height</span>
+    <span class="n">top_triangle_area</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="o">*</span> <span class="n">top_triangle_base</span> <span class="o">*</span> <span class="n">top_triangle_height</span>
+
+    <span class="n">area</span> <span class="o">=</span> <span class="n">triangle_area</span> <span class="o">-</span> <span class="n">top_triangle_area</span>
+
+    <span class="k">return</span> <span class="n">area</span></div>
+
+
+
+<span class="c1"># Get trapezoid fuzzy membership function area</span>
+<div class="viewcode-block" id="get_trapezoid_fmf_area">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.get_trapezoid_fmf_area.html#pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.get_trapezoid_fmf_area">[docs]</a>
+<span class="k">def</span> <span class="nf">get_trapezoid_fmf_area</span><span class="p">(</span><span class="n">Fuzzy_set</span><span class="p">,</span> <span class="n">membership_val</span><span class="p">,</span> <span class="n">LR</span><span class="p">):</span>
+    <span class="c1"># LR determines the trapezoid is a left trapezoid or right trapezoid</span>
+    <span class="n">trapezoid_base1</span> <span class="o">=</span> <span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">LR</span> <span class="o">==</span> <span class="s2">&quot;left&quot;</span><span class="p">:</span>
+        <span class="n">trapezoid_base2</span> <span class="o">=</span> <span class="p">(</span><span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">membership_val</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># LR=&quot;right&quot;</span>
+        <span class="n">trapezoid_base2</span> <span class="o">=</span> <span class="p">(</span><span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">membership_val</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="n">area</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">trapezoid_base1</span> <span class="o">+</span> <span class="n">trapezoid_base2</span><span class="p">)</span> <span class="o">*</span> <span class="n">membership_val</span>
+
+    <span class="k">return</span> <span class="n">area</span></div>
+
+
+
+<span class="c1"># Get triangle fuzzy membership function centroid</span>
+<div class="viewcode-block" id="get_triangle_fmf_center">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.get_triangle_fmf_center.html#pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.get_triangle_fmf_center">[docs]</a>
+<span class="k">def</span> <span class="nf">get_triangle_fmf_center</span><span class="p">(</span><span class="n">Fuzzy_set</span><span class="p">):</span>
+    <span class="n">centroid</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="o">*</span> <span class="p">(</span><span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">centroid</span></div>
+
+
+
+<span class="c1"># Get trapezoid fuzzy membership function centroid</span>
+<div class="viewcode-block" id="get_trapezoid_fmf_center">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.get_trapezoid_fmf_center.html#pymgipsim.Controllers.mvAP.Hypoglycemia_Hyperglycemia.get_trapezoid_fmf_center">[docs]</a>
+<span class="k">def</span> <span class="nf">get_trapezoid_fmf_center</span><span class="p">(</span><span class="n">Fuzzy_set</span><span class="p">,</span> <span class="n">LR</span><span class="p">):</span>
+    <span class="c1"># LR determines the trapezoid is a left trapezoid or right trapezoid</span>
+
+    <span class="k">if</span> <span class="n">LR</span> <span class="o">==</span> <span class="s2">&quot;left&quot;</span><span class="p">:</span>
+        <span class="n">rectangle_area</span> <span class="o">=</span> <span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">rectangle_center</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">triangle_area</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">triangle_center</span> <span class="o">=</span> <span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="o">*</span> <span class="p">(</span><span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># LR=&quot;right&quot;</span>
+        <span class="n">rectangle_area</span> <span class="o">=</span> <span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">rectangle_center</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">triangle_area</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">triangle_center</span> <span class="o">=</span> <span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="o">*</span> <span class="p">(</span><span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">Fuzzy_set</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="n">centroid</span> <span class="o">=</span> <span class="p">(</span><span class="n">rectangle_area</span> <span class="o">*</span> <span class="n">rectangle_center</span> <span class="o">+</span> <span class="n">triangle_area</span> <span class="o">*</span> <span class="n">triangle_center</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">rectangle_area</span> <span class="o">+</span> <span class="n">triangle_area</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">centroid</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andy, Mate.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a customized 
+    theme
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

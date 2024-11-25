@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e21422de" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html">
+            <img src = "/Flag_of_Chicago,_Illinois2.svg" alt="**" style="padding: 0px 0px 0px 0px; margin: 0; max-height: 20px; width:auto; height:auto; display: inline-block; object-fit: contain; border-radius: 0;" />
+            mGIPsim
+            
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">🦮 Guide dog</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../userinterface.html">User interface</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🐱‍💻 Hacker cat</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../detailed.html">For the curious ones</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pymgipsim.html">For developers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">------------------</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../aboutus.html">🌬️🌁 About us</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">mGIPsim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pymgipsim.Controllers.mvAP.DataContainer</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article" >
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pymgipsim.Controllers.mvAP.DataContainer</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">deque</span>
+
+
+<div class="viewcode-block" id="Hovorka_Parameters">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.DataContainer.Hovorka_Parameters.html#pymgipsim.Controllers.mvAP.DataContainer.Hovorka_Parameters">[docs]</a>
+<span class="k">class</span> <span class="nc">Hovorka_Parameters</span><span class="p">:</span>
+    <span class="n">ka1</span> <span class="o">=</span> <span class="mf">0.006</span>
+    <span class="n">ka2</span> <span class="o">=</span> <span class="mf">0.06</span>
+    <span class="n">ka3</span> <span class="o">=</span> <span class="mf">0.03</span>
+    <span class="n">vI</span> <span class="o">=</span> <span class="mf">0.12</span>
+    <span class="n">vG</span> <span class="o">=</span> <span class="mf">0.16</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">TmaxI</span><span class="o">=</span><span class="mi">55</span><span class="p">,</span> <span class="n">SIT</span><span class="o">=</span><span class="mf">51.2e-4</span><span class="p">,</span> <span class="n">SID</span><span class="o">=</span><span class="mf">8.2e-4</span><span class="p">,</span> <span class="n">SIE</span><span class="o">=</span><span class="mf">520e-4</span><span class="p">,</span> <span class="n">Ke</span><span class="o">=</span><span class="mf">0.138</span><span class="p">,</span> <span class="n">K12</span><span class="o">=</span><span class="mf">0.066</span><span class="p">,</span> <span class="n">Ag</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">TmaxG</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">gain</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">TmaxE</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">EGP0</span><span class="o">=</span><span class="mf">0.0161</span><span class="p">,</span> <span class="n">F01</span><span class="o">=</span><span class="mf">0.0097</span><span class="p">,</span> <span class="n">BW</span><span class="o">=</span><span class="mi">80</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">TmaxI</span> <span class="o">=</span> <span class="n">TmaxI</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SIT</span> <span class="o">=</span> <span class="n">SIT</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SID</span> <span class="o">=</span> <span class="n">SID</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SIE</span> <span class="o">=</span> <span class="n">SIE</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ke</span> <span class="o">=</span> <span class="n">Ke</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">K12</span> <span class="o">=</span> <span class="n">K12</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ag</span> <span class="o">=</span> <span class="n">Ag</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">TmaxG</span> <span class="o">=</span> <span class="n">TmaxG</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gain</span> <span class="o">=</span> <span class="n">gain</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">TmaxE</span> <span class="o">=</span> <span class="n">TmaxE</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">EGP0</span> <span class="o">=</span> <span class="n">EGP0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">F01</span> <span class="o">=</span> <span class="n">F01</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">BW</span> <span class="o">=</span> <span class="n">BW</span>
+
+    <span class="k">def</span> <span class="nf">get_VI</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Hovorka_Parameters</span><span class="o">.</span><span class="n">vI</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">BW</span>
+
+    <span class="k">def</span> <span class="nf">get_VG</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Hovorka_Parameters</span><span class="o">.</span><span class="n">vG</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">BW</span>
+
+    <span class="k">def</span> <span class="nf">get_kb1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Hovorka_Parameters</span><span class="o">.</span><span class="n">ka1</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">SIT</span>
+
+    <span class="k">def</span> <span class="nf">get_kb2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Hovorka_Parameters</span><span class="o">.</span><span class="n">ka2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">SID</span>
+
+    <span class="k">def</span> <span class="nf">get_kb3</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Hovorka_Parameters</span><span class="o">.</span><span class="n">ka3</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">SIE</span>
+
+    <span class="k">def</span> <span class="nf">get_parameters_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">TmaxI</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">SIT</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">SID</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">SIE</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ke</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">K12</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">TmaxG</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">TmaxE</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">EGP0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">BW</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">update_by_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters_vector</span><span class="p">):</span>
+        <span class="c1"># parameters_vector contains [TmaxI, SIT, SID, SIE, Ke, K12, TmaxG, gain, TmaxE, EGP0, BW]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">TmaxI</span> <span class="o">=</span> <span class="n">parameters_vector</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SIT</span> <span class="o">=</span> <span class="n">parameters_vector</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SID</span> <span class="o">=</span> <span class="n">parameters_vector</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SIE</span> <span class="o">=</span> <span class="n">parameters_vector</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ke</span> <span class="o">=</span> <span class="n">parameters_vector</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">K12</span> <span class="o">=</span> <span class="n">parameters_vector</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">TmaxG</span> <span class="o">=</span> <span class="n">parameters_vector</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gain</span> <span class="o">=</span> <span class="n">parameters_vector</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">TmaxE</span> <span class="o">=</span> <span class="n">parameters_vector</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">EGP0</span> <span class="o">=</span> <span class="n">parameters_vector</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">BW</span> <span class="o">=</span> <span class="n">parameters_vector</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="Data_PW">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.DataContainer.Data_PW.html#pymgipsim.Controllers.mvAP.DataContainer.Data_PW">[docs]</a>
+<span class="k">class</span> <span class="nc">Data_PW</span><span class="p">:</span>
+    <span class="c1"># basal_pw unit is U/hr</span>
+    <span class="c1"># bolus_pw unit is U or U/(sample time)</span>
+    <span class="c1"># fast_carb_pw unit is gr or gr/(sample time)</span>
+    <span class="c1"># energy_expenditure_pw unit is MET value</span>
+    <span class="c1"># hypo_prob_pw and hyper_prob_pw are probability between 0 and 1</span>
+    <span class="c1"># cgm_pw unit is mg/dl</span>
+    <span class="c1"># gut_absorption_rate_pw unit is mmol/min</span>
+    <span class="c1"># T is the sample time, e.g. when T=5 it means the data are stored every 5 min</span>
+    <span class="n">pw</span> <span class="o">=</span> <span class="mi">36</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">basal_pw</span><span class="o">=</span><span class="n">deque</span><span class="p">([],</span> <span class="n">maxlen</span><span class="o">=</span><span class="n">pw</span><span class="p">),</span> <span class="n">bolus_pw</span><span class="o">=</span><span class="n">deque</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">pw</span><span class="p">,</span> <span class="n">maxlen</span><span class="o">=</span><span class="n">pw</span><span class="p">),</span>
+                 <span class="n">fast_carb_pw</span><span class="o">=</span><span class="n">deque</span><span class="p">([],</span> <span class="n">maxlen</span><span class="o">=</span><span class="n">pw</span><span class="p">),</span> <span class="n">energy_expenditure_pw</span><span class="o">=</span><span class="n">deque</span><span class="p">([</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">pw</span><span class="p">,</span> <span class="n">maxlen</span><span class="o">=</span><span class="n">pw</span><span class="p">),</span>
+                 <span class="n">hypo_prob_pw</span><span class="o">=</span><span class="n">deque</span><span class="p">([],</span> <span class="n">maxlen</span><span class="o">=</span><span class="n">pw</span><span class="p">),</span> <span class="n">hyper_prob_pw</span><span class="o">=</span><span class="n">deque</span><span class="p">([],</span> <span class="n">maxlen</span><span class="o">=</span><span class="n">pw</span><span class="p">),</span>
+                 <span class="n">cgm_pw</span><span class="o">=</span><span class="n">deque</span><span class="p">([],</span> <span class="n">maxlen</span><span class="o">=</span><span class="n">pw</span><span class="p">),</span> <span class="n">gut_absorption_rate_pw</span><span class="o">=</span><span class="n">deque</span><span class="p">([],</span> <span class="n">maxlen</span><span class="o">=</span><span class="n">pw</span><span class="p">),</span> <span class="n">T</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">basal_pw</span> <span class="o">=</span> <span class="n">basal_pw</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bolus_pw</span> <span class="o">=</span> <span class="n">bolus_pw</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fast_carb_pw</span> <span class="o">=</span> <span class="n">fast_carb_pw</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">energy_expenditure_pw</span> <span class="o">=</span> <span class="n">energy_expenditure_pw</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hypo_prob_pw</span> <span class="o">=</span> <span class="n">hypo_prob_pw</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hyper_prob_pw</span> <span class="o">=</span> <span class="n">hyper_prob_pw</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cgm_pw</span> <span class="o">=</span> <span class="n">cgm_pw</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gut_absorption_rate_pw</span> <span class="o">=</span> <span class="n">gut_absorption_rate_pw</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">=</span> <span class="n">T</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">push_num</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">push_cgm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cgm_val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cgm_pw</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cgm_val</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">push_num</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">get_last_cgm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cgm_pw</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">get_dcgm_dt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># dcgm_dt = (3.0 * self.cgm_pw[-1] - 4.0 * self.cgm_pw[-2] + self.cgm_pw[-3]) / (2.0 * self.T)</span>
+        <span class="c1"># for test only</span>
+        <span class="n">dcgm_dt</span> <span class="o">=</span> <span class="p">(</span><span class="mf">3.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">cgm_pw</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mf">4.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">cgm_pw</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cgm_pw</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.0</span>
+        <span class="k">return</span> <span class="n">dcgm_dt</span>
+
+    <span class="k">def</span> <span class="nf">get_d2cgm_dt2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># d2cgm_dt2 = (self.cgm_pw[-1] - 2.0 * self.cgm_pw[-2] + self.cgm_pw[-3]) / (self.T ** 2)</span>
+        <span class="c1"># for test only</span>
+        <span class="n">d2cgm_dt2</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cgm_pw</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">cgm_pw</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cgm_pw</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">d2cgm_dt2</span>
+
+    <span class="k">def</span> <span class="nf">get_cgm_min</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="c1"># this function returns the min cgm of the last k sample time</span>
+        <span class="n">cgm_pw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cgm_pw</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cgm_pw</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">k</span><span class="p">:</span>
+            <span class="n">cgm_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">cgm_pw</span><span class="p">[</span><span class="o">-</span><span class="n">k</span><span class="p">:])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cgm_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">cgm_pw</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">cgm_min</span>
+
+    <span class="k">def</span> <span class="nf">get_cgm_max</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="c1"># this function returns the max cgm of the last k sample time</span>
+        <span class="n">cgm_pw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cgm_pw</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cgm_pw</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">k</span><span class="p">:</span>
+            <span class="n">cgm_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">cgm_pw</span><span class="p">[</span><span class="o">-</span><span class="n">k</span><span class="p">:])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cgm_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">cgm_pw</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">cgm_max</span>
+
+    <span class="c1"># this function returns the cgm_pw as a numpy array</span>
+    <span class="k">def</span> <span class="nf">get_cgm_pw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cgm_pw</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_basal_pw_mU_min</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basal_pw</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">/</span> <span class="mi">60</span>
+
+    <span class="k">def</span> <span class="nf">push_basal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">basal_val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">basal_pw</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">basal_val</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_last_basal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">basal_pw</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">get_last_basal_mU_min</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">basal_pw</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">/</span> <span class="mi">60</span>
+
+    <span class="k">def</span> <span class="nf">push_bolus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bolus_val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bolus_pw</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bolus_val</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_last_bolus</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bolus_pw</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">get_last_bolus_mU_min</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bolus_pw</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="k">def</span> <span class="nf">get_last_insulin_input_mU_min</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_last_basal_mU_min</span><span class="p">()</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_last_bolus_mU_min</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">push_fast_carb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fast_carb_val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fast_carb_pw</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fast_carb_val</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_last_fast_carb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fast_carb_pw</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">push_energy_expenditure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">energy_expenditure_val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">energy_expenditure_pw</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">energy_expenditure_val</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_last_energy_expenditure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_expenditure_pw</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">push_hypo_prob</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hypo_prob_val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hypo_prob_pw</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hypo_prob_val</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_last_hypo_prob</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hypo_prob_pw</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">push_hyper_prob</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hyper_prob_val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hyper_prob_pw</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hyper_prob_val</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_last_hyper_prob</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hyper_prob_pw</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">push_gut_absorption_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gut_absorption_rate_val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gut_absorption_rate_pw</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gut_absorption_rate_val</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_last_gut_absorption_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">gut_absorption_rate_pw</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="Plasma_Insulin_Concentration_Constraint_Params">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.DataContainer.Plasma_Insulin_Concentration_Constraint_Params.html#pymgipsim.Controllers.mvAP.DataContainer.Plasma_Insulin_Concentration_Constraint_Params">[docs]</a>
+<span class="k">class</span> <span class="nc">Plasma_Insulin_Concentration_Constraint_Params</span><span class="p">:</span>
+    <span class="c1"># the default values for soft and hard constraints intercept and slope are taken from Iman Hajizade&#39;s dissertation</span>
+    <span class="c1"># relating CGM(mg/dl) to normalized PIC (PIC/PIC_basal)</span>
+    <span class="c1"># normalized_PIC = PIC_PIC_basal = slope * CGM + intercept</span>
+    <span class="c1"># you have to provide a value for the PIC_basal when creating an instance of this class</span>
+
+    <span class="c1"># the intercept and slope returned by the functions of this class relate the PIC in mu/L to G in mmol/L</span>
+    <span class="c1"># PIC = slope * G + intercept</span>
+
+    <span class="c1"># mode can take &#39;all&#39;, &#39;hard&#39;, &#39;soft&#39; or &#39;none&#39; values. The default value is &#39;soft&#39;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">PIC_basal</span><span class="p">,</span> <span class="n">soft_intercept</span><span class="o">=</span><span class="mf">1.3</span><span class="p">,</span> <span class="n">soft_slope</span><span class="o">=</span><span class="mf">0.006</span><span class="p">,</span> <span class="n">upper_hard_intercept</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">upper_hard_slope</span><span class="o">=</span><span class="mf">0.0065</span><span class="p">,</span> <span class="n">lower_hard_intercept</span><span class="o">=</span><span class="mf">0.45</span><span class="p">,</span> <span class="n">lower_hard_slope</span><span class="o">=</span><span class="mf">0.004166</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;soft&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PIC_basal</span> <span class="o">=</span> <span class="n">PIC_basal</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">soft_intercept</span> <span class="o">=</span> <span class="n">soft_intercept</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">soft_slope</span> <span class="o">=</span> <span class="n">soft_slope</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upper_hard_intercept</span> <span class="o">=</span> <span class="n">upper_hard_intercept</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upper_hard_slope</span> <span class="o">=</span> <span class="n">upper_hard_slope</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lower_hard_intercept</span> <span class="o">=</span> <span class="n">lower_hard_intercept</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lower_hard_slope</span> <span class="o">=</span> <span class="n">lower_hard_slope</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
+
+    <span class="k">def</span> <span class="nf">get_soft_intercept</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">PIC_basal</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">soft_intercept</span>
+
+    <span class="k">def</span> <span class="nf">get_soft_slope</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">18</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">PIC_basal</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">soft_slope</span>
+
+    <span class="k">def</span> <span class="nf">get_upper_hard_intercept</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">PIC_basal</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper_hard_intercept</span>
+
+    <span class="k">def</span> <span class="nf">get_upper_hard_slope</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">18</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">PIC_basal</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper_hard_slope</span>
+
+    <span class="k">def</span> <span class="nf">get_lower_hard_intercept</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">PIC_basal</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower_hard_intercept</span>
+
+    <span class="k">def</span> <span class="nf">get_lower_hard_slope</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">18</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">PIC_basal</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower_hard_slope</span></div>
+
+
+
+<div class="viewcode-block" id="Demographic_Information">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.DataContainer.Demographic_Information.html#pymgipsim.Controllers.mvAP.DataContainer.Demographic_Information">[docs]</a>
+<span class="k">class</span> <span class="nc">Demographic_Information</span><span class="p">:</span>
+    <span class="c1"># the default values for the waist_size and height are in centimeter</span>
+    <span class="c1"># the default value for BW is in kg</span>
+    <span class="c1"># gender can either take 1 or 0 which corresponds to male and female respectively</span>
+    <span class="c1"># insulin2carb_ratio unit is gr/U</span>
+    <span class="c1"># basal_rate unit is U/hr</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gender</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">age</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">waist_size</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span> <span class="n">BW</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span> <span class="n">HbA1c</span><span class="o">=</span><span class="mf">6.5</span><span class="p">,</span> <span class="n">insulin2carb_ratio</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">basal_rate</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">correction_factor</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gender</span> <span class="o">=</span> <span class="n">gender</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">age</span> <span class="o">=</span> <span class="n">age</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">waist_size</span> <span class="o">=</span> <span class="n">waist_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">BW</span> <span class="o">=</span> <span class="n">BW</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="n">height</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">HbA1c</span> <span class="o">=</span> <span class="n">HbA1c</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">insulin2carb_ratio</span> <span class="o">=</span> <span class="n">insulin2carb_ratio</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">basal_rate</span> <span class="o">=</span> <span class="n">basal_rate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">correction_factor</span> <span class="o">=</span> <span class="n">correction_factor</span>
+
+    <span class="k">def</span> <span class="nf">get_BMI</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># BMI = body weight (kg) / height^2 (meter)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">BW</span> <span class="o">/</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="o">/</span><span class="mi">100</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_basal_rate_mU_min</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">basal_rate</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">/</span> <span class="mi">60</span>
+
+    <span class="k">def</span> <span class="nf">get_basal_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">basal_rate</span></div>
+
+
+
+<div class="viewcode-block" id="Hovorka_Model_Extended_States_Matrix">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.DataContainer.Hovorka_Model_Extended_States_Matrix.html#pymgipsim.Controllers.mvAP.DataContainer.Hovorka_Model_Extended_States_Matrix">[docs]</a>
+<span class="k">class</span> <span class="nc">Hovorka_Model_Extended_States_Matrix</span><span class="p">:</span>
+    <span class="n">pw</span> <span class="o">=</span> <span class="mi">36</span>
+    <span class="n">num_states</span> <span class="o">=</span> <span class="mi">13</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_matrix</span><span class="o">=</span><span class="n">deque</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">pw</span><span class="p">,</span> <span class="n">num_states</span><span class="p">)),</span> <span class="n">maxlen</span><span class="o">=</span><span class="n">pw</span><span class="p">)):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state_matrix</span> <span class="o">=</span> <span class="n">state_matrix</span>
+
+    <span class="k">def</span> <span class="nf">get_current_state_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_matrix</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">get_previous_state_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_matrix</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">get_current_state_object</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Hovorka_Model_Extended_States_Object</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state_matrix</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+
+    <span class="k">def</span> <span class="nf">get_previous_state_object</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Hovorka_Model_Extended_States_Object</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state_matrix</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]))</span>
+
+    <span class="k">def</span> <span class="nf">push_current_state_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_vector</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state_matrix</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">state_vector</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="Hovorka_Model_States_Object_0">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.DataContainer.Hovorka_Model_States_Object_0.html#pymgipsim.Controllers.mvAP.DataContainer.Hovorka_Model_States_Object_0">[docs]</a>
+<span class="k">class</span> <span class="nc">Hovorka_Model_States_Object_0</span><span class="p">:</span>
+    <span class="n">num_states</span> <span class="o">=</span> <span class="mi">12</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_vector</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_states</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">state_vector</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">state_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">state_vector</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">S1</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">S2</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PIC</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Q2</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">D1</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">D2</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">R1</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">R2</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x1</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x2</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x3</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">get_state_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">S1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">S2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">PIC</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">D1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">D2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x3</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">update_by_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_vector</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">state_vector</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">state_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">state_vector</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">S1</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">S2</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PIC</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Q2</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">D1</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">D2</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">R1</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">R2</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x1</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x2</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x3</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_PIC_pos</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Hovorka_Model_States_Object_0</span><span class="o">.</span><span class="n">num_states</span> <span class="o">-</span> <span class="mi">3</span><span class="p">)))</span></div>
+
+
+
+<div class="viewcode-block" id="Hovorka_Model_States_Object_1">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.DataContainer.Hovorka_Model_States_Object_1.html#pymgipsim.Controllers.mvAP.DataContainer.Hovorka_Model_States_Object_1">[docs]</a>
+<span class="k">class</span> <span class="nc">Hovorka_Model_States_Object_1</span><span class="p">:</span>
+    <span class="n">num_states</span> <span class="o">=</span> <span class="mi">10</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_vector</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_states</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">state_vector</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">state_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">state_vector</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">S1</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">S2</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PIC</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PIC</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Q2</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">R1</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">R2</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x1</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x2</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x3</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">get_state_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">S1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">S2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">PIC</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x3</span><span class="p">])</span>
+
+
+    <span class="k">def</span> <span class="nf">update_by_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_vector</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">state_vector</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">state_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">state_vector</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">S1</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">S2</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PIC</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Q2</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">R1</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">R2</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x1</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x2</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x3</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_PIC_pos</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Hovorka_Model_States_Object_1</span><span class="o">.</span><span class="n">num_states</span><span class="o">-</span><span class="mi">3</span><span class="p">)))</span></div>
+
+
+
+<div class="viewcode-block" id="Hovorka_Model_Extended_States_Object">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.DataContainer.Hovorka_Model_Extended_States_Object.html#pymgipsim.Controllers.mvAP.DataContainer.Hovorka_Model_Extended_States_Object">[docs]</a>
+<span class="k">class</span> <span class="nc">Hovorka_Model_Extended_States_Object</span><span class="p">:</span>
+    <span class="n">num_states</span> <span class="o">=</span> <span class="mi">13</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_vector</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_states</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">state_vector</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">state_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">state_vector</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">S1</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">S2</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PIC</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Q2</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">R1</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">R2</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x1</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x2</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x3</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">TmaxI</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ke</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ug</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">12</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">get_state_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">S1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">S2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">PIC</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">TmaxI</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ke</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ug</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">get_short_state_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">S1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">S2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">PIC</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x3</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">get_short_state_object</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Hovorka_Model_States_Object_1</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_short_state_vector</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">update_by_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_vector</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">state_vector</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">state_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">state_vector</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">S1</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">S2</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PIC</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Q2</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">R1</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">R2</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x1</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x2</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x3</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">TmaxI</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ke</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ug</span> <span class="o">=</span> <span class="n">state_vector</span><span class="p">[</span><span class="mi">12</span><span class="p">]</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_PIC_pos</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Hovorka_Model_Extended_States_Object</span><span class="o">.</span><span class="n">num_states</span> <span class="o">-</span> <span class="mi">3</span><span class="p">)))</span></div>
+
+
+
+<div class="viewcode-block" id="Linear_State_Space_Model">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.DataContainer.Linear_State_Space_Model.html#pymgipsim.Controllers.mvAP.DataContainer.Linear_State_Space_Model">[docs]</a>
+<span class="k">class</span> <span class="nc">Linear_State_Space_Model</span><span class="p">:</span>
+    <span class="c1"># T is the sample time which by default is set to 5 min</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">C</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">u0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">f0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">A</span> <span class="o">=</span> <span class="n">A</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">B</span> <span class="o">=</span> <span class="n">B</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">C</span> <span class="o">=</span> <span class="n">C</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">D</span> <span class="o">=</span> <span class="n">D</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x0</span> <span class="o">=</span> <span class="n">x0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">u0</span> <span class="o">=</span> <span class="n">u0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f0</span> <span class="o">=</span> <span class="n">f0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">=</span> <span class="n">T</span>
+
+    <span class="k">def</span> <span class="nf">get_state_num</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">get_input_num</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">get_input_num_artificial</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">get_output_num</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">get_A</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">A</span>
+
+    <span class="k">def</span> <span class="nf">get_B</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">B</span>
+
+    <span class="k">def</span> <span class="nf">get_B_artificial</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">B</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">f0</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_C</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">C</span>
+
+    <span class="k">def</span> <span class="nf">get_D</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span></div>
+
+
+
+<div class="viewcode-block" id="Quadratic_Optimization_Problem">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.DataContainer.Quadratic_Optimization_Problem.html#pymgipsim.Controllers.mvAP.DataContainer.Quadratic_Optimization_Problem">[docs]</a>
+<span class="k">class</span> <span class="nc">Quadratic_Optimization_Problem</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">Aeq</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">beq</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lb</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ub</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">=</span> <span class="n">H</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">A</span> <span class="o">=</span> <span class="n">A</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Aeq</span> <span class="o">=</span> <span class="n">Aeq</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beq</span> <span class="o">=</span> <span class="n">beq</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lb</span> <span class="o">=</span> <span class="n">lb</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ub</span> <span class="o">=</span> <span class="n">ub</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x0</span> <span class="o">=</span> <span class="n">x0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="n">options</span></div>
+
+
+
+<div class="viewcode-block" id="MPC_Objective_Function_Params">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.DataContainer.MPC_Objective_Function_Params.html#pymgipsim.Controllers.mvAP.DataContainer.MPC_Objective_Function_Params">[docs]</a>
+<span class="k">class</span> <span class="nc">MPC_Objective_Function_Params</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prediction_horizon</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">Q_x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">Q_e</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">Q_u</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">Q_du</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">Q_PIC</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">PIC_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ysp</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prediction_horizon</span> <span class="o">=</span> <span class="n">prediction_horizon</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Q_x</span> <span class="o">=</span> <span class="n">Q_x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Q_e</span> <span class="o">=</span> <span class="n">Q_e</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Q_u</span> <span class="o">=</span> <span class="n">Q_u</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Q_du</span> <span class="o">=</span> <span class="n">Q_du</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Q_PIC</span> <span class="o">=</span> <span class="n">Q_PIC</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PIC_pos</span> <span class="o">=</span> <span class="n">PIC_pos</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ysp</span> <span class="o">=</span> <span class="n">ysp</span></div>
+
+
+
+<div class="viewcode-block" id="Bounds">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.DataContainer.Bounds.html#pymgipsim.Controllers.mvAP.DataContainer.Bounds">[docs]</a>
+<span class="k">class</span> <span class="nc">Bounds</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u_min</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">u_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_min</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y_min</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">du_min</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">du_max</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">u_min</span> <span class="o">=</span> <span class="n">u_min</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">u_max</span> <span class="o">=</span> <span class="n">u_max</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_min</span> <span class="o">=</span> <span class="n">x_min</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_max</span> <span class="o">=</span> <span class="n">x_max</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_min</span> <span class="o">=</span> <span class="n">y_min</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_max</span> <span class="o">=</span> <span class="n">y_max</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">du_min</span> <span class="o">=</span> <span class="n">du_min</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">du_max</span> <span class="o">=</span> <span class="n">du_max</span></div>
+
+
+
+<div class="viewcode-block" id="Noise_Error_Covariance_Matrix">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Controllers.mvAP.DataContainer.Noise_Error_Covariance_Matrix.html#pymgipsim.Controllers.mvAP.DataContainer.Noise_Error_Covariance_Matrix">[docs]</a>
+<span class="k">class</span> <span class="nc">Noise_Error_Covariance_Matrix</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P_UKF</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">Q_UKF</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">R_UKF</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">P_NRLS</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">P_Ug</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">P_UKF</span> <span class="o">=</span> <span class="n">P_UKF</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Q_UKF</span> <span class="o">=</span> <span class="n">Q_UKF</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">R_UKF</span> <span class="o">=</span> <span class="n">R_UKF</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">P_NRLS</span> <span class="o">=</span> <span class="n">P_NRLS</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">P_Ug</span> <span class="o">=</span> <span class="n">P_Ug</span></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andy, Mate.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a customized 
+    theme
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
