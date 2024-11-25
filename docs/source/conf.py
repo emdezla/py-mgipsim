@@ -12,7 +12,7 @@ import sys
 sys.path.insert(0, os.path.abspath('../..'))
 
 project = 'mGIPsim'
-copyright = '2024, Andy, Mate'
+copyright = '2024, Illinois Tech'
 author = 'Andy, Mate'
 
 # -- General configuration ---------------------------------------------------
