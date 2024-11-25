@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e21422de" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            <img src = "/Flag_of_Chicago,_Illinois2.svg" alt="**" style="padding: 0px 0px 0px 0px; margin: 0; max-height: 20px; width:auto; height:auto; display: inline-block; object-fit: contain; border-radius: 0;" />
+            mGIPsim
+            
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">🦮 Guide dog</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../userinterface.html">User interface</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🐱‍💻 Hacker cat</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../detailed.html">For the curious ones</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../pymgipsim.html">For developers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">------------------</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../aboutus.html">🌬️🌁 About us</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">mGIPsim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pymgipsim.Utilities.units_conversions_constants</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article" >
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pymgipsim.Utilities.units_conversions_constants</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">jit_module</span>
+
+<span class="n">jit_module</span><span class="p">(</span><span class="n">nopython</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Unit Conversions</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TimeUnits">
+<a class="viewcode-back" href="../../../_autosummary/pymgipsim.Utilities.units_conversions_constants.TimeUnits.html#pymgipsim.Utilities.units_conversions_constants.TimeUnits">[docs]</a>
+<span class="k">class</span> <span class="nc">TimeUnits</span><span class="p">:</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">convert_hour_to_min</span><span class="p">(</span><span class="n">hours</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">hours</span> <span class="o">*</span> <span class="mi">60</span>
+
+<div class="viewcode-block" id="TimeUnits.convert_inverse_hour_inverse_minute">
+<a class="viewcode-back" href="../../../_autosummary/pymgipsim.Utilities.units_conversions_constants.TimeUnits.html#pymgipsim.Utilities.units_conversions_constants.TimeUnits.convert_inverse_hour_inverse_minute">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">convert_inverse_hour_inverse_minute</span><span class="p">(</span><span class="n">inverse_hour</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; 1/h to 1/min&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">inverse_hour</span> <span class="o">/</span> <span class="mi">60</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">convert_minutes_to_days</span><span class="p">(</span><span class="n">minutes</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">minutes</span> <span class="o">/</span> <span class="mi">60</span> <span class="o">/</span> <span class="mi">24</span>
+    
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">calculate_time_adjustment_array</span><span class="p">(</span><span class="n">dimension</span><span class="p">):</span>
+
+        <span class="n">time_adjustment_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">dimension</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dimension</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+
+            <span class="n">time_adjustment_array</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">*=</span> <span class="n">UnitConversion</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">convert_hour_to_min</span><span class="p">(</span><span class="mi">24</span><span class="o">*</span><span class="n">i</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">time_adjustment_array</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">convert_days_to_minutes</span><span class="p">(</span><span class="n">days</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">days</span> <span class="o">*</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">60</span></div>
+
+
+<div class="viewcode-block" id="MetricUnits">
+<a class="viewcode-back" href="../../../_autosummary/pymgipsim.Utilities.units_conversions_constants.MetricUnits.html#pymgipsim.Utilities.units_conversions_constants.MetricUnits">[docs]</a>
+<span class="k">class</span> <span class="nc">MetricUnits</span><span class="p">:</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">base_to_milli</span><span class="p">(</span><span class="n">unit</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">unit</span> <span class="o">*</span> <span class="mf">1e3</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">milli_to_base</span><span class="p">(</span><span class="n">unit</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">unit</span><span class="o">/</span><span class="mf">1e3</span></div>
+
+    
+<div class="viewcode-block" id="InsulinUnits">
+<a class="viewcode-back" href="../../../_autosummary/pymgipsim.Utilities.units_conversions_constants.InsulinUnits.html#pymgipsim.Utilities.units_conversions_constants.InsulinUnits">[docs]</a>
+<span class="k">class</span> <span class="nc">InsulinUnits</span><span class="p">:</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">Uhr_to_uUmin</span><span class="p">(</span><span class="n">Uhr</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Uhr</span><span class="o">/</span> <span class="mf">60.0</span> <span class="o">*</span> <span class="mf">1E6</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">uUmin_to_Uhr</span><span class="p">(</span><span class="n">uUmin</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">uUmin</span><span class="o">*</span> <span class="mf">60.0</span> <span class="o">/</span> <span class="mf">1E6</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">Uhr_to_mUmin</span><span class="p">(</span><span class="n">Uhr</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Uhr</span><span class="o">*</span><span class="mi">1000</span><span class="o">/</span><span class="mi">60</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">mUmin_to_Uhr</span><span class="p">(</span><span class="n">mUmin</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">mUmin</span><span class="o">/</span><span class="mi">1000</span><span class="o">*</span><span class="mi">60</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">U_to_mU</span><span class="p">(</span><span class="n">U</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">U</span><span class="o">*</span><span class="mi">1000</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">U_to_uU</span><span class="p">(</span><span class="n">U</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">U</span> <span class="o">*</span> <span class="mf">1e6</span></div>
+
+    
+
+<div class="viewcode-block" id="GlucoseUnits">
+<a class="viewcode-back" href="../../../_autosummary/pymgipsim.Utilities.units_conversions_constants.GlucoseUnits.html#pymgipsim.Utilities.units_conversions_constants.GlucoseUnits">[docs]</a>
+<span class="k">class</span> <span class="nc">GlucoseUnits</span><span class="p">:</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">g_glucose_to_mol</span><span class="p">(</span><span class="n">g_glucose</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">g_glucose</span> <span class="o">/</span> <span class="mf">180.156</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">g_glucose_to_mmol</span><span class="p">(</span><span class="n">g_glucose</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">g_glucose</span> <span class="o">/</span> <span class="mf">180.156</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">mmol_glcuose_to_g</span><span class="p">(</span><span class="n">mmol_glucose</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">mmol_glucose</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">)</span> <span class="o">*</span> <span class="mf">180.156</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">concentration_mmolL_to_mgdL</span><span class="p">(</span><span class="n">mmolL</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">mmolL</span><span class="o">*</span><span class="mi">18</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">concentration_mgdl_to_mmolL</span><span class="p">(</span><span class="n">mgdL</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">mgdL</span><span class="o">/</span><span class="mi">18</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">energy_g_glucose_to_kkcal</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">g</span><span class="o">*</span><span class="mi">4</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">energy_kkcal_to_g_glucose_equiv</span><span class="p">(</span><span class="n">kcal</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">kcal</span><span class="o">/</span><span class="mi">4</span></div>
+
+
+
+<div class="viewcode-block" id="UnitConversion">
+<a class="viewcode-back" href="../../../_autosummary/pymgipsim.Utilities.units_conversions_constants.UnitConversion.html#pymgipsim.Utilities.units_conversions_constants.UnitConversion">[docs]</a>
+<span class="k">class</span> <span class="nc">UnitConversion</span><span class="p">:</span>
+
+    <span class="n">time</span> <span class="o">=</span> <span class="n">TimeUnits</span><span class="p">()</span>
+
+    <span class="n">metric</span> <span class="o">=</span> <span class="n">MetricUnits</span><span class="p">()</span>
+
+    <span class="n">insulin</span> <span class="o">=</span> <span class="n">InsulinUnits</span><span class="p">()</span>
+
+    <span class="n">glucose</span> <span class="o">=</span> <span class="n">GlucoseUnits</span><span class="p">()</span></div>
+
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Units</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">GLUCOSE_KCAL_PER_GRAM</span> <span class="o">=</span> <span class="mi">4</span> <span class="c1"># kcal/g</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Constants</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># Define random seed</span>
+<span class="n">DEFAULT_RANDOM_SEED</span> <span class="o">=</span> <span class="mi">402</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andy, Mate.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a customized 
+    theme
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

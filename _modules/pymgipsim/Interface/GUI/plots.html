@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e21422de" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html">
+            <img src = "/Flag_of_Chicago,_Illinois2.svg" alt="**" style="padding: 0px 0px 0px 0px; margin: 0; max-height: 20px; width:auto; height:auto; display: inline-block; object-fit: contain; border-radius: 0;" />
+            mGIPsim
+            
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">🦮 Guide dog</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../userinterface.html">User interface</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🐱‍💻 Hacker cat</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../detailed.html">For the curious ones</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pymgipsim.html">For developers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">------------------</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../aboutus.html">🌬️🌁 About us</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">mGIPsim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pymgipsim.Interface.GUI.plots</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article" >
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pymgipsim.Interface.GUI.plots</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">streamlit</span> <span class="k">as</span> <span class="nn">st</span>
+<span class="kn">from</span> <span class="nn">bokeh</span> <span class="kn">import</span> <span class="n">plotting</span>
+<span class="kn">from</span> <span class="nn">bokeh</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="kn">from</span> <span class="nn">bokeh.colors</span> <span class="kn">import</span> <span class="n">RGB</span>
+<span class="kn">from</span> <span class="nn">bokeh.models</span> <span class="kn">import</span> <span class="n">Arrow</span><span class="p">,</span> <span class="n">VeeHead</span>
+<span class="kn">from</span> <span class="nn">bokeh.palettes</span> <span class="kn">import</span> <span class="n">Category20</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pymgipsim.Utilities.units_conversions_constants</span> <span class="kn">import</span> <span class="n">UnitConversion</span>
+<span class="kn">from</span> <span class="nn">pymgipsim.Controllers</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">pymgipsim.VirtualPatient.Models</span> <span class="kn">import</span> <span class="n">T1DM</span>
+
+<div class="viewcode-block" id="plot_hovorka">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Interface.GUI.plots.plot_hovorka.html#pymgipsim.Interface.GUI.plots.plot_hovorka">[docs]</a>
+<span class="k">def</span> <span class="nf">plot_hovorka</span><span class="p">():</span>
+    <span class="n">patient_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">file</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.json&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">simulated_scenario</span><span class="o">.</span><span class="n">patient</span><span class="o">.</span><span class="n">files</span><span class="p">]</span>
+    <span class="n">options</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">multiselect</span><span class="p">(</span>
+        <span class="s2">&quot;Select patients&quot;</span><span class="p">,</span>
+        <span class="n">patient_list</span><span class="p">,</span><span class="n">default</span><span class="o">=</span><span class="n">patient_list</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">variables</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">multiselect</span><span class="p">(</span>
+        <span class="s2">&quot;Select variables&quot;</span><span class="p">,</span>
+        <span class="p">(</span><span class="s2">&quot;Blood glucose&quot;</span><span class="p">,</span><span class="s2">&quot;Meals&quot;</span><span class="p">,</span><span class="s2">&quot;Insulin&quot;</span><span class="p">,</span><span class="s2">&quot;Heart rate&quot;</span><span class="p">),</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;Blood glucose&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cho_color</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mf">0.259</span><span class="p">,</span> <span class="mf">0.125</span><span class="p">,</span> <span class="mf">0.329</span><span class="p">])</span><span class="o">*</span><span class="mi">255</span>
+        <span class="n">insulin_color</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.639</span><span class="p">,</span> <span class="mf">0.224</span><span class="p">])</span><span class="o">*</span><span class="mi">255</span>
+        <span class="n">heart_rate_color</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.498</span><span class="p">,</span> <span class="mf">0.545</span><span class="p">,</span> <span class="mf">0.25</span><span class="o">/</span><span class="mi">255</span><span class="p">])</span><span class="o">*</span><span class="mi">255</span>  <span class="c1"># [1, 0.325, 0.392]</span>
+        <span class="n">scenario</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">simulated_scenario</span>
+
+        <span class="n">model</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">model</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;T1DM cohort results.&quot;</span><span class="p">,</span> <span class="n">x_axis_label</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">y_axis_label</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+        <span class="n">time_axis</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">as_unix</span> <span class="o">/</span> <span class="mf">60.0</span>
+        <span class="n">selected_patients</span> <span class="o">=</span> <span class="p">[</span><span class="n">patient_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">option</span><span class="p">)</span> <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="n">options</span><span class="p">]</span>
+        <span class="n">color</span> <span class="o">=</span> <span class="n">Category20</span><span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">as_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
+        <span class="k">for</span> <span class="n">patientidx</span> <span class="ow">in</span> <span class="n">selected_patients</span><span class="p">:</span>
+            <span class="n">glucose</span> <span class="o">=</span> <span class="n">UnitConversion</span><span class="o">.</span><span class="n">glucose</span><span class="o">.</span><span class="n">concentration_mmolL_to_mgdL</span><span class="p">(</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">as_array</span><span class="p">[</span><span class="n">patientidx</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">glucose_state</span><span class="p">,</span> <span class="p">:]</span> <span class="o">/</span> <span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">VG</span><span class="p">[</span>
+                    <span class="n">patientidx</span><span class="p">])</span>
+            <span class="k">if</span> <span class="s2">&quot;Blood glucose&quot;</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+                <span class="n">p</span><span class="o">.</span><span class="n">line</span><span class="p">(</span><span class="n">time_axis</span><span class="p">,</span> <span class="n">glucose</span><span class="p">,</span> <span class="n">legend_label</span><span class="o">=</span><span class="n">patient_list</span><span class="p">[</span><span class="n">patientidx</span><span class="p">],</span> <span class="n">line_width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                       <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">[</span><span class="n">patientidx</span><span class="p">])</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">y_range</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Range1d</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">400</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">magnitude</span><span class="p">,</span> <span class="n">start_time</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">scenario</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">meal_carb</span><span class="o">.</span><span class="n">magnitude</span><span class="p">[</span><span class="n">patientidx</span><span class="p">],</span>
+                                             <span class="n">scenario</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">meal_carb</span><span class="o">.</span><span class="n">start_time</span><span class="p">[</span><span class="n">patientidx</span><span class="p">]):</span>
+                <span class="n">vh</span> <span class="o">=</span> <span class="n">VeeHead</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">fill_color</span><span class="o">=</span><span class="n">RGB</span><span class="p">(</span><span class="o">*</span><span class="n">cho_color</span><span class="p">))</span>
+                <span class="k">if</span> <span class="s2">&quot;Meals&quot;</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+                    <span class="n">p</span><span class="o">.</span><span class="n">add_layout</span><span class="p">(</span><span class="n">Arrow</span><span class="p">(</span><span class="n">end</span><span class="o">=</span><span class="n">vh</span><span class="p">,</span> <span class="n">x_start</span><span class="o">=</span><span class="n">start_time</span> <span class="o">/</span> <span class="mf">60.0</span><span class="p">,</span> <span class="n">y_start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">x_end</span><span class="o">=</span><span class="n">start_time</span> <span class="o">/</span> <span class="mf">60.0</span><span class="p">,</span> <span class="n">y_end</span><span class="o">=</span><span class="n">magnitude</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="s2">&quot;Insulin&quot;</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">scenario</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">OpenLoop</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">Controller</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="n">scenario</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">StochasticOpenLoop</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">Controller</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">magnitude</span><span class="p">,</span> <span class="n">start_time</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">scenario</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">bolus_insulin</span><span class="o">.</span><span class="n">magnitude</span><span class="p">[</span><span class="n">patientidx</span><span class="p">],</span>
+                                                         <span class="n">scenario</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">bolus_insulin</span><span class="o">.</span><span class="n">start_time</span><span class="p">[</span><span class="n">patientidx</span><span class="p">]):</span>
+                            <span class="n">vh</span> <span class="o">=</span> <span class="n">VeeHead</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">fill_color</span><span class="o">=</span><span class="n">RGB</span><span class="p">(</span><span class="o">*</span><span class="n">insulin_color</span><span class="p">))</span>
+                            <span class="n">p</span><span class="o">.</span><span class="n">add_layout</span><span class="p">(</span><span class="n">Arrow</span><span class="p">(</span><span class="n">end</span><span class="o">=</span><span class="n">vh</span><span class="p">,</span> <span class="n">x_start</span><span class="o">=</span><span class="n">start_time</span> <span class="o">/</span> <span class="mf">60.0</span><span class="p">,</span> <span class="n">y_start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">x_end</span><span class="o">=</span><span class="n">start_time</span> <span class="o">/</span> <span class="mf">60.0</span><span class="p">,</span>
+                                               <span class="n">y_end</span><span class="o">=</span><span class="n">magnitude</span><span class="p">,</span> <span class="n">line_color</span><span class="o">=</span><span class="n">RGB</span><span class="p">(</span><span class="o">*</span><span class="n">insulin_color</span><span class="p">)))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">match</span> <span class="n">model</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+                            <span class="k">case</span> <span class="n">T1DM</span><span class="o">.</span><span class="n">ExtHovorka</span><span class="o">.</span><span class="n">Model</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+                                <span class="n">insulin_arr</span> <span class="o">=</span> <span class="n">UnitConversion</span><span class="o">.</span><span class="n">insulin</span><span class="o">.</span><span class="n">mUmin_to_Uhr</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">as_array</span><span class="p">[</span><span class="n">patientidx</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="p">:])</span>
+                                <span class="n">p</span><span class="o">.</span><span class="n">varea</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">time_axis</span><span class="p">,</span>
+                                        <span class="n">y1</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">insulin_arr</span><span class="p">),</span>
+                                        <span class="n">y2</span><span class="o">=</span><span class="n">insulin_arr</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="n">RGB</span><span class="p">(</span><span class="o">*</span><span class="n">insulin_color</span><span class="p">))</span>
+                            <span class="k">case</span> <span class="n">T1DM</span><span class="o">.</span><span class="n">IVP</span><span class="o">.</span><span class="n">Model</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+                                <span class="n">insulin_arr</span> <span class="o">=</span> <span class="n">UnitConversion</span><span class="o">.</span><span class="n">insulin</span><span class="o">.</span><span class="n">uUmin_to_Uhr</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">as_array</span><span class="p">[</span><span class="n">patientidx</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:])</span>
+                                <span class="n">p</span><span class="o">.</span><span class="n">varea</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">time_axis</span><span class="p">,</span>
+                                        <span class="n">y1</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">insulin_arr</span><span class="p">),</span>
+                                        <span class="n">y2</span><span class="o">=</span><span class="n">insulin_arr</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="n">RGB</span><span class="p">(</span><span class="o">*</span><span class="n">insulin_color</span><span class="p">))</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="k">pass</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot;Heart rate&quot;</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+                        <span class="n">hr_times</span> <span class="o">=</span> <span class="n">scenario</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">heart_rate</span><span class="o">.</span><span class="n">start_time</span><span class="p">[</span><span class="n">patientidx</span><span class="p">]</span>
+                        <span class="n">hr_magnitudes</span> <span class="o">=</span> <span class="n">scenario</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">heart_rate</span><span class="o">.</span><span class="n">magnitude</span><span class="p">[</span><span class="n">patientidx</span><span class="p">]</span>
+                        <span class="n">hr_times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">hr_times</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span>
+                        <span class="n">hr_magnitudes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">hr_magnitudes</span><span class="p">)</span>
+                        <span class="n">hr_times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hr_times</span><span class="p">,</span> <span class="n">time_axis</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                        <span class="n">hr_magnitudes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hr_magnitudes</span><span class="p">,</span> <span class="n">hr_magnitudes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                        <span class="n">p</span><span class="o">.</span><span class="n">varea</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">hr_times</span><span class="p">,</span>
+                                <span class="n">y1</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">hr_magnitudes</span><span class="p">),</span>
+                                <span class="n">y2</span><span class="o">=</span><span class="n">hr_magnitudes</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">RGB</span><span class="p">(</span><span class="o">*</span><span class="n">heart_rate_color</span><span class="p">))</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+
+        <span class="n">st</span><span class="o">.</span><span class="n">bokeh_chart</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">use_container_width</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># def plot_jauslin():</span>
+    <span class="c1"># if st.session_state.model is not None and st.session_state.model.name == T2DM.Jauslin.Model.name:</span>
+    <span class="c1">#     model = st.session_state.model</span>
+    <span class="c1">#     p = plotting.figure(title=&quot;T2DM cohort blood glucose results.&quot;, x_axis_label=&#39;x&#39;, y_axis_label=&#39;y&#39;)</span>
+    <span class="c1">#     time_axis = model.time.as_unix / 60.0</span>
+    <span class="c1">#</span>
+    <span class="c1">#     glucose = np.zeros_like(model.states.as_array[:, model.glucose_state, :])</span>
+    <span class="c1">#     volume = model.parameters.Vg</span>
+    <span class="c1">#     for i in range(glucose.shape[0]):</span>
+    <span class="c1">#         glucose[i] = UnitConversion.glucose.concentration_mmolL_to_mgdL(model.states.as_array[i, model.glucose_state, :] / volume[i])</span>
+    <span class="c1">#     glucose_std = glucose.std(axis=0)</span>
+    <span class="c1">#     glucose_mean = glucose.mean(axis=0)</span>
+    <span class="c1">#</span>
+    <span class="c1">#     p.line(time_axis, glucose_mean, legend_label=&quot;Cohort avg. glucose trace.&quot;, line_width=2)</span>
+    <span class="c1">#</span>
+    <span class="c1">#     p.varea(x=time_axis,</span>
+    <span class="c1">#             y1=glucose_mean-glucose_std,</span>
+    <span class="c1">#             y2=glucose_mean+glucose_std, alpha=0.25)</span>
+    <span class="c1">#</span>
+    <span class="c1">#     st.bokeh_chart(p, use_container_width=True)</span>
+
+
+<div class="viewcode-block" id="plot_multiscale">
+<a class="viewcode-back" href="../../../../_autosummary/pymgipsim.Interface.GUI.plots.plot_multiscale.html#pymgipsim.Interface.GUI.plots.plot_multiscale">[docs]</a>
+<span class="k">def</span> <span class="nf">plot_multiscale</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">multiscale_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">multiscale_model</span>
+        <span class="n">bw_state</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">as_array</span>
+        <span class="n">time_axis</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">as_unix</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Body weight change&quot;</span><span class="p">,</span> <span class="n">x_axis_label</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">y_axis_label</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">bw_state</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">std</span> <span class="o">=</span> <span class="n">bw_state</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">p</span><span class="o">.</span><span class="n">line</span><span class="p">(</span><span class="n">time_axis</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">legend_label</span><span class="o">=</span><span class="s2">&quot;Cohort avg. glucose trace.&quot;</span><span class="p">,</span> <span class="n">line_width</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="n">p</span><span class="o">.</span><span class="n">varea</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">time_axis</span><span class="p">,</span>
+                <span class="n">y1</span><span class="o">=</span><span class="n">mean</span><span class="o">-</span><span class="n">std</span><span class="p">,</span>
+                <span class="n">y2</span><span class="o">=</span><span class="n">mean</span><span class="o">+</span><span class="n">std</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
+
+        <span class="n">st</span><span class="o">.</span><span class="n">bokeh_chart</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">use_container_width</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andy, Mate.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a customized 
+    theme
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

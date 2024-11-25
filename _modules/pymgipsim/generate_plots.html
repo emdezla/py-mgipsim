@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e21422de" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html">
+            <img src = "/Flag_of_Chicago,_Illinois2.svg" alt="**" style="padding: 0px 0px 0px 0px; margin: 0; max-height: 20px; width:auto; height:auto; display: inline-block; object-fit: contain; border-radius: 0;" />
+            mGIPsim
+            
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">🦮 Guide dog</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../userinterface.html">User interface</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🐱‍💻 Hacker cat</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../detailed.html">For the curious ones</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pymgipsim.html">For developers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">------------------</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../aboutus.html">🌬️🌁 About us</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mGIPsim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pymgipsim.generate_plots</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article" >
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pymgipsim.generate_plots</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">pymgipsim.Plotting.plotting</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">pymgipsim.Utilities.Scenario</span> <span class="kn">import</span> <span class="n">scenario</span>
+<span class="kn">from</span> <span class="nn">pymgipsim.Utilities.units_conversions_constants</span> <span class="kn">import</span> <span class="n">UnitConversion</span>
+<span class="kn">import</span> <span class="nn">pymgipsim.VirtualPatient.Models</span> <span class="k">as</span> <span class="nn">Models</span>
+
+<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">#######################################################################################################################</span>
+<span class="sd">Model States</span>
+<span class="sd">#######################################################################################################################</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="k">def</span> <span class="nf">_generate_plot_subject</span><span class="p">(</span><span class="n">results_directory</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate and save a detailed input-output plot for a single subject.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    - simulation_folder: str</span>
+<span class="sd">        Path to the simulation folder.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    - fig</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">results_directory</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">model.pkl&quot;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">loaded_model</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">results_directory</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">simulation_settings.json&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>  <span class="c1">#</span>
+        <span class="n">loaded_scenario</span> <span class="o">=</span> <span class="n">scenario</span><span class="p">(</span><span class="o">**</span><span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">))</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="n">patient</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;plot_patient&#39;</span><span class="p">]</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plot_subject_response</span><span class="p">(</span><span class="n">loaded_model</span><span class="p">,</span> <span class="n">loaded_scenario</span><span class="p">,</span> <span class="n">patient</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">results_directory</span><span class="si">}</span><span class="s2">/figures/subject_&quot;</span><span class="o">+</span><span class="n">fig</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_title</span><span class="p">()</span><span class="o">+</span><span class="s2">&quot;.png&quot;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">fig</span>
+
+<span class="k">def</span> <span class="nf">_generate_plot_bgc</span><span class="p">(</span><span class="n">results_directory</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate and save a blood glucose (BGC) plot for the simulation.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    - simulation_folder: str</span>
+<span class="sd">        Path to the simulation folder.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    - None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">results_directory</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">model.pkl&quot;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">loaded_model</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">&#39;figsize&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">figsize</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;figsize&#39;</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">12</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">&#39;color&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">figcolor</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">figcolor</span> <span class="o">=</span> <span class="s1">&#39;C0&#39;</span>
+
+    <span class="n">glucose</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">loaded_model</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">as_array</span><span class="p">[:,</span> <span class="n">loaded_model</span><span class="o">.</span><span class="n">glucose_state</span><span class="p">,</span> <span class="p">:])</span>
+
+
+    <span class="k">match</span> <span class="n">loaded_model</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+        <span class="k">case</span> <span class="n">Models</span><span class="o">.</span><span class="n">T1DM</span><span class="o">.</span><span class="n">ExtHovorka</span><span class="o">.</span><span class="n">Model</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+            <span class="n">volume</span> <span class="o">=</span> <span class="n">loaded_model</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">VG</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">glucose</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">glucose</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">UnitConversion</span><span class="o">.</span><span class="n">glucose</span><span class="o">.</span><span class="n">concentration_mmolL_to_mgdL</span><span class="p">(</span><span class="n">loaded_model</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">as_array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">loaded_model</span><span class="o">.</span><span class="n">glucose_state</span><span class="p">,</span> <span class="p">:]</span> <span class="o">/</span> <span class="n">volume</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                
+        <span class="k">case</span> <span class="n">Models</span><span class="o">.</span><span class="n">T1DM</span><span class="o">.</span><span class="n">IVP</span><span class="o">.</span><span class="n">Model</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+            <span class="n">glucose</span> <span class="o">=</span> <span class="n">loaded_model</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">as_array</span><span class="p">[:,</span> <span class="n">loaded_model</span><span class="o">.</span><span class="n">glucose_state</span><span class="p">,</span> <span class="p">:]</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plot_bgc</span><span class="p">(</span><span class="n">loaded_model</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">as_unix</span><span class="p">,</span> <span class="n">glucose</span><span class="p">,</span> <span class="n">figsize</span><span class="p">,</span> <span class="n">figcolor</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">results_directory</span><span class="si">}</span><span class="s2">/figures/bgc_plot.png&quot;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">fig</span>
+
+<span class="k">def</span> <span class="nf">_generate_plot_all_states</span><span class="p">(</span><span class="n">results_directory</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate and save a plot for all states in the simulation.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    - simulation_folder: str</span>
+<span class="sd">        Path to the simulation folder.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    - None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="s1">&#39;figsize&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">figsize</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;figsize&#39;</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">12</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">&#39;color&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">figcolor</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">figcolor</span> <span class="o">=</span> <span class="s1">&#39;C0&#39;</span>
+
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">results_directory</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">model.pkl&quot;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">loaded_model</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plot_all_states</span><span class="p">(</span><span class="n">loaded_model</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">as_unix</span><span class="p">,</span> <span class="n">loaded_model</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">as_array</span><span class="p">,</span> <span class="n">loaded_model</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">state_units</span><span class="p">,</span> <span class="n">loaded_model</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">state_names</span><span class="p">,</span> <span class="n">figsize</span><span class="p">,</span> <span class="n">figcolor</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">results_directory</span><span class="si">}</span><span class="s2">/figures/all_states.png&quot;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">fig</span>
+
+
+<span class="k">def</span> <span class="nf">_generate_bw</span><span class="p">(</span><span class="n">results_directory</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate and save a plot for body weight in a multiscale simulation</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    - simulation_folder: str</span>
+<span class="sd">        Path to the simulation folder.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    - None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="s1">&#39;figsize&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">figsize</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;figsize&#39;</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">12</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">&#39;color&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">figcolor</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">figcolor</span> <span class="o">=</span> <span class="s1">&#39;C0&#39;</span>
+
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">results_directory</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">multiscale_model.pkl&quot;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">loaded_model</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plot_bw</span><span class="p">(</span><span class="n">loaded_model</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">as_unix</span><span class="p">,</span> <span class="n">loaded_model</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">as_array</span><span class="p">,</span> <span class="n">loaded_model</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">state_units</span><span class="p">,</span> <span class="n">loaded_model</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">state_names</span><span class="p">,</span> <span class="n">figsize</span><span class="p">,</span> <span class="n">figcolor</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">results_directory</span><span class="si">}</span><span class="s2">/figures/bodyweight.png&quot;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">fig</span>
+
+<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">#######################################################################################################################</span>
+<span class="sd">Multiscale-Specific</span>
+<span class="sd">#######################################################################################################################</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">_generate_bw</span><span class="p">(</span><span class="n">results_directory</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate and save a plot for body weight in a multiscale simulation</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    - simulation_folder: str</span>
+<span class="sd">        Path to the simulation folder.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    - None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="s1">&#39;figsize&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">figsize</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;figsize&#39;</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">12</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">&#39;color&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">figcolor</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">figcolor</span> <span class="o">=</span> <span class="s1">&#39;C0&#39;</span>
+
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">results_directory</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">multiscale_model.pkl&quot;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">loaded_model</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plot_bw</span><span class="p">(</span><span class="n">loaded_model</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">as_unix</span><span class="p">,</span> <span class="n">loaded_model</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">as_array</span><span class="p">,</span> <span class="n">loaded_model</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">state_units</span><span class="p">,</span> <span class="n">loaded_model</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">state_names</span><span class="p">,</span> <span class="n">figsize</span><span class="p">,</span> <span class="n">figcolor</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">results_directory</span><span class="si">}</span><span class="s2">/figures/bodyweight.png&quot;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">fig</span>
+
+
+<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">#######################################################################################################################</span>
+<span class="sd">Signals</span>
+<span class="sd">#######################################################################################################################</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">_generate_input_signals</span><span class="p">(</span><span class="n">results_directory</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate and save a plot for body weight in a multiscale simulation</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    - simulation_folder: str</span>
+<span class="sd">        Path to the simulation folder.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    - None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="s1">&#39;figsize&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">figsize</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;figsize&#39;</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">12</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">&#39;color&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">figcolor</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">figcolor</span> <span class="o">=</span> <span class="s1">&#39;C0&#39;</span>
+
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">results_directory</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">model.pkl&quot;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">loaded_model</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plot_input_signals</span><span class="p">(</span><span class="n">loaded_model</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">as_unix</span><span class="p">,</span> <span class="n">loaded_model</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">as_array</span><span class="p">,</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="nb">vars</span><span class="p">(</span><span class="n">loaded_model</span><span class="o">.</span><span class="n">inputs</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="k">if</span> <span class="s1">&#39;array&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">i</span><span class="p">])</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">results_directory</span><span class="si">}</span><span class="s2">/figures/input_singals.png&quot;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">fig</span>
+
+
+
+
+
+
+<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">#######################################################################################################################</span>
+<span class="sd">Main</span>
+<span class="sd">#######################################################################################################################</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="generate_plots_main">
+<a class="viewcode-back" href="../../_autosummary/pymgipsim.generate_plots.generate_plots_main.html#pymgipsim.generate_plots.generate_plots_main">[docs]</a>
+<span class="k">def</span> <span class="nf">generate_plots_main</span><span class="p">(</span><span class="n">results_folder_path</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">no_print</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&gt;&gt;&gt;&gt;&gt; Generating Plots&quot;</span><span class="p">)</span>
+
+ 
+    <span class="n">plot_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">bgc_fig</span> <span class="o">=</span> <span class="n">_generate_plot_bgc</span><span class="p">(</span><span class="n">results_folder_path</span><span class="p">,</span> <span class="o">**</span><span class="nb">vars</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+
+    <span class="n">all_states_fig</span> <span class="o">=</span> <span class="n">_generate_plot_all_states</span><span class="p">(</span><span class="n">results_folder_path</span><span class="p">,</span> <span class="o">**</span><span class="nb">vars</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+
+    <span class="n">input_signals_fig</span> <span class="o">=</span> <span class="n">_generate_input_signals</span><span class="p">(</span><span class="n">results_folder_path</span><span class="p">,</span> <span class="o">**</span><span class="nb">vars</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+
+    <span class="n">plot_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">bgc_fig</span><span class="p">,</span> <span class="n">all_states_fig</span><span class="p">,</span> <span class="n">input_signals_fig</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">multi_scale</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Body Weight Figure &quot;&quot;&quot;</span>
+        <span class="n">bw_fig</span> <span class="o">=</span> <span class="n">_generate_bw</span><span class="p">(</span><span class="n">results_folder_path</span><span class="p">,</span> <span class="o">**</span><span class="nb">vars</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+        <span class="n">plot_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bw_fig</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">plot_body_weight</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">plot_all</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">bw_fig</span><span class="p">)</span>
+            <span class="n">plot_list</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">bw_fig</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">plot_patient</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">subject_fig</span> <span class="o">=</span> <span class="n">_generate_plot_subject</span><span class="p">(</span><span class="n">results_folder_path</span><span class="p">,</span> <span class="o">**</span><span class="nb">vars</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+        <span class="n">plot_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">subject_fig</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">plot_blood_glucose</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">plot_all</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">bgc_fig</span><span class="p">)</span>
+        <span class="n">plot_list</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">bgc_fig</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">plot_all_states</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">plot_all</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">all_states_fig</span><span class="p">)</span>
+        <span class="n">plot_list</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">all_states_fig</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">plot_input_signals</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">plot_all</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">input_signals_fig</span><span class="p">)</span>
+        <span class="n">plot_list</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">input_signals_fig</span><span class="p">)</span>
+            
+    <span class="k">return</span> <span class="n">plot_list</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andy, Mate.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a customized 
+    theme
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

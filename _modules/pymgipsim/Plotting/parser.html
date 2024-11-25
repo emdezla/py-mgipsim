@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e21422de" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            <img src = "/Flag_of_Chicago,_Illinois2.svg" alt="**" style="padding: 0px 0px 0px 0px; margin: 0; max-height: 20px; width:auto; height:auto; display: inline-block; object-fit: contain; border-radius: 0;" />
+            mGIPsim
+            
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">🦮 Guide dog</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../userinterface.html">User interface</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🐱‍💻 Hacker cat</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../detailed.html">For the curious ones</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../pymgipsim.html">For developers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">------------------</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../aboutus.html">🌬️🌁 About us</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">mGIPsim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pymgipsim.Plotting.parser</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article" >
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pymgipsim.Plotting.parser</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">from</span> <span class="nn">pymgipsim.Interface.Messages.parser_colors</span> <span class="kn">import</span> <span class="n">color_help_text</span><span class="p">,</span> <span class="n">color_group_header_text</span>
+
+
+<div class="viewcode-block" id="generate_plot_parser">
+<a class="viewcode-back" href="../../../_autosummary/pymgipsim.Plotting.parser.generate_plot_parser.html#pymgipsim.Plotting.parser.generate_plot_parser">[docs]</a>
+<span class="k">def</span> <span class="nf">generate_plot_parser</span><span class="p">(</span><span class="n">parent_parser</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">add_help</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+
+	<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
+	                                <span class="n">prog</span> <span class="o">=</span> <span class="s1">&#39;Plots&#39;</span><span class="p">,</span>
+	                                <span class="n">formatter_class</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentDefaultsHelpFormatter</span><span class="p">,</span>
+	                                <span class="n">parents</span><span class="o">=</span><span class="n">parent_parser</span><span class="p">,</span>
+	                                <span class="n">add_help</span><span class="o">=</span><span class="n">add_help</span>
+	                                <span class="p">)</span>
+
+	<span class="n">plot_group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="n">title</span> <span class="o">=</span> <span class="n">color_group_header_text</span><span class="p">(</span><span class="s1">&#39;Specific Plots&#39;</span><span class="p">))</span>
+	<span class="n">plot_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-pbg&#39;</span><span class="p">,</span>
+							<span class="s1">&#39;--blood-glucose&#39;</span><span class="p">,</span>
+							<span class="n">dest</span> <span class="o">=</span> <span class="s1">&#39;plot_blood_glucose&#39;</span><span class="p">,</span>
+							<span class="n">help</span> <span class="o">=</span> <span class="n">color_help_text</span><span class="p">(</span><span class="s1">&#39;Display population blood glucose concentration.&#39;</span><span class="p">),</span>
+							<span class="n">action</span> <span class="o">=</span> <span class="s1">&#39;store_true&#39;</span>
+							<span class="p">)</span>
+
+	<span class="n">plot_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-pas&#39;</span><span class="p">,</span>
+							<span class="s1">&#39;--all-states&#39;</span><span class="p">,</span>
+							<span class="n">dest</span> <span class="o">=</span> <span class="s1">&#39;plot_all_states&#39;</span><span class="p">,</span>
+							<span class="n">help</span> <span class="o">=</span> <span class="n">color_help_text</span><span class="p">(</span><span class="s1">&#39;Display all models states.&#39;</span><span class="p">),</span>
+							<span class="n">action</span> <span class="o">=</span> <span class="s1">&#39;store_true&#39;</span>
+							<span class="p">)</span>
+	
+	<span class="n">plot_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-pis&#39;</span><span class="p">,</span>
+							<span class="s1">&#39;--input_signals&#39;</span><span class="p">,</span>
+							<span class="n">dest</span> <span class="o">=</span> <span class="s1">&#39;plot_input_signals&#39;</span><span class="p">,</span>
+							<span class="n">help</span> <span class="o">=</span> <span class="n">color_help_text</span><span class="p">(</span><span class="s1">&#39;Display all models input signals.&#39;</span><span class="p">),</span>
+							<span class="n">action</span> <span class="o">=</span> <span class="s1">&#39;store_true&#39;</span>
+							<span class="p">)</span>
+
+
+	<span class="n">plot_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-pat&#39;</span><span class="p">,</span>
+							<span class="s1">&#39;--patient&#39;</span><span class="p">,</span>
+							<span class="n">dest</span> <span class="o">=</span> <span class="s1">&#39;plot_patient&#39;</span><span class="p">,</span>
+							<span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+							<span class="n">help</span> <span class="o">=</span> <span class="n">color_help_text</span><span class="p">(</span><span class="s1">&#39;Display blood glucose and inputs for a single subject.&#39;</span><span class="p">)</span>
+							<span class="p">)</span>
+
+	<span class="n">plot_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-pa&#39;</span><span class="p">,</span>
+							<span class="s1">&#39;--all&#39;</span><span class="p">,</span>
+							<span class="n">dest</span> <span class="o">=</span> <span class="s1">&#39;plot_all&#39;</span><span class="p">,</span>
+							<span class="n">action</span> <span class="o">=</span> <span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+							<span class="n">help</span> <span class="o">=</span> <span class="n">color_help_text</span><span class="p">(</span><span class="s1">&#39;Display all plots.&#39;</span><span class="p">)</span>
+
+							<span class="p">)</span>
+
+	<span class="n">plot_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-pbw&#39;</span><span class="p">,</span>
+							<span class="s1">&#39;--body-weight&#39;</span><span class="p">,</span>
+							<span class="n">dest</span> <span class="o">=</span> <span class="s1">&#39;plot_body_weight&#39;</span><span class="p">,</span>
+							<span class="n">help</span> <span class="o">=</span> <span class="n">color_help_text</span><span class="p">(</span><span class="s1">&#39;Display body weight.&#39;</span><span class="p">),</span>
+							<span class="n">action</span> <span class="o">=</span> <span class="s1">&#39;store_true&#39;</span>
+							<span class="p">)</span>
+
+	
+	<span class="n">plot_options_group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="n">title</span> <span class="o">=</span> <span class="n">color_group_header_text</span><span class="p">(</span><span class="s1">&#39;Plot Design Options&#39;</span><span class="p">))</span>
+	<span class="n">plot_options_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-fis&#39;</span><span class="p">,</span> <span class="s1">&#39;--fig-size&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;figsize&#39;</span><span class="p">,</span> <span class="n">nargs</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">default</span> <span class="o">=</span> <span class="p">[</span><span class="mi">12</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="nb">type</span> <span class="o">=</span> <span class="nb">int</span><span class="p">,</span> <span class="n">help</span> <span class="o">=</span> <span class="n">color_help_text</span><span class="p">(</span><span class="s1">&#39;Set figure size (width, height&#39;</span><span class="p">))</span>
+	<span class="n">plot_options_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-c&#39;</span><span class="p">,</span> <span class="s1">&#39;--color&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;color&#39;</span><span class="p">,</span> <span class="n">choices</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="s1">&#39;orange&#39;</span><span class="p">,</span> <span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="s1">&#39;black&#39;</span><span class="p">],</span> <span class="n">default</span> <span class="o">=</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="nb">type</span> <span class="o">=</span> <span class="nb">str</span><span class="p">,</span> <span class="n">help</span> <span class="o">=</span> <span class="n">color_help_text</span><span class="p">(</span><span class="s1">&#39;Set line color&#39;</span><span class="p">))</span>
+
+
+	<span class="k">return</span> <span class="n">parser</span></div>
+
+
+
+<div class="viewcode-block" id="generate_plot_parser_multiscale">
+<a class="viewcode-back" href="../../../_autosummary/pymgipsim.Plotting.parser.generate_plot_parser_multiscale.html#pymgipsim.Plotting.parser.generate_plot_parser_multiscale">[docs]</a>
+<span class="k">def</span> <span class="nf">generate_plot_parser_multiscale</span><span class="p">(</span><span class="n">parent_parser</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">add_help</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+
+	<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
+	                                <span class="n">prog</span> <span class="o">=</span> <span class="s1">&#39;Plots&#39;</span><span class="p">,</span>
+	                                <span class="n">formatter_class</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentDefaultsHelpFormatter</span><span class="p">,</span>
+	                                <span class="n">parents</span><span class="o">=</span><span class="n">parent_parser</span><span class="p">,</span>
+	                                <span class="n">add_help</span><span class="o">=</span><span class="n">add_help</span>
+	                                <span class="p">)</span>
+
+	<span class="n">plot_group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="n">title</span> <span class="o">=</span> <span class="n">color_group_header_text</span><span class="p">(</span><span class="s1">&#39;Specific Plots&#39;</span><span class="p">))</span>
+
+	<span class="n">plot_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-pbw&#39;</span><span class="p">,</span>
+							<span class="s1">&#39;--body-weight&#39;</span><span class="p">,</span>
+							<span class="n">dest</span> <span class="o">=</span> <span class="s1">&#39;plot_body_weight&#39;</span><span class="p">,</span>
+							<span class="n">help</span> <span class="o">=</span> <span class="n">color_help_text</span><span class="p">(</span><span class="s1">&#39;Display body weight.&#39;</span><span class="p">),</span>
+							<span class="n">action</span> <span class="o">=</span> <span class="s1">&#39;store_true&#39;</span>
+							<span class="p">)</span>
+	
+	<span class="k">return</span> <span class="n">parser</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andy, Mate.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a customized 
+    theme
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e21422de" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            <img src = "/Flag_of_Chicago,_Illinois2.svg" alt="**" style="padding: 0px 0px 0px 0px; margin: 0; max-height: 20px; width:auto; height:auto; display: inline-block; object-fit: contain; border-radius: 0;" />
+            mGIPsim
+            
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">🦮 Guide dog</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../userinterface.html">User interface</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🐱‍💻 Hacker cat</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../detailed.html">For the curious ones</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../pymgipsim.html">For developers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">------------------</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../aboutus.html">🌬️🌁 About us</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">mGIPsim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pymgipsim.InputGeneration.heart_rate_settings</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article" >
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pymgipsim.InputGeneration.heart_rate_settings</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pymgipsim.InputGeneration.signal</span> <span class="kn">import</span> <span class="n">Signal</span><span class="p">,</span> <span class="n">Events</span>
+<span class="kn">from</span> <span class="nn">pymgipsim.Utilities.Scenario</span> <span class="kn">import</span> <span class="n">scenario</span><span class="p">,</span> <span class="n">controller</span>
+<span class="kn">from</span> <span class="nn">pymgipsim.Controllers</span> <span class="kn">import</span> <span class="n">OpenLoop</span>
+<span class="kn">import</span> <span class="nn">pymgipsim.VirtualPatient.Models.Physact.Activity2Heartrate</span> <span class="k">as</span> <span class="nn">Heartrate</span>
+<span class="kn">from</span> <span class="nn">pymgipsim.ModelSolver.singlescale</span> <span class="kn">import</span> <span class="n">SingleScaleSolver</span>
+
+<div class="viewcode-block" id="generate_heart_rate">
+<a class="viewcode-back" href="../../../_autosummary/pymgipsim.InputGeneration.heart_rate_settings.generate_heart_rate.html#pymgipsim.InputGeneration.heart_rate_settings.generate_heart_rate">[docs]</a>
+<span class="k">def</span> <span class="nf">generate_heart_rate</span><span class="p">(</span><span class="n">scenario_instance</span><span class="p">:</span> <span class="n">scenario</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+    <span class="n">no_subjects</span> <span class="o">=</span> <span class="n">scenario_instance</span><span class="o">.</span><span class="n">patient</span><span class="o">.</span><span class="n">number_of_subjects</span>
+    <span class="c1"># magnitude = np.expand_dims(np.asarray(scenario_instance.patient.demographic_info.resting_heart_rate),1)</span>
+    <span class="c1"># start_time = np.zeros((no_subjects,1))</span>
+    <span class="n">sampling_time</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">scenario_instance</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span><span class="n">scenario_instance</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">end_time</span><span class="p">,</span><span class="n">sampling_time</span><span class="p">)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Heartrate</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">sampling_time</span><span class="o">=</span><span class="n">sampling_time</span><span class="p">)</span>
+
+    <span class="n">model</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">running_speed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">,</span> <span class="n">sampling_time</span><span class="o">=</span><span class="n">sampling_time</span><span class="p">,</span>
+                                        <span class="n">start_time</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">no_subjects</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">magnitude</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">no_subjects</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">running_incline</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">,</span> <span class="n">sampling_time</span><span class="o">=</span><span class="n">sampling_time</span><span class="p">,</span>
+                                        <span class="n">start_time</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">no_subjects</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">magnitude</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">no_subjects</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">cycling_power</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">,</span> <span class="n">sampling_time</span><span class="o">=</span><span class="n">sampling_time</span><span class="p">,</span>
+                                        <span class="n">start_time</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">no_subjects</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">magnitude</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">no_subjects</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">standard_power</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">,</span> <span class="n">sampling_time</span><span class="o">=</span><span class="n">sampling_time</span><span class="p">,</span>
+                                        <span class="n">start_time</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">no_subjects</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">magnitude</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">no_subjects</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">METACSM</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">,</span> <span class="n">sampling_time</span><span class="o">=</span><span class="n">sampling_time</span><span class="p">,</span>
+                                        <span class="n">start_time</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">no_subjects</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">magnitude</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">no_subjects</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+
+
+    <span class="k">if</span> <span class="n">scenario_instance</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">cycling_power</span><span class="p">:</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">cycling_power</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">,</span> <span class="n">sampling_time</span><span class="o">=</span><span class="n">sampling_time</span><span class="p">,</span>
+                                            <span class="n">duration</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">scenario_instance</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">cycling_power</span><span class="o">.</span><span class="n">duration</span><span class="p">),</span>
+                                            <span class="n">start_time</span><span class="o">=</span><span class="n">scenario_instance</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">cycling_power</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span>
+                                            <span class="n">magnitude</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">scenario_instance</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">cycling_power</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">scenario_instance</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">cycling_power</span><span class="o">.</span><span class="n">duration</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">scenario_instance</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">running_speed</span> <span class="ow">and</span> <span class="n">scenario_instance</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">running_incline</span><span class="p">:</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">running_speed</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">,</span> <span class="n">sampling_time</span><span class="o">=</span><span class="n">sampling_time</span><span class="p">,</span>
+                                            <span class="n">duration</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">scenario_instance</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">running_speed</span><span class="o">.</span><span class="n">duration</span><span class="p">),</span>
+                                            <span class="n">start_time</span><span class="o">=</span><span class="n">scenario_instance</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">running_speed</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span>
+                                            <span class="n">magnitude</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">scenario_instance</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">running_speed</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">scenario_instance</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">running_speed</span><span class="o">.</span><span class="n">duration</span><span class="p">))</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">running_incline</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">,</span> <span class="n">sampling_time</span><span class="o">=</span><span class="n">sampling_time</span><span class="p">,</span>
+                                              <span class="n">start_time</span><span class="o">=</span><span class="n">scenario_instance</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">running_incline</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span>
+                                              <span class="n">duration</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">scenario_instance</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">running_incline</span><span class="o">.</span><span class="n">duration</span><span class="p">),</span>
+                                              <span class="n">magnitude</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">scenario_instance</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">running_incline</span><span class="o">.</span><span class="n">magnitude</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">scenario_instance</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">running_speed</span><span class="o">.</span><span class="n">duration</span><span class="p">))</span>
+
+    <span class="n">model</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="n">Heartrate</span><span class="o">.</span><span class="n">Parameters</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Heartrate</span><span class="o">.</span><span class="n">Parameters</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">scenario_instance</span><span class="p">)))</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">as_unix</span> <span class="o">=</span> <span class="n">time</span>
+
+    <span class="n">scenario_controller</span> <span class="o">=</span> <span class="n">scenario_instance</span><span class="o">.</span><span class="n">controller</span>
+    <span class="n">scenario_instance</span><span class="o">.</span><span class="n">controller</span> <span class="o">=</span> <span class="n">controller</span><span class="p">(</span><span class="n">OpenLoop</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">Controller</span><span class="o">.</span><span class="n">name</span><span class="p">,[])</span>
+    <span class="n">solver</span> <span class="o">=</span> <span class="n">SingleScaleSolver</span><span class="p">(</span><span class="n">scenario_instance</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+    <span class="n">solver</span><span class="o">.</span><span class="n">set_solver</span><span class="p">(</span><span class="s2">&quot;RK4&quot;</span><span class="p">)</span>
+    <span class="n">solver</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">()</span>
+    <span class="n">solver</span><span class="o">.</span><span class="n">do_simulation</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">heart_rate</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">rate_equations</span><span class="p">(</span><span class="n">solver</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">as_array</span><span class="p">,</span> <span class="n">solver</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">as_unix</span><span class="p">,</span> <span class="n">solver</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">as_array</span><span class="p">,</span> <span class="n">solver</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">as_array</span><span class="p">)</span>
+    <span class="n">METACSM</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">METACSM</span><span class="o">.</span><span class="n">sampled_signal</span>
+    <span class="c1">#</span>
+    <span class="c1"># plt.plot(heart_rate.T)</span>
+    <span class="c1"># plt.show()</span>
+    <span class="n">scenario_instance</span><span class="o">.</span><span class="n">controller</span> <span class="o">=</span> <span class="n">scenario_controller</span>
+    <span class="k">return</span> <span class="n">Events</span><span class="p">(</span><span class="n">magnitude</span><span class="o">=</span><span class="n">heart_rate</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="n">time</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">no_subjects</span><span class="p">,</span><span class="mi">1</span><span class="p">)))</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span>\
+        <span class="n">Events</span><span class="p">(</span><span class="n">magnitude</span><span class="o">=</span><span class="n">METACSM</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="n">time</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">no_subjects</span><span class="p">,</span><span class="mi">1</span><span class="p">)))</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andy, Mate.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a customized 
+    theme
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
