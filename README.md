@@ -1,7 +1,9 @@
 ## **mGIPsim
 
 Metabolic simulator of 20 virtual patients with type 1 diabetes, simulates physical activity, meal intakes, and insulin therapies.
-
+* Efficient simulation (vectorized and JIT compiled)
+* Modular, easy to extend with models, controllers
+* [Docs](https://illinoistech-itm.github.io/py-mgipsim/)
 
 ## Requirements
 * Python 3.12.0
