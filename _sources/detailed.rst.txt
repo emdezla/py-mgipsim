@@ -25,26 +25,26 @@ Simulation workflow
 
 	1. If a scenario object contains all the necessary information for a successful simulation, it can be passed to `VirtualCohort </py-mgipsim/_autosummary/pymgipsim.VirtualPatient.VirtualPatient.VirtualCohort.html>`_ class to a initialize a virtual cohort object.
 	2. The VirtualCohort class (during init) will:
-	    1. initialize a `model </py-mgipsim/_autosummary/pymgipsim/VirtualPatient/Models/Model/BaseModel.html>`_ object by calling the :code:`from_scenario` function of the model that was defined in the scenario objects.
+	    1. initialize a `model </py-mgipsim/_autosummary/pymgipsim.VirtualPatient.Models.Model.BaseModel.html>`_ object by calling the :code:`from_scenario` function of the model that was defined in the scenario objects.
 	    2. The :code:`from_scenario` function of the model initializes the model given the information in the scenario (e.g. input variables, patient model parameters, time sequence).
-	    3. The initialized model and the scenario object is passed to a `ModelSolver </py-mgipsim/_autosummary/pymgipsim/ModelSolver/BaseSolvers.html>`_ class.
-	3. The :code:`preprocessing` function of the `model </py-mgipsim/_autosummary/pymgipsim/VirtualPatient/Models/Model/BaseModel.html>`_ object, nested in the `ModelSolver </py-mgipsim/_autosummary/pymgipsim/ModelSolver/BaseSolvers.html>`_ object, nested in the `VirtualCohort </py-mgipsim/_autosummary/pymgipsim.VirtualPatient.VirtualPatient.VirtualCohort.html>`_ object has to be called.
+	    3. The initialized model and the scenario object is passed to a `ModelSolver </py-mgipsim/_autosummary/pymgipsim.ModelSolver.BaseSolvers.html>`_ class.
+	3. The :code:`preprocessing` function of the `model </py-mgipsim/_autosummary/pymgipsim.VirtualPatient.Models.Model.BaseModel.html>`_ object, nested in the `ModelSolver </py-mgipsim/_autosummary/pymgipsim.ModelSolver.BaseSolvers.html>`_ object, nested in the `VirtualCohort </py-mgipsim/_autosummary/pymgipsim.VirtualPatient.VirtualPatient.VirtualCohort.html>`_ object has to be called.
 	4. The :code:`do_simulation` function of the `VirtualCohort </py-mgipsim/_autosummary/pymgipsim.VirtualPatient.VirtualPatient.VirtualCohort.html>`_ object can be called to run the simulation.
 
 **Building blocks**
 
 Time-series signal
 
-	* Any time-series signal is represented in the `signal </py-mgipsim/_autosummary/pymgipsim/InputGeneration/signal/Signal.html>`_  class. For instances, input variables of the models are signals.
+	* Any time-series signal is represented in the `signal </py-mgipsim/_autosummary/pymgipsim.InputGeneration.signal.Signal.html>`_  class. For instances, input variables of the models are signals.
 
 	* It holds:
 		* Time, a :code:`np.array` that defines the sequence of time instances (minutes) at which the signal will sampled.
 		* Sampling time (minutes).
-		* Attributes of an `event </py-mgipsim/_autosummary/pymgipsim/InputGeneration/signal/Events.html>`_  object.
+		* Attributes of an `event </py-mgipsim/_autosummary/pymgipsim.InputGeneration.signal.Events.html>`_  object.
 
 Events
 
-	* `Event </py-mgipsim/_autosummary/pymgipsim/InputGeneration/signal/Events.html>`_  class represents a time-series signal before sampling it by holding the following variables:
+	* `Event </py-mgipsim/_autosummary/pymgipsim.InputGeneration.signal.Events.html>`_  class represents a time-series signal before sampling it by holding the following variables:
 		* Magnitudes :code:`np.array` (unit of the signal)
 		* Start times :code:`np.array` (minutes)
 		* Durations :code:`np.array` (minutes), if undefined zero order hold will be assumed during the sampling process. If defined, the energy (value in the magnitude variable) will be distributed equally.
@@ -53,8 +53,8 @@ Events
 
 All models have the following attributes:
 
-	* Inputs, holds the input variables. (The inputs class itself are model specific but all of them are a container of `signal </py-mgipsim/_autosummary/pymgipsim/InputGeneration/signal/Signal.html>`_) attributes).
-	* States, holds the state variables (The states class itself are model specific but all of them are a container of `signal </py-mgipsim/_autosummary/pymgipsim/InputGeneration/signal/Signal.html>`_) attributes).
+	* Inputs, holds the input variables. (The inputs class itself are model specific but all of them are a container of `signal </py-mgipsim/_autosummary/pymgipsim.InputGeneration.signal.Signal.html>`_) attributes).
+	* States, holds the state variables (The states class itself are model specific but all of them are a container of `signal </py-mgipsim/_autosummary/pymgipsim.InputGeneration.signal.Signal.html>`_) attributes).
 	* Parameters, holds the parameters of the model.
 	* Time, same as the time attribute of any of the input variables.
 	* Sampling time, as as the sampling time attribute of any of the input variables.
