@@ -18,6 +18,47 @@ By using the command line interface, the user apply modifications to a default s
 .. image:: imgs/workflow.svg
    :target: _images/workflow.svg
 
+Simulation workflow
+---------------------------
+
+** Simulation given a defined scenario **
+
+1. If a scenario object contains all the necessary information for a successful simulation, it can be passed to `VirtualCohort </_autosummary/pymgipsim.VirtualPatient.VirtualPatient.VirtualCohort.html>`_ class to a initialize a virtual cohort object.
+2. The VirtualCohort class (during init) will:
+    1. initialize a `model </_autosummary/pymgipsim/VirtualPatient/Models/Model/BaseModel.html>`_ object by calling the :code:`from_scenario` function of the model that was defined in the scenario objects.
+    2. The :code:`from_scenario` function of the model initializes the model given the information in the scenario (e.g. input variables, patient model parameters, time sequence).
+    3. The initialized model and the scenario object is passed to a [ModelSolver](../blob/develop/pymgipsim/ModelSolver/BaseSolvers.py) class.
+3. The :code:`preprocessing` function of the [model](../blob/main/pymgipsim/VirtualPatient/Models/Model.py) object, nested in the [model solver](../blob/develop/pymgipsim/ModelSolver/BaseSolvers.py) object, nested in the [virtual cohort](../blob/main/pymgipsim/VirtualPatient/VirtualPatient.py) object has to be called.
+4. The :code:`do_simulation` function of the [virtual cohort](../blob/main/pymgipsim/VirtualPatient/VirtualPatient.py) object can be called to run the simulation.
+
+** Building blocks **
+
+### Time-series signal
+Any time-series signal is represented in the [signal](../blob/develop/pymgipsim/InputGeneration/signal.py) class. For instances, input variables of the models are signals.
+It holds:
+* Time, a :code:`np.array` that defines the sequence of time instances (minutes) at which the signal will sampled.
+* Sampling time (minutes).
+* Attributes of an [event](../blob/develop/pymgipsim/InputGeneration/signal.py) object.
+
+[Event](../blob/develop/pymgipsim/InputGeneration/signal.py) class represents a time-series signal before sampling it by holding the following variables:
+* Magnitudes :code:`np.array` (unit of the signal)
+* Start times :code:`np.array` (minutes)
+* Durations :code:`np.array` (minutes), if undefined zero order hold will be assumed during the sampling process. If defined, the energy (value in the magnitude variable) will be distributed equally.
+
+** (Abstract) model **
+
+All models have the following attributes:
+* Inputs, holds the input variables. (The inputs class itself are model specific but all of them are a container of [signal](../blob/develop/pymgipsim/InputGeneration/signal.py) attributes).
+* States, holds the state variables (The states class itself are model specific but all of them are a container of [signal](../blob/develop/pymgipsim/InputGeneration/signal.py) attributes).
+* Parameters, holds the parameters of the model.
+* Time, same as the time attribute of any of the input variables.
+* Sampling time, as as the sampling time attribute of any of the input variables.
+
+Both inputs, states and parameters have a common function :code:`as_array` that returns the input variables, state variables or parameters as a `np.array`.
+
+All models have a :code:`model` function that defines the differential equations.
+
+
 
 **General settings (generate_settings.py)**
 

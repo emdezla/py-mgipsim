@@ -53,6 +53,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">For the curious ones</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="inputs.html">Inputs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="models.html">Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#simulation-workflow">Simulation workflow</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="pymgipsim.html">For developers</a></li>
@@ -108,6 +109,43 @@
 <p>A scenario is a unique descriptor of a simulation. Outside of the simulator a scenario is described in a JSON file. At the end of each simulation the scenario is exported and can be reused later to make a simulation reproducable. The core element of the simulator is the scenario JSON file/class. Between the class and the file there is a one-to-one mapping, all the fields in the file are mirrored as the scenario class attributes. For the detailed description of the fields in the scenario please refer to the <a class="reference external" href="/_autosummary/pymgipsim.Utilities.Scenario.scenario.html">docs</a>.</p>
 <p>By using the command line interface, the user apply modifications to a default scenario instance (loaded from the default JSON file) (<a class="reference external" href="/_autosummary/pymgipsim.Settings.DefaultSettings.html">defaults</a>). Until the simulation command is not called, only the scenario instance is manipulated and saved in each module. The CLI parses inputs according to the library [argparse](<a class="reference external" href="https://docs.python.org/3/library/argparse.html">https://docs.python.org/3/library/argparse.html</a>).</p>
 <a class="reference external image-reference" href="_images/workflow.svg"><img alt="_images/workflow.svg" src="_images/workflow.svg" /></a>
+<section id="simulation-workflow">
+<h2>Simulation workflow<a class="headerlink" href="#simulation-workflow" title="Link to this heading">¶</a></h2>
+<p>** Simulation given a defined scenario **</p>
+<ol class="arabic simple">
+<li><p>If a scenario object contains all the necessary information for a successful simulation, it can be passed to <a class="reference external" href="/_autosummary/pymgipsim.VirtualPatient.VirtualPatient.VirtualCohort.html">VirtualCohort</a> class to a initialize a virtual cohort object.</p></li>
+<li><dl class="simple">
+<dt>The VirtualCohort class (during init) will:</dt><dd><ol class="arabic simple">
+<li><p>initialize a <a class="reference external" href="/_autosummary/pymgipsim/VirtualPatient/Models/Model/BaseModel.html">model</a> object by calling the <code class="code docutils literal notranslate"><span class="pre">from_scenario</span></code> function of the model that was defined in the scenario objects.</p></li>
+<li><p>The <code class="code docutils literal notranslate"><span class="pre">from_scenario</span></code> function of the model initializes the model given the information in the scenario (e.g. input variables, patient model parameters, time sequence).</p></li>
+<li><p>The initialized model and the scenario object is passed to a [ModelSolver](../blob/develop/pymgipsim/ModelSolver/BaseSolvers.py) class.</p></li>
+</ol>
+</dd>
+</dl>
+</li>
+<li><p>The <code class="code docutils literal notranslate"><span class="pre">preprocessing</span></code> function of the [model](../blob/main/pymgipsim/VirtualPatient/Models/Model.py) object, nested in the [model solver](../blob/develop/pymgipsim/ModelSolver/BaseSolvers.py) object, nested in the [virtual cohort](../blob/main/pymgipsim/VirtualPatient/VirtualPatient.py) object has to be called.</p></li>
+<li><p>The <code class="code docutils literal notranslate"><span class="pre">do_simulation</span></code> function of the [virtual cohort](../blob/main/pymgipsim/VirtualPatient/VirtualPatient.py) object can be called to run the simulation.</p></li>
+</ol>
+<p>** Building blocks **</p>
+<p>### Time-series signal
+Any time-series signal is represented in the [signal](../blob/develop/pymgipsim/InputGeneration/signal.py) class. For instances, input variables of the models are signals.
+It holds:
+* Time, a <code class="code docutils literal notranslate"><span class="pre">np.array</span></code> that defines the sequence of time instances (minutes) at which the signal will sampled.
+* Sampling time (minutes).
+* Attributes of an [event](../blob/develop/pymgipsim/InputGeneration/signal.py) object.</p>
+<p>[Event](../blob/develop/pymgipsim/InputGeneration/signal.py) class represents a time-series signal before sampling it by holding the following variables:
+* Magnitudes <code class="code docutils literal notranslate"><span class="pre">np.array</span></code> (unit of the signal)
+* Start times <code class="code docutils literal notranslate"><span class="pre">np.array</span></code> (minutes)
+* Durations <code class="code docutils literal notranslate"><span class="pre">np.array</span></code> (minutes), if undefined zero order hold will be assumed during the sampling process. If defined, the energy (value in the magnitude variable) will be distributed equally.</p>
+<p>** (Abstract) model **</p>
+<p>All models have the following attributes:
+* Inputs, holds the input variables. (The inputs class itself are model specific but all of them are a container of [signal](../blob/develop/pymgipsim/InputGeneration/signal.py) attributes).
+* States, holds the state variables (The states class itself are model specific but all of them are a container of [signal](../blob/develop/pymgipsim/InputGeneration/signal.py) attributes).
+* Parameters, holds the parameters of the model.
+* Time, same as the time attribute of any of the input variables.
+* Sampling time, as as the sampling time attribute of any of the input variables.</p>
+<p>Both inputs, states and parameters have a common function <code class="code docutils literal notranslate"><span class="pre">as_array</span></code> that returns the input variables, state variables or parameters as a <cite>np.array</cite>.</p>
+<p>All models have a <code class="code docutils literal notranslate"><span class="pre">model</span></code> function that defines the differential equations.</p>
 <p><strong>General settings (generate_settings.py)</strong></p>
 <p><code class="code docutils literal notranslate"><span class="pre">&gt;&gt;</span> <span class="pre">settings</span></code></p>
 <p><strong>Virtual cohort settings (generate_subjects.py)</strong></p>
@@ -118,6 +156,7 @@
 <p><code class="code docutils literal notranslate"><span class="pre">&gt;&gt;</span> <span class="pre">simulate</span></code></p>
 <p><strong>Plotting (generate_plots.py</strong></p>
 <p><code class="code docutils literal notranslate"><span class="pre">&gt;&gt;</span> <span class="pre">plot</span></code></p>
+</section>
 </section>
 
 
