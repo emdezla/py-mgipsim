@@ -96,7 +96,7 @@
 </section>
 <section id="how-to-add-a-model">
 <h2>How to add a model?<a class="headerlink" href="#how-to-add-a-model" title="Link to this heading">¶</a></h2>
-<p>** Defining the model **</p>
+<p><strong>Defining the model</strong></p>
 <ul class="simple">
 <li><p>Define the state variables, inputs, constants, parameters, and model equations in the VirtualPatient/Models folder</p></li>
 <li><dl class="simple">
@@ -126,7 +126,7 @@
 </li>
 <li><p>Define virtual patient parameters in <code class="code docutils literal notranslate"><span class="pre">JSON</span></code> files in the Patients folder.</p></li>
 </ul>
-<p>** Add model to the generate functions **</p>
+<p><strong>Add model to the generate functions</strong></p>
 <ul class="simple">
 <li><p>Add functions that generate the necessary inputs of the model in <code class="code docutils literal notranslate"><span class="pre">generate_inputs_main</span></code> function in the generate_inputs file.</p></li>
 <li><p>Add model parameter generation in <code class="code docutils literal notranslate"><span class="pre">generate_virtual_subjects_main</span></code> function in the generate_subjects file.</p></li>
@@ -135,30 +135,30 @@
 <p class="admonition-title">Note</p>
 <p>If the added model is just an auixiliary model, it can be readily used for simulation. An example is the physical activity -&gt; heart rate model, and the implementation can be found in <code class="code docutils literal notranslate"><span class="pre">pymgipsim/InputGeneration/heart_rate_settings.py</span></code>. If the added model represents the patient, the following steps are needed.</p>
 </div>
-<p>** Update VirtualCohort **</p>
+<p><strong>Update VirtualCohort</strong></p>
 <ul class="simple">
 <li><p>Add the defined model to the virtual patient class in VirtualPatient/VirtualPatient.</p></li>
 </ul>
-<p>** Update plots **</p>
+<p><strong>Update plots</strong></p>
 <ul class="simple">
 <li><p>Update plotting function with specifics of the defined model.</p></li>
 </ul>
-<p>** Optional: Controller compatibility **
+<p><strong>Optional: Controller compatibility</strong>
 *</p>
 </section>
 <section id="how-to-add-a-controller">
 <h2>How to add a controller?<a class="headerlink" href="#how-to-add-a-controller" title="Link to this heading">¶</a></h2>
-<p>** Define controller class **</p>
+<p><strong>Define controller class</strong></p>
 <ul class="simple">
 <li><p>Define the class similarly to already existing ones in the <code class="code docutils literal notranslate"><span class="pre">pymgipsim/Controllers</span></code> folder.</p></li>
 <li><p>The controller has to have a unique name, same as the folder name.</p></li>
 <li><p><code class="code docutils literal notranslate"><span class="pre">run</span></code> function of the controller will be called in every sampling time of the simulation with the available data up to that point. The function has to modify inplace the current sample of the input array.</p></li>
 </ul>
-<p>** Adding it to the solver **</p>
+<p><strong>Adding it to the solver</strong></p>
 <ul class="simple">
 <li><p>Add the controller to the <code class="code docutils literal notranslate"><span class="pre">set_controller</span></code> function in <code class="code docutils literal notranslate"><span class="pre">pymgipsim/ModelSolver/singlescale.py</span></code>.</p></li>
 </ul>
-<p>** Update plots **</p>
+<p><strong>Update plots</strong></p>
 <ul class="simple">
 <li><p>Update plotting function with specifics of the defined controller.</p></li>
 </ul>
