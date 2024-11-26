@@ -1,10 +1,17 @@
 from abc import ABC, abstractmethod
 class BaseModel(ABC):
-    # Inputs
-    # States
-    # Initial states
-    # Parameters
-    # Time ? Technically should be an attribute of the ModelSolver if possible. It is not model specific.
+    """ Abstract Model class.
+
+    Attributes:
+        inputs
+        states
+        initial_conditions
+        parameters
+        time: ? Technically should be an attribute of the ModelSolver if possible. It is not model specific.
+
+    """
+
+
     output_state: int = NotImplemented
 
     def __init__(self):
