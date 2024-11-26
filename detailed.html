@@ -112,35 +112,39 @@
 <section id="simulation-workflow">
 <h2>Simulation workflow<a class="headerlink" href="#simulation-workflow" title="Link to this heading">¶</a></h2>
 <p>** Simulation given a defined scenario **</p>
-<ol class="arabic simple">
-<li><p>If a scenario object contains all the necessary information for a successful simulation, it can be passed to <a class="reference external" href="/_autosummary/pymgipsim.VirtualPatient.VirtualPatient.VirtualCohort.html">VirtualCohort</a> class to a initialize a virtual cohort object.</p></li>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>If a scenario object contains all the necessary information for a successful simulation, it can be passed to <a class="reference external" href="/py-mgipsim/_autosummary/pymgipsim.VirtualPatient.VirtualPatient.VirtualCohort.html">VirtualCohort</a> class to a initialize a virtual cohort object.</p></li>
 <li><dl class="simple">
 <dt>The VirtualCohort class (during init) will:</dt><dd><ol class="arabic simple">
-<li><p>initialize a <a class="reference external" href="/_autosummary/pymgipsim/VirtualPatient/Models/Model/BaseModel.html">model</a> object by calling the <code class="code docutils literal notranslate"><span class="pre">from_scenario</span></code> function of the model that was defined in the scenario objects.</p></li>
+<li><p>initialize a <a class="reference external" href="/py-mgipsim/_autosummary/pymgipsim/VirtualPatient/Models/Model/BaseModel.html">model</a> object by calling the <code class="code docutils literal notranslate"><span class="pre">from_scenario</span></code> function of the model that was defined in the scenario objects.</p></li>
 <li><p>The <code class="code docutils literal notranslate"><span class="pre">from_scenario</span></code> function of the model initializes the model given the information in the scenario (e.g. input variables, patient model parameters, time sequence).</p></li>
-<li><p>The initialized model and the scenario object is passed to a [ModelSolver](../blob/develop/pymgipsim/ModelSolver/BaseSolvers.py) class.</p></li>
+<li><p>The initialized model and the scenario object is passed to a <a class="reference external" href="/py-mgipsim/_autosummary/pymgipsim/ModelSolver/BaseSolvers.html">ModelSolver</a> class.</p></li>
 </ol>
 </dd>
 </dl>
 </li>
-<li><p>The <code class="code docutils literal notranslate"><span class="pre">preprocessing</span></code> function of the [model](../blob/main/pymgipsim/VirtualPatient/Models/Model.py) object, nested in the [model solver](../blob/develop/pymgipsim/ModelSolver/BaseSolvers.py) object, nested in the [virtual cohort](../blob/main/pymgipsim/VirtualPatient/VirtualPatient.py) object has to be called.</p></li>
-<li><p>The <code class="code docutils literal notranslate"><span class="pre">do_simulation</span></code> function of the [virtual cohort](../blob/main/pymgipsim/VirtualPatient/VirtualPatient.py) object can be called to run the simulation.</p></li>
+<li><p>The <code class="code docutils literal notranslate"><span class="pre">preprocessing</span></code> function of the <a class="reference external" href="/py-mgipsim/_autosummary/pymgipsim/VirtualPatient/Models/Model/BaseModel.html">model</a> object, nested in the <a class="reference external" href="/py-mgipsim/_autosummary/pymgipsim/ModelSolver/BaseSolvers.html">ModelSolver</a> object, nested in the <a class="reference external" href="/py-mgipsim/_autosummary/pymgipsim.VirtualPatient.VirtualPatient.VirtualCohort.html">VirtualCohort</a> object has to be called.</p></li>
+<li><p>The <code class="code docutils literal notranslate"><span class="pre">do_simulation</span></code> function of the <a class="reference external" href="/py-mgipsim/_autosummary/pymgipsim.VirtualPatient.VirtualPatient.VirtualCohort.html">VirtualCohort</a> object can be called to run the simulation.</p></li>
 </ol>
+</div></blockquote>
 <p>** Building blocks **</p>
-<p>### Time-series signal
-Any time-series signal is represented in the [signal](../blob/develop/pymgipsim/InputGeneration/signal.py) class. For instances, input variables of the models are signals.
-It holds:
+<ul class="simple">
+<li><p>Time-series signal</p></li>
+</ul>
+<p>Any time-series signal is represented in the <a class="reference external" href="/py-mgipsim/_autosummary/pymgipsim/InputGeneration/signal/Signal.html">signal</a>  class. For instances, input variables of the models are signals.</p>
+<p>It holds:
 * Time, a <code class="code docutils literal notranslate"><span class="pre">np.array</span></code> that defines the sequence of time instances (minutes) at which the signal will sampled.
 * Sampling time (minutes).
-* Attributes of an [event](../blob/develop/pymgipsim/InputGeneration/signal.py) object.</p>
-<p>[Event](../blob/develop/pymgipsim/InputGeneration/signal.py) class represents a time-series signal before sampling it by holding the following variables:
+* Attributes of an <a class="reference external" href="/py-mgipsim/_autosummary/pymgipsim/InputGeneration/signal/Events.html">event</a>  object.</p>
+<p><a class="reference external" href="/py-mgipsim/_autosummary/pymgipsim/InputGeneration/signal/Events.html">Event</a>  class represents a time-series signal before sampling it by holding the following variables:
 * Magnitudes <code class="code docutils literal notranslate"><span class="pre">np.array</span></code> (unit of the signal)
 * Start times <code class="code docutils literal notranslate"><span class="pre">np.array</span></code> (minutes)
 * Durations <code class="code docutils literal notranslate"><span class="pre">np.array</span></code> (minutes), if undefined zero order hold will be assumed during the sampling process. If defined, the energy (value in the magnitude variable) will be distributed equally.</p>
 <p>** (Abstract) model **</p>
 <p>All models have the following attributes:
-* Inputs, holds the input variables. (The inputs class itself are model specific but all of them are a container of [signal](../blob/develop/pymgipsim/InputGeneration/signal.py) attributes).
-* States, holds the state variables (The states class itself are model specific but all of them are a container of [signal](../blob/develop/pymgipsim/InputGeneration/signal.py) attributes).
+* Inputs, holds the input variables. (The inputs class itself are model specific but all of them are a container of <a class="reference external" href="/py-mgipsim/_autosummary/pymgipsim/InputGeneration/signal/Signal.html">signal</a>) attributes).
+* States, holds the state variables (The states class itself are model specific but all of them are a container of <a class="reference external" href="/py-mgipsim/_autosummary/pymgipsim/InputGeneration/signal/Signal.html">signal</a>) attributes).
 * Parameters, holds the parameters of the model.
 * Time, same as the time attribute of any of the input variables.
 * Sampling time, as as the sampling time attribute of any of the input variables.</p>
