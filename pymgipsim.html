@@ -53,6 +53,8 @@
 <li class="toctree-l1"><a class="reference internal" href="detailed.html">For the curious ones</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">For developers</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#programatically-run-simulations">Programatically run simulations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-add-a-model">How to add a model?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-add-a-controller">How to add a controller?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#pymgipsim-package">PYmGIPsim package</a></li>
 </ul>
 </li>
@@ -91,6 +93,62 @@
 <section id="programatically-run-simulations">
 <h2>Programatically run simulations<a class="headerlink" href="#programatically-run-simulations" title="Link to this heading">¶</a></h2>
 <p>An example is provided in <code class="code docutils literal notranslate"><span class="pre">manual_script.py</span></code> on how programatically defined scenarios can be simulated.</p>
+</section>
+<section id="how-to-add-a-model">
+<h2>How to add a model?<a class="headerlink" href="#how-to-add-a-model" title="Link to this heading">¶</a></h2>
+<p>** Defining the model **
+* Define the state variables, inputs, constants, parameters, and model equations in the VirtualPatient/Models folder
+* In the Parameters file:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Define all model parameters and their vectorization function (<code class="code docutils literal notranslate"><span class="pre">as_array</span></code>).</p></li>
+<li><p>Define <code class="code docutils literal notranslate"><span class="pre">generate</span></code> function that either loads patient files or draws random samples from distributions.</p></li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li><dl class="simple">
+<dt>In the Inputs file:</dt><dd><ul>
+<li><p>Define all model inputs and their vectorization function (<code class="code docutils literal notranslate"><span class="pre">as_array</span></code>).</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>In the Model file:</dt><dd><ul>
+<li><p>Define a unique name in the Model class, same name should be given to the folder.</p></li>
+<li><p>Diff. equations should be defined in the <code class="code docutils literal notranslate"><span class="pre">model</span></code> function.</p></li>
+<li><p>Initial conditions should be defined in the <code class="code docutils literal notranslate"><span class="pre">preprocessing</span></code> function.</p></li>
+<li><p>A <code class="code docutils literal notranslate"><span class="pre">from_scenario</span></code> function has to be defined which passes the inputs, parameters, etc. from the scenario to the model. Unit conversions from the default units to the model specific ones is convenient to do in this function.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>Define virtual patient parameters in <code class="code docutils literal notranslate"><span class="pre">JSON</span></code> files in the Patients folder.</p></li>
+</ul>
+<p>** Add model to the generate functions **
+* Add functions that generate the necessary inputs of the model in <code class="code docutils literal notranslate"><span class="pre">generate_inputs_main</span></code> function in the generate_inputs file.
+* Add model parameter generation in <code class="code docutils literal notranslate"><span class="pre">generate_virtual_subjects_main</span></code> function in the generate_subjects file.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If the added model is just an auixiliary model, it can be readily used for simulation. An example is the physical activity -&gt; heart rate model, and the implementation can be found in <code class="code docutils literal notranslate"><span class="pre">pymgipsim/InputGeneration/heart_rate_settings.py</span></code>. If the added model represents the patient, the following steps are needed.</p>
+</div>
+<p>** Update VirtualCohort **
+* Add the defined model to the virtual patient class in VirtualPatient/VirtualPatient.</p>
+<p>** Update plots **
+* Update plotting function with specifics of the defined model.</p>
+<p>** Optional: Controller compatibility **
+*</p>
+</section>
+<section id="how-to-add-a-controller">
+<h2>How to add a controller?<a class="headerlink" href="#how-to-add-a-controller" title="Link to this heading">¶</a></h2>
+<p>** Define controller class **
+* Define the class similarly to already existing ones in the <code class="code docutils literal notranslate"><span class="pre">pymgipsim/Controllers</span></code> folder.
+* The controller has to have a unique name, same as the folder name.
+* <code class="code docutils literal notranslate"><span class="pre">run</span></code> function of the controller will be called in every sampling time of the simulation with the available data up to that point. The function has to modify inplace the current sample of the input array.</p>
+<p>** Adding it to the solver **
+* Add the controller to the <code class="code docutils literal notranslate"><span class="pre">set_controller</span></code> function in <code class="code docutils literal notranslate"><span class="pre">pymgipsim/ModelSolver/singlescale.py</span></code>.</p>
+<p>** Update plots **
+* Update plotting function with specifics of the defined controller.</p>
 </section>
 <section id="pymgipsim-package">
 <h2>PYmGIPsim package<a class="headerlink" href="#pymgipsim-package" title="Link to this heading">¶</a></h2>
