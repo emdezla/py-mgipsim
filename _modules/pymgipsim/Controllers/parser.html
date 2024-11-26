@@ -80,8 +80,8 @@
            <div itemprop="articleBody">
              
   <h1>Source code for pymgipsim.Controllers.parser</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">json</span><span class="o">,</span> <span class="nn">argparse</span><span class="o">,</span> <span class="nn">colorama</span>
-<span class="kn">from</span> <span class="nn">..Utilities.paths</span> <span class="kn">import</span> <span class="n">default_settings_path</span>
+<span></span><span class="kn">import</span> <span class="nn">json</span><span class="o">,</span> <span class="nn">argparse</span><span class="o">,</span> <span class="nn">glob</span>
+<span class="kn">from</span> <span class="nn">..Utilities.paths</span> <span class="kn">import</span> <span class="n">default_settings_path</span><span class="p">,</span> <span class="n">controller_path</span>
 <span class="kn">from</span> <span class="nn">pymgipsim.Interface.Messages.parser_colors</span> <span class="kn">import</span> <span class="n">color_help_text</span><span class="p">,</span> <span class="n">color_group_header_text</span>
 <span class="kn">from</span> <span class="nn">pymgipsim</span> <span class="kn">import</span> <span class="n">Controllers</span>
 <span class="kn">from</span> <span class="nn">pymgipsim.Utilities.Scenario</span> <span class="kn">import</span> <span class="n">scenario</span>
@@ -99,6 +99,15 @@
         <span class="n">scenario_instance</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">controller_name</span>
         <span class="n">scenario_instance</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">controller_parameters</span></div>
 
+
+<div class="viewcode-block" id="get_controller_names">
+<a class="viewcode-back" href="../../../_autosummary/pymgipsim.Controllers.parser.get_controller_names.html#pymgipsim.Controllers.parser.get_controller_names">[docs]</a>
+<span class="k">def</span> <span class="nf">get_controller_names</span><span class="p">():</span>
+    <span class="n">paths</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">controller_path</span><span class="o">+</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">*</span><span class="se">\\</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">controllers</span> <span class="o">=</span> <span class="p">[</span><span class="n">folder</span> <span class="k">for</span> <span class="n">folder</span> <span class="ow">in</span> <span class="n">paths</span> <span class="k">if</span> <span class="s1">&#39;__&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">folder</span><span class="p">]</span>
+    <span class="n">controllers</span> <span class="o">=</span> <span class="p">[</span><span class="n">folder</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span> <span class="k">for</span> <span class="n">folder</span> <span class="ow">in</span> <span class="n">controllers</span><span class="p">]</span>
+    <span class="n">controllers</span> <span class="o">=</span> <span class="p">[</span><span class="n">folder</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">folder</span> <span class="ow">in</span> <span class="n">controllers</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">controllers</span></div>
 
 
 <div class="viewcode-block" id="generate_controller_settings_parser">
@@ -118,9 +127,7 @@
                             <span class="s1">&#39;--controller-name&#39;</span><span class="p">,</span>
                             <span class="n">help</span> <span class="o">=</span> <span class="n">color_help_text</span><span class="p">(</span><span class="s2">&quot;Name of the closed-loop controller algorithm.&quot;</span><span class="p">),</span>
                             <span class="n">dest</span> <span class="o">=</span> <span class="s1">&#39;controller_name&#39;</span><span class="p">,</span>
-                            <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="n">Controllers</span><span class="o">.</span><span class="n">OpenLoop</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">Controller</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                                     <span class="n">Controllers</span><span class="o">.</span><span class="n">SAPT</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">Controller</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                                     <span class="n">Controllers</span><span class="o">.</span><span class="n">StochasticOpenLoop</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">Controller</span><span class="o">.</span><span class="n">name</span><span class="p">],</span>
+                            <span class="n">choices</span><span class="o">=</span><span class="n">get_controller_names</span><span class="p">(),</span>
                             <span class="nb">type</span> <span class="o">=</span> <span class="nb">str</span><span class="p">,</span>
                             <span class="n">default</span> <span class="o">=</span> <span class="n">Controllers</span><span class="o">.</span><span class="n">OpenLoop</span><span class="o">.</span><span class="n">controller</span><span class="o">.</span><span class="n">Controller</span><span class="o">.</span><span class="n">name</span>
                             <span class="p">)</span>

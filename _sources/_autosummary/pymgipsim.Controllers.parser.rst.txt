@@ -19,6 +19,7 @@ pymgipsim.Controllers.parser
    
       controller_args_to_scenario
       generate_controller_settings_parser
+      get_controller_names
    
    
 

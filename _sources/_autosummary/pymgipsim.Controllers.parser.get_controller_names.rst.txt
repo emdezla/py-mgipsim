@@ -1,0 +1,6 @@
+pymgipsim.Controllers.parser.get\_controller\_names
+===================================================
+
+.. currentmodule:: pymgipsim.Controllers.parser
+
+.. autofunction:: get_controller_names
