@@ -1,5 +1,5 @@
-import json, argparse, colorama
-from ..Utilities.paths import default_settings_path
+import json, argparse, glob
+from ..Utilities.paths import default_settings_path, controller_path
 from pymgipsim.Interface.Messages.parser_colors import color_help_text, color_group_header_text
 from pymgipsim import Controllers
 from pymgipsim.Utilities.Scenario import scenario
@@ -15,6 +15,12 @@ def controller_args_to_scenario(scenario_instance: scenario, args):
         scenario_instance.controller.name = args.controller_name
         scenario_instance.controller.parameters = args.controller_parameters
 
+def get_controller_names():
+    paths = glob.glob(controller_path+ "\\*\\")
+    controllers = [folder for folder in paths if '__' not in folder]
+    controllers = [folder.split("\\")[-2:] for folder in controllers]
+    controllers = [folder[0] for folder in controllers]
+    return controllers
 
 def generate_controller_settings_parser(parent_parser = [], add_help = True):
 
@@ -31,9 +37,7 @@ def generate_controller_settings_parser(parent_parser = [], add_help = True):
                             '--controller-name',
                             help = color_help_text("Name of the closed-loop controller algorithm."),
                             dest = 'controller_name',
-                            choices=[Controllers.OpenLoop.controller.Controller.name,
-                                     Controllers.SAPT.controller.Controller.name,
-                                     Controllers.StochasticOpenLoop.controller.Controller.name],
+                            choices=get_controller_names(),
                             type = str,
                             default = Controllers.OpenLoop.controller.Controller.name
                             )

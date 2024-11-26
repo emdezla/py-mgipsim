@@ -9,10 +9,12 @@ def therapies():
     if st.session_state.args.model_name == T1DM.ExtHovorka.Model.name:
         option = st.selectbox(
             "Insulin therapy options",
-            ("💉 Multiple daily injections", "📱 Sensor augmented pump therapy", "📱 Fully automated insulin delivery"),
+            ("💉 Multiple daily injections","💉 Multiple daily injections (stochastic)", "📱 Sensor augmented pump therapy"),
         )
         if "💉 Multiple daily injections"==option:
             st.session_state.args.controller_name = OpenLoop.controller.Controller.name
+        if "💉 Multiple daily injections (stochastic)"==option:
+            st.session_state.args.controller_name = StochasticOpenLoop.controller.Controller.name
         if "📱 Sensor augmented pump therapy"==option:
             st.session_state.args.controller_name = SAPT.controller.Controller.name
         if "📱 Fully automated insulin delivery"==option:
