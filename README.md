@@ -6,7 +6,7 @@ Metabolic simulator of 20 virtual patients with type 1 diabetes, simulates physi
 * [Docs](https://illinoistech-itm.github.io/py-mgipsim/)
 
 ## Requirements
-* Python 3.12.0
+* Python 3.12
 * Dependencies can be installed via ``pip install -r requirements.txt``
 
 ## Usage
