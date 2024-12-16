@@ -5,5 +5,5 @@ class Controller:
     def __init__(self):
         pass
 
-    def run(self, measurements, inputs, sample):
+    def run(self, measurements, inputs, states, sample):
         return
