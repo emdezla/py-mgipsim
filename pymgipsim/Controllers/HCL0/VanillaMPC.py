@@ -1,5 +1,5 @@
 import numpy as np
-from pymgipsim.Controllers.MPC.DataContainer import *
+from pymgipsim.Controllers.HCL0.DataContainer import *
 import qpsolvers
 from pymgipsim.Utilities.units_conversions_constants import UnitConversion
 from pymgipsim.Utilities.Scenario import scenario
@@ -7,24 +7,23 @@ from pymgipsim.InputGeneration.signal import Signal
 from pymgipsim.VirtualPatient.Models import T1DM
 
 
-class Controller:
-    name = "MPC"
+class VanillaMPC:
 
-    def __init__(self, scenario_instance: scenario):
+    def __init__(self, scenario_instance: scenario, patient_idx):
         self.current_states_object = Hovorka_Model_Extended_States_Object_MealComp0()
         demographic_info = scenario_instance.patient.demographic_info
-        self.demographic_info = Demographic_Information(BW=demographic_info.body_weight[0], height=demographic_info.height[0], insulin2carb_ratio=demographic_info.carb_insulin_ratio[0],
-                                                        correction_factor=demographic_info.correction_bolus[0], basal_rate=demographic_info.basal[0],
-                                                        HbA1c=demographic_info.HbA1c[0], waist_size=demographic_info.waist_size[0])
+        self.demographic_info = Demographic_Information(BW=demographic_info.body_weight[patient_idx], height=demographic_info.height[patient_idx], insulin2carb_ratio=demographic_info.carb_insulin_ratio[patient_idx],
+                                                        correction_factor=demographic_info.correction_bolus[patient_idx], basal_rate=demographic_info.basal[patient_idx],
+                                                        HbA1c=demographic_info.HbA1c[patient_idx], waist_size=demographic_info.waist_size[patient_idx])
         model_parameters = T1DM.ExtHovorka.Parameters(np.asarray(scenario_instance.patient.model.parameters))
-        self.hovorka_params = Hovorka_Parameters(TmaxI=model_parameters.tmaxI[0],
-                                                 SIT=model_parameters.kb1[0]/model_parameters.ka1[0],
-                                                 SID=model_parameters.kb2[0]/model_parameters.ka2[0],
-                                                 SIE=model_parameters.kb3[0]/model_parameters.ka3[0],
-                                                 Ke=model_parameters.ke[0], K12=model_parameters.k12[0],
-                                                 Ag=0.8, TmaxG=model_parameters.tmaxG[0], gain=1,
-                                                 TmaxE=5, EGP0=model_parameters.EGP0[0]/model_parameters.BW[0],
-                                                 F01=model_parameters.F01[0], BW=model_parameters.BW[0])
+        self.hovorka_params = Hovorka_Parameters(TmaxI=model_parameters.tmaxI[patient_idx],
+                                                 SIT=model_parameters.kb1[patient_idx]/model_parameters.ka1[patient_idx],
+                                                 SID=model_parameters.kb2[patient_idx]/model_parameters.ka2[patient_idx],
+                                                 SIE=model_parameters.kb3[patient_idx]/model_parameters.ka3[patient_idx],
+                                                 Ke=model_parameters.ke[patient_idx], K12=model_parameters.k12[patient_idx],
+                                                 Ag=0.8, TmaxG=model_parameters.tmaxG[patient_idx], gain=1,
+                                                 TmaxE=5, EGP0=model_parameters.EGP0[patient_idx]/model_parameters.BW[patient_idx],
+                                                 F01=model_parameters.F01[patient_idx], BW=model_parameters.BW[patient_idx])
 
         self.pw_data_object = Data_PW()
         self.bounds = Bounds()
@@ -385,41 +384,39 @@ class Controller:
         # from plant
         self.current_states_object.update_by_vector(x_plant)
 
-    def run(self, measurements, inputs, states, sample):
+    def run(self, measurements, inputs, states, sample, patient_idx):
+        patient_states = states[patient_idx,:,sample]
 
-        #cgm, meal=0, exercise=1
-        if sample % self.T==0:
-
-            patient_states = states[0,:,sample]
-            #[S1, S2, PIC, G, Q2, R1, R2, x1, x2, x3, D1, D2]
-            #['S1', 'S2', 'I', 'x1', 'x2', 'x3', 'Q1', 'Q2', 'IG', 'D1Slow', 'D2Slow','D1Fast', 'D2Fast', 'EEfast', 'EEhighintensity', 'EElongeffect']
-            converted_states = np.zeros(12,)
-            converted_states[0:3] = patient_states[0:3]
-            converted_states[3] = patient_states[8]
-            converted_states[4] = patient_states[7]
-            converted_states[[5,6]] = [0,0]
-            converted_states[7:10] = patient_states[3:6]
-            converted_states[10:] = [0,0]#patient_states[9:11]
-            self.update_state(converted_states)
-            # Select hardcoded 1st patient (MPC currently works for single patient)
-            G = UnitConversion.glucose.concentration_mmolL_to_mgdL(measurements[0])
-            uFastCarbs, uSlowCarbs, uHR, uInsulin, energy_expenditure = inputs[0]
+        # Convert representation from simulator to controller
+        #[S1, S2, PIC, G, Q2, R1, R2, x1, x2, x3, D1, D2]
+        #['S1', 'S2', 'I', 'x1', 'x2', 'x3', 'Q1', 'Q2', 'IG', 'D1Slow', 'D2Slow','D1Fast', 'D2Fast', 'EEfast', 'EEhighintensity', 'EElongeffect']
+        converted_states = np.zeros(12,)
+        converted_states[0:3] = patient_states[0:3]
+        converted_states[3] = patient_states[8]
+        converted_states[4] = patient_states[7]
+        converted_states[[5,6]] = [0,0]
+        converted_states[7:10] = patient_states[3:6]
+        converted_states[10:] = UnitConversion.glucose.mmol_glucose_to_g(patient_states[9:11])#patient_states[9:11]
+        self.update_state(converted_states)
+        # Select hardcoded 1st patient (MPC currently works for single patient)
+        G = UnitConversion.glucose.concentration_mmolL_to_mgdL(measurements[patient_idx])
+        uFastCarbs, uSlowCarbs, uHR, uInsulin, energy_expenditure = inputs[patient_idx]
 
 
-            sum_meals = np.sum(uFastCarbs[sample-self.T+1:sample:sample+1]+uSlowCarbs[sample-self.T+1:sample:sample+1])/self.T
-            energy_expenditure_mean = 1+np.sum(energy_expenditure[sample-self.T+1:sample:sample+1])/self.T
+        sum_meals = np.sum(uFastCarbs[sample-self.T+1:sample:sample+1]+uSlowCarbs[sample-self.T+1:sample:sample+1])/self.T
+        energy_expenditure_mean = 1+np.sum(energy_expenditure[sample-self.T+1:sample:sample+1])/self.T
 
-            # meal is in gram
-            # exercise is in MET
-            self.pw_data_object.push_cgm(G)
-            self.pw_data_object.push_meal(sum_meals)
-            self.pw_data_object.push_energy_expenditure(energy_expenditure_mean)
+        # meal is in gram
+        # exercise is in MET
+        self.pw_data_object.push_cgm(G)
+        self.pw_data_object.push_meal(sum_meals)
+        self.pw_data_object.push_energy_expenditure(energy_expenditure_mean)
 
-            self.update_linear_model()
-            basal, bolus = self.mpc_execute()
-            self.pw_data_object.push_basal(basal)
-            self.pw_data_object.push_bolus(bolus)
-            # insulin = MPC_Controller_01.get_insulin_input_mU_min(basal, bolus)
-            insulin_rate = UnitConversion.insulin.Uhr_to_mUmin(basal)+UnitConversion.insulin.U_to_mU(bolus)/self.T
-            inputs[0,3,sample:sample+self.T] = insulin_rate
+        self.update_linear_model()
+        basal, bolus = self.mpc_execute()
+        self.pw_data_object.push_basal(basal)
+        self.pw_data_object.push_bolus(bolus)
+        # insulin = MPC_Controller_01.get_insulin_input_mU_min(basal, bolus)
+        insulin_rate = UnitConversion.insulin.Uhr_to_mUmin(basal)+UnitConversion.insulin.U_to_mU(bolus)/self.T
+        inputs[patient_idx,3,sample:sample+self.T] = insulin_rate
         return

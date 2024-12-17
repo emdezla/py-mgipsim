@@ -1,4 +1,7 @@
 from abc import ABC, abstractmethod
+
+import numpy as np
+
 from ..ODESolvers.ode_solvers import euler_single_step, rk4_single_step
 from pymgipsim.Utilities.Scenario import scenario
 from pymgipsim.VirtualPatient.Models.Model import BaseModel
@@ -37,10 +40,12 @@ class SolverBase(ABC):
                     case T1DM.IVP.Model.name:
                         self.model.inputs.basal_insulin.sampled_signal[:, 0] = self.controller.basal.sampled_signal[:, 0]
                 self.model.preprocessing()
-            case Controllers.MPC.controller.Controller.name:
-                self.controller = Controllers.MPC.controller.Controller(self.scenario_instance)
-                self.model.inputs.uInsulin.sampled_signal[:, 0] = UnitConversion.insulin.Uhr_to_mUmin(self.controller.demographic_info.basal_rate)
+            case Controllers.HCL0.controller.Controller.name:
+                self.controller = Controllers.HCL0.controller.Controller(self.scenario_instance)
+                self.model.inputs.uInsulin.sampled_signal[:, 0] = UnitConversion.insulin.Uhr_to_mUmin(np.asarray([x.demographic_info.basal_rate for x in self.controller.controllers]))
                 self.model.preprocessing()
+            case _:  # Default case
+                raise Exception("Undefined controller, Add it to the ModelSolver class.")
 
 
     def set_solver(self, solver_name):

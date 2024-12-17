@@ -20,7 +20,7 @@ def therapies():
         if "📱 Fully automated insulin delivery"==option:
             st.session_state.args.controller_name = ""
         if "📱 Hybrid closed-loop"==option:
-            st.session_state.args.controller_name = MPC.controller.Controller.name
+            st.session_state.args.controller_name = HCL0.controller.Controller.name
     else:
         st.session_state.args.controller_name = "OpenLoop"
 
