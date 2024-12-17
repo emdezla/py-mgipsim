@@ -85,7 +85,7 @@ class GlucoseUnits:
         return (g_glucose / 180.156) * 1000
 
     @staticmethod
-    def mmol_glcuose_to_g(mmol_glucose):
+    def mmol_glucose_to_g(mmol_glucose):
         return (mmol_glucose / 1000) * 180.156
 
     @staticmethod

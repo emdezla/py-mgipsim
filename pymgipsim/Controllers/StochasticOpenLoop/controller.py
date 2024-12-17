@@ -37,6 +37,6 @@ class Controller:
 
                 pass
 
-    def run(self, measurements, inputs, sample):
+    def run(self, measurements, inputs, states, sample):
         inputs[:, 3, sample] = self.insulin.sampled_signal[:, sample]
         return

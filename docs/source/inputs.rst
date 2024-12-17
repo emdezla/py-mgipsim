@@ -60,6 +60,14 @@ By default, bolus values are calculated based on the carbohydrate-to-insulin rat
 
 - Definition: Series of start times and magnitudes.
 
+**Therapies:**
+
+- Multiple Daily Injections: Based on basal rate of the patient and carbohydrate-to-insulin ratio.
+
+- Sensor Augmented Pump Therapy: Issues rescue carbs if necessary. Basal rates and meal time boluses are based on demographics information.
+
+- Hybrid closed-loop: A minimal implementation of a hybrid closed-loop algorithm using a vanilla model predictive controller.
+
 
 SGL2i
 -------------------

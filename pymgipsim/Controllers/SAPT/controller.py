@@ -41,7 +41,7 @@ class Controller:
                 raise Exception(f"Unknown model name {self.model_name}")
 
 
-    def run(self, measurements, inputs, sample):
+    def run(self, measurements, inputs, states, sample):
 
         chos = self.meal_announcement.sampled_signal[:,sample]
         meal_ongoing_binmap = chos > np.finfo(float).eps

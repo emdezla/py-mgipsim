@@ -1,4 +1,7 @@
 from abc import ABC, abstractmethod
+
+import numpy as np
+
 from ..ODESolvers.ode_solvers import euler_single_step, rk4_single_step
 from pymgipsim.Utilities.Scenario import scenario
 from pymgipsim.VirtualPatient.Models.Model import BaseModel
@@ -37,6 +40,12 @@ class SolverBase(ABC):
                     case T1DM.IVP.Model.name:
                         self.model.inputs.basal_insulin.sampled_signal[:, 0] = self.controller.basal.sampled_signal[:, 0]
                 self.model.preprocessing()
+            case Controllers.HCL0.controller.Controller.name:
+                self.controller = Controllers.HCL0.controller.Controller(self.scenario_instance)
+                self.model.inputs.uInsulin.sampled_signal[:, 0] = UnitConversion.insulin.Uhr_to_mUmin(np.asarray([x.demographic_info.basal_rate for x in self.controller.controllers]))
+                self.model.preprocessing()
+            case _:  # Default case
+                raise Exception("Undefined controller, Add it to the ModelSolver class.")
 
 
     def set_solver(self, solver_name):
@@ -70,7 +79,7 @@ class SingleScaleSolver(SolverBase):
         state_results[:, :, 0] = self.model.initial_conditions.as_array
         for sample in tqdm(range(1, inputs.shape[2]), disable = no_progress_bar):
 
-            self.controller.run(measurements=state_results[:, self.model.output_state, sample - 1], inputs=inputs, sample=sample-1)
+            self.controller.run(measurements=state_results[:, self.model.output_state, sample - 1], inputs=inputs, states=state_results, sample=sample-1)
 
             state_results[:, :, sample] = self.ode_solver(
                 f=self.model.model,
