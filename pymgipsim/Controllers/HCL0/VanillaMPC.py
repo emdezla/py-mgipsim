@@ -1,3 +1,4 @@
+# Linear MPC, implemented by Mohammad Ahmadasas
 import numpy as np
 from pymgipsim.Controllers.HCL0.DataContainer import *
 import qpsolvers
@@ -8,6 +9,7 @@ from pymgipsim.VirtualPatient.Models import T1DM
 
 
 class VanillaMPC:
+    # Linear MPC, implemented by Mohammad Ahmadasas
 
     def __init__(self, scenario_instance: scenario, patient_idx):
         self.current_states_object = Hovorka_Model_Extended_States_Object_MealComp0()
