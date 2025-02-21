@@ -1,4 +1,4 @@
-import json, argparse, glob
+import json, argparse, glob, os
 from ..Utilities.paths import default_settings_path, controller_path
 from pymgipsim.Interface.Messages.parser_colors import color_help_text, color_group_header_text
 from pymgipsim import Controllers
@@ -16,9 +16,9 @@ def controller_args_to_scenario(scenario_instance: scenario, args):
         scenario_instance.controller.parameters = args.controller_parameters
 
 def get_controller_names():
-    paths = glob.glob(controller_path+ "\\*\\")
+    paths = glob.glob(os.path.join(controller_path, "*", ""))
     controllers = [folder for folder in paths if '__' not in folder]
-    controllers = [folder.split("\\")[-2:] for folder in controllers]
+    controllers = [folder.split(os.sep)[-2:] for folder in controllers]
     controllers = [folder[0] for folder in controllers]
     return controllers
 

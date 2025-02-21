@@ -1,6 +1,7 @@
 import traceback, json
 from tabulate import tabulate
 import copy
+import os
 
 import matplotlib.pyplot as plt
 from pymgipsim.Utilities.Scenario import scenario
@@ -381,7 +382,7 @@ class SimulatorCLI(SimulatorCMD):
 
 		self.results_list = []
 
-		with open(default_settings_path + "\\scenario_default.json", "r") as f:  #
+		with open(os.path.join(default_settings_path, "scenario_default.json"), "r") as f:  #
 			self.simulation_scenario = scenario(**json.load(f))
 		f.close()
 

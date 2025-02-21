@@ -4,6 +4,7 @@ import json
 from pymgipsim.Utilities.Scenario import scenario
 from pymgipsim.Utilities.units_conversions_constants import UnitConversion
 import pymgipsim.VirtualPatient.Models as Models
+import os
 
 """ 
 #######################################################################################################################
@@ -22,17 +23,17 @@ def _generate_plot_subject(results_directory, **kwargs):
     - fig
     """
 
-    with open(results_directory + "\\model.pkl", 'rb') as f:
+    with open(os.path.join(results_directory, "model.pkl"), 'rb') as f:
         loaded_model = pickle.load(f)
 
-    with open(results_directory + "\\simulation_settings.json", "r") as f:  #
+    with open(os.path.join(results_directory, "simulation_settings.json"), "r") as f:  #
         loaded_scenario = scenario(**json.load(f))
     f.close()
 
     patient = kwargs['plot_patient']
 
     fig = plot_subject_response(loaded_model, loaded_scenario, patient)
-    fig.savefig(f"{results_directory}/figures/subject_"+fig.axes[0].get_title()+".png", bbox_inches='tight')
+    fig.savefig(os.path.join(results_directory, "figures", "subject_" + fig.axes[0].get_title() + ".png"), bbox_inches='tight')
 
     return fig
 
@@ -48,7 +49,7 @@ def _generate_plot_bgc(results_directory, **kwargs):
     - None
     """
 
-    with open(results_directory + "\\model.pkl", 'rb') as f:
+    with open(os.path.join(results_directory, "model.pkl"), 'rb') as f:
         loaded_model = pickle.load(f)
 
     if 'figsize' in kwargs:
@@ -76,7 +77,7 @@ def _generate_plot_bgc(results_directory, **kwargs):
 
     fig = plot_bgc(loaded_model.time.as_unix, glucose, figsize, figcolor)
     fig.tight_layout()
-    fig.savefig(f"{results_directory}/figures/bgc_plot.png", bbox_inches='tight')
+    fig.savefig(os.path.join(results_directory, "figures", "bgc_plot.png"), bbox_inches='tight')
 
     return fig
 
@@ -103,12 +104,12 @@ def _generate_plot_all_states(results_directory, **kwargs):
         figcolor = 'C0'
 
 
-    with open(results_directory + "\\model.pkl", 'rb') as f:
+    with open(os.path.join(results_directory, "model.pkl"), 'rb') as f:
         loaded_model = pickle.load(f)
 
     fig = plot_all_states(loaded_model.time.as_unix, loaded_model.states.as_array, loaded_model.states.state_units, loaded_model.states.state_names, figsize, figcolor)
     fig.tight_layout()
-    fig.savefig(f"{results_directory}/figures/all_states.png", bbox_inches='tight')
+    fig.savefig(os.path.join(results_directory, "figures", "all_states.png"), bbox_inches='tight')
 
     return fig
 
@@ -136,12 +137,12 @@ def _generate_bw(results_directory, **kwargs):
         figcolor = 'C0'
 
 
-    with open(results_directory + "\\multiscale_model.pkl", 'rb') as f:
+    with open(os.path.join(results_directory, "multiscale_model.pkl"), 'rb') as f:
         loaded_model = pickle.load(f)
 
     fig = plot_bw(loaded_model.time.as_unix, loaded_model.states.as_array, loaded_model.states.state_units, loaded_model.states.state_names, figsize, figcolor)
     fig.tight_layout()
-    fig.savefig(f"{results_directory}/figures/bodyweight.png", bbox_inches='tight')
+    fig.savefig(os.path.join(results_directory, "figures", "bodyweight.png"), bbox_inches='tight')
 
     return fig
 
@@ -175,12 +176,12 @@ def _generate_bw(results_directory, **kwargs):
         figcolor = 'C0'
 
 
-    with open(results_directory + "\\multiscale_model.pkl", 'rb') as f:
+    with open(os.path.join(results_directory, "multiscale_model.pkl"), 'rb') as f:
         loaded_model = pickle.load(f)
 
     fig = plot_bw(loaded_model.time.as_unix, loaded_model.states.as_array, loaded_model.states.state_units, loaded_model.states.state_names, figsize, figcolor)
     fig.tight_layout()
-    fig.savefig(f"{results_directory}/figures/bodyweight.png", bbox_inches='tight')
+    fig.savefig(os.path.join(results_directory, "figures", "bodyweight.png"), bbox_inches='tight')
 
     return fig
 
@@ -214,12 +215,12 @@ def _generate_input_signals(results_directory, **kwargs):
         figcolor = 'C0'
 
 
-    with open(results_directory + "\\model.pkl", 'rb') as f:
+    with open(os.path.join(results_directory, "model.pkl"), 'rb') as f:
         loaded_model = pickle.load(f)
 
     fig = plot_input_signals(loaded_model.time.as_unix, loaded_model.inputs.as_array, [i for i in list(vars(loaded_model.inputs).keys()) if 'array' not in i])
     fig.tight_layout()
-    fig.savefig(f"{results_directory}/figures/input_singals.png", bbox_inches='tight')
+    fig.savefig(os.path.join(results_directory, "figures", "input_singals.png"), bbox_inches='tight')
 
     return fig
 

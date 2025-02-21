@@ -1,5 +1,6 @@
 import argparse
 import numpy as np
+import os
 from pymgipsim.Utilities.paths import default_settings_path, results_path
 from pymgipsim.Settings.parser import generate_settings_parser
 from pymgipsim.Utilities import simulation_folder
@@ -31,13 +32,13 @@ def generate_simulation_settings_main(scenario_instance: scenario, args: argpars
     else:
         scenario_instance.settings.simulator_name = "SingleScaleSolver"
 
-    save_scenario(results_folder_path + "\\simulation_settings.json", asdict(scenario_instance))
+    save_scenario(os.path.join(results_folder_path, "simulation_settings.json"), asdict(scenario_instance))
 
     return scenario_instance
 
 if __name__ == '__main__':
 
-    default_scenario = load_scenario(default_settings_path + "\\scenario_default.json")
+    default_scenario = load_scenario(os.path.join(default_settings_path, "scenario_default.json"))
 
     """ Define Results Path """
     _, _, _, results_folder_path = simulation_folder.create_simulation_results_folder(results_path)

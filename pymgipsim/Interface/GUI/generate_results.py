@@ -18,6 +18,7 @@ import base64
 import json
 import simplejson
 from dataclasses import asdict
+import os
 
 
 def download_button(object_to_download, download_filename):
@@ -168,7 +169,7 @@ def run_simulation(uploaded_scenario):
 
     if uploaded_scenario is not None:
         settings_file = scenario(**json.loads(uploaded_scenario.getvalue()))
-    save_scenario(st.session_state.results_folder_path + "\\simulation_settings.json", asdict(settings_file))
+    save_scenario(os.path.join(st.session_state.results_folder_path, "simulation_settings.json"), asdict(settings_file))
     if settings_file.settings.simulator_name == "MultiScaleSolver":
         model_solver,metrics = generate_results_main(scenario_instance=settings_file, args=vars(args),
                                              results_folder_path=st.session_state.results_folder_path)

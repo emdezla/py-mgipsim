@@ -12,6 +12,7 @@ from pymgipsim.generate_plots import generate_plots_main
 from pymgipsim.generate_results import generate_results_main
 
 import cProfile, pstats
+import os
 
 """
 #######################
@@ -34,7 +35,7 @@ def run_simulator_cli(args):
 
     """ Loading Default Scenario """
 
-    default_scenario = load_scenario(default_settings_path + "\\scenario_default.json")
+    default_scenario = load_scenario(os.path.join(default_settings_path, "scenario_default.json"))
 
     """ Define Results Path """
     _, _, _, results_folder_path = simulation_folder.create_simulation_results_folder(results_path)

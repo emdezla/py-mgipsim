@@ -25,7 +25,7 @@ def get_most_recent_folder_in_directory(directory: str) -> str:
     - str
         Path of the most recent folder.
     """
-    all_subdirs = [f"{directory}/{d}" for d in os.listdir(directory)]
+    all_subdirs = [os.path.join(directory, d) for d in os.listdir(directory)]
     most_recent_dir = max(all_subdirs, key=os.path.getmtime)
     
     return most_recent_dir
@@ -59,7 +59,7 @@ def create_simulation_folder(results_folder_directory: str, simulation_name: str
     - str
         Path to the created simulation folder.
     """
-    folder_path = f"{results_folder_directory}/{simulation_name}"
+    folder_path = os.path.join(results_folder_directory, simulation_name)
 
     if not os.path.exists(folder_path):
         os.mkdir(folder_path)
@@ -68,7 +68,7 @@ def create_simulation_folder(results_folder_directory: str, simulation_name: str
         shutil.rmtree(folder_path)
         os.mkdir(folder_path) 
 
-    os.mkdir(f"{folder_path}/figures")
+    os.mkdir(os.path.join(folder_path, "figures"))
 
     return folder_path
 
@@ -117,9 +117,9 @@ def load_settings_file(args, results_folder_path):
                 print(traceback.format_exc())
 
     else:
-        settings_file = load_scenario(default_settings_path + "\\scenario_default.json")
+        settings_file = load_scenario(os.path.join(default_settings_path, "scenario_default.json"))
 
-    save_scenario(results_folder_path + "\\simulation_settings.json", asdict(settings_file))
+    save_scenario(os.path.join(results_folder_path, "simulation_settings.json"), asdict(settings_file))
 
     assert settings_file is not None
 
