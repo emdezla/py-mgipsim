@@ -8,20 +8,12 @@ from pymgipsim.VirtualPatient.Models.Model import BaseModel
 from pymgipsim import Controllers
 from pymgipsim.Utilities.units_conversions_constants import UnitConversion
 from pymgipsim.VirtualPatient.Models import T1DM
+from .BaseSolvers import BaseSolver
 from tqdm import tqdm
 
-class SolverBase(ABC):
+class SingleScaleSolver(BaseSolver):
 
-
-    def __init__(self, scenario_instance: scenario, model: BaseModel):
-
-        # Directory where the results should be stored
-        self.scenario_instance = scenario_instance
-
-        self.model = model
-
-        # ODE solver function
-        self.set_solver(self.scenario_instance.settings.solver_name)
+    name = "SingleScaleSolver"
 
     def set_controller(self, controller_name):
         match controller_name:
@@ -44,42 +36,24 @@ class SolverBase(ABC):
                 self.controller = Controllers.HCL0.controller.Controller(self.scenario_instance)
                 self.model.inputs.uInsulin.sampled_signal[:, 0] = UnitConversion.insulin.Uhr_to_mUmin(np.asarray([x.demographic_info.basal_rate for x in self.controller.controllers]))
                 self.model.preprocessing()
+            case Controllers.SMDI.controller.Controller.name:
+                self.controller = Controllers.SMDI.controller.Controller(self.scenario_instance)
             case _:  # Default case
                 raise Exception("Undefined controller, Add it to the ModelSolver class.")
 
-
-    def set_solver(self, solver_name):
-        match solver_name:
-            case "RK4":
-                self.ode_solver = rk4_single_step
-            case 'Euler':
-                self.ode_solver = euler_single_step
-
-    @abstractmethod
-    def do_simulation(self):
-        pass
-
-
-
-class SingleScaleSolver(SolverBase):
-
-    name = "SingleScaleSolver"
-
     def do_simulation(self, no_progress_bar):
-
-
         """ Initialize """
         state_results = self.model.states.as_array
         inputs = self.model.inputs.as_array
         parameters = self.model.parameters.as_array
-
 
         self.set_controller(self.scenario_instance.controller.name)
 
         state_results[:, :, 0] = self.model.initial_conditions.as_array
         for sample in tqdm(range(1, inputs.shape[2]), disable = no_progress_bar):
 
-            self.controller.run(measurements=state_results[:, self.model.output_state, sample - 1], inputs=inputs, states=state_results, sample=sample-1)
+            self.controller.run(measurements=state_results[:, self.model.output_state, sample - 1],
+                                inputs=inputs, states=state_results, sample=sample-1)
 
             state_results[:, :, sample] = self.ode_solver(
                 f=self.model.model,
