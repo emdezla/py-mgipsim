@@ -1,3 +1,4 @@
+import os
 from pymgipsim.Utilities.Scenario import scenario, demographic_info
 from pymgipsim.Utilities.units_conversions_constants import UnitConversion
 from .Models import T1DM, Multiscale
@@ -44,9 +45,9 @@ class VirtualCohort:
 
         try:
             body_weight, egfr, basal, height, total_daily_basal, carb_insulin_ratio, resting_heart_rate, correction_bolus, hba1c, waist_size,baseline_daily_energy_intake, baseline_daily_energy_expenditure, baseline_daily_urinary_glucose_excretion  = [], [], [], [], [], [], [], [], [], [],[],[],[]
-            path = models_path + "\\" + scenario_instance.patient.model.name.replace(".", "\\") + "\\Patients\\"
+            path = os.path.join(models_path, scenario_instance.patient.model.name.replace(".", os.sep), "Patients")
             for name in scenario_instance.patient.files:
-                abs_path = path + name
+                abs_path = os.path.join(path, name)
                 with open(abs_path) as f:
                     params_dict = json.load(f)
                 dem = demographic_info(**params_dict["demographic_info"])

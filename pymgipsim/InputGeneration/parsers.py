@@ -1,8 +1,9 @@
 import json, argparse
+import os
 from ..Utilities.paths import default_settings_path
 from pymgipsim.Interface.Messages.parser_colors import color_help_text, color_group_header_text
 
-with open(default_settings_path + "\\scenario_default.json") as f:
+with open(os.path.join(default_settings_path, "scenario_default.json")) as f:
     default_settings = json.load(f)
 
 def generate_carb_settings_parser(parent_parser = [], add_help = True):

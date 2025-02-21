@@ -22,6 +22,7 @@ from pymgipsim.InputGeneration.carb_energy_settings import make_carb_settings
 import argparse, json, pprint
 from dataclasses import asdict
 from pymgipsim.Controllers.parser import controller_args_to_scenario
+import os
 
 
 def generate_inputs_main(scenario_instance: scenario, args: argparse.Namespace, results_folder_path: str) -> argparse.Namespace:
@@ -68,14 +69,14 @@ def generate_inputs_main(scenario_instance: scenario, args: argparse.Namespace, 
     if scenario_instance.settings.simulator_name == "MultiScaleSolver":
         generate_multiscale_inputs(scenario_instance)
 
-    save_scenario(results_folder_path + "\\simulation_settings.json", asdict(scenario_instance))
+    save_scenario(os.path.join(results_folder_path, "simulation_settings.json"), asdict(scenario_instance))
 
     return scenario_instance
 
 
 if __name__ == '__main__':
 
-    with open(default_settings_path + "\\scenario_default.json","r") as f: #
+    with open(os.path.join(default_settings_path, "scenario_default.json"), "r") as f: #
         default_scenario = scenario(**json.load(f))
     f.close()
 

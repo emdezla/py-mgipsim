@@ -1,4 +1,5 @@
 import argparse
+import os
 from ..Utilities.paths import default_settings_path
 from ..Utilities.Scenario import load_scenario
 from pymgipsim.Interface.Messages.parser_colors import color_help_text, color_group_header_text
@@ -8,7 +9,7 @@ from pymgipsim.Utilities.units_conversions_constants import UnitConversion, DEFA
 #     default_settings = scenario(**json.load(f))
 # f.close()
 
-default_settings = load_scenario(default_settings_path + "\\scenario_default.json")
+default_settings = load_scenario(os.path.join(default_settings_path, "scenario_default.json"))
 
 default_days = UnitConversion.time.convert_minutes_to_days(default_settings.settings.end_time - default_settings.settings.start_time)
 

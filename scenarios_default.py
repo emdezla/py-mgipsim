@@ -1,3 +1,4 @@
+import os
 from pymgipsim.Utilities.units_conversions_constants import UnitConversion, DEFAULT_RANDOM_SEED
 from pymgipsim.Utilities.paths import results_path, default_settings_path
 from pymgipsim.Utilities.Scenario import save_scenario
@@ -95,4 +96,4 @@ scenario["patient"]["model"]["initial_conditions"] = None
 scenario["patient"]["mscale"] = {}
 scenario['patient']["mscale"]["models"] = ["Multiscale.BodyWeight"]
 
-save_scenario(default_settings_path + "\\scenario_default.json", scenario)
+save_scenario(os.path.join(default_settings_path, "scenario_default.json"), scenario)

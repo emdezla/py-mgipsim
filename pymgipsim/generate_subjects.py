@@ -23,9 +23,7 @@ from dataclasses import asdict
 np.random.seed(DEFAULT_RANDOM_SEED)
 
 def list_model_patients(model_name: str):
-    path = simulator_path + "/VirtualPatient/Models/"
-    path = path + model_name.replace(".", "/")
-    path = path + "/Patients/*.json"
+    path = os.path.join(simulator_path, "VirtualPatient", "Models", model_name.replace(".", "/"), "Patients", "*.json")
     files = []
     for filename in glob.iglob(path):
         files.append(os.path.split(filename)[-1])
@@ -82,7 +80,7 @@ def generate_virtual_subjects_main(scenario_instance: scenario, args: argparse.N
     parameters = Multiscale.BodyWeight.Parameters.generate(scenario_instance)
     scenario_instance.patient.mscale.parameters = parameters.tolist()
 
-    save_scenario(results_folder_path + "\\simulation_settings.json", asdict(scenario_instance))
+    save_scenario(os.path.join(results_folder_path, "simulation_settings.json"), asdict(scenario_instance))
 
     return scenario_instance
 
@@ -90,7 +88,7 @@ def generate_virtual_subjects_main(scenario_instance: scenario, args: argparse.N
 if __name__ == '__main__':
 
 
-    with open(default_settings_path + "\\scenario_default.json","r") as f: #
+    with open(os.path.join(default_settings_path, "scenario_default.json"), "r") as f: #
         default_scenario = scenario(**json.load(f))
     f.close()
 
