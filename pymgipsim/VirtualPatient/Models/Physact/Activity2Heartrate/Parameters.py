@@ -1,5 +1,6 @@
 import numpy as np
 import json
+import os
 from ...Parameters import BaseParameters
 from pymgipsim.Utilities.Scenario import scenario
 from pymgipsim.Utilities.paths import models_path
@@ -35,9 +36,9 @@ class Parameters(BaseParameters):
     @staticmethod
     def generate(scenario_instance: scenario):
         cohort_parameters = []
-        path = models_path + "\\Physact\\Activity2Heartrate\\Patients\\"
+        path = os.path.join(models_path, "Physact", "Activity2Heartrate", "Patients")
         for name in scenario_instance.patient.files:
-            abs_path = path + name
+            abs_path = os.path.join(path, name)
             with open(abs_path) as f:
                 params_dict = json.load(f)
             model_params = params_dict["model_parameters"]

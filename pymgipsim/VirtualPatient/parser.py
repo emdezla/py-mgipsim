@@ -1,16 +1,17 @@
 import argparse
+import os
 from ..Utilities.paths import default_settings_path, models_path
 from ..Utilities.Scenario import load_scenario
 from pymgipsim.VirtualPatient.Models import T1DM
 import glob
 from pymgipsim.Interface.Messages.parser_colors import color_help_text, color_group_header_text
 
-default_settings = load_scenario(default_settings_path + "\\scenario_default.json")
+default_settings = load_scenario(os.path.join(default_settings_path, "scenario_default.json"))
 
 def get_model_names():
-    paths = glob.glob(models_path + "\\*\\*\\")
+    paths = glob.glob(os.path.join(models_path, "*", "*", ""))
     models = [folder for folder in paths if 'T1DM' in folder and '__' not in folder]
-    models = [folder.split("\\")[-3:] for folder in models]
+    models = [folder.split(os.sep)[-3:] for folder in models]
     models = [folder[0] + "." + folder[1] for folder in models]
     return models
 
