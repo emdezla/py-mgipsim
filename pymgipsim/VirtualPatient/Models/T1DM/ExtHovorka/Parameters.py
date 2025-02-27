@@ -1,5 +1,5 @@
 import json
-
+import os
 import numpy as np
 from dataclasses import dataclass
 from ...Parameters import BaseParameters
@@ -52,9 +52,9 @@ class Parameters(BaseParameters):
     @staticmethod
     def generate(scenario_instance: scenario):
         cohort_parameters = []
-        path = models_path + "\\" + scenario_instance.patient.model.name.replace(".", "\\") + "\\Patients\\"
+        path = os.path.join(models_path, scenario_instance.patient.model.name.replace(".", os.sep), "Patients")
         for name in scenario_instance.patient.files:
-            abs_path = path + name
+            abs_path = os.path.join(path, name)
             with open(abs_path) as f:
                 params_dict = json.load(f)
             parameters = Parameters()

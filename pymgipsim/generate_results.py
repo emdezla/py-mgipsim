@@ -1,4 +1,5 @@
 import pickle, pandas
+import os
 
 import pandas as pd
 
@@ -56,10 +57,10 @@ def generate_results_main(scenario_instance, args, results_folder_path):
 
 			cohort.model_solver.do_simulation(no_progress_bar = args['no_progress_bar'])
 			
-			with open(results_folder_path + "\\model.pkl", 'wb') as f:
+			with open(os.path.join(results_folder_path, "model.pkl"), 'wb') as f:
 				pickle.dump(cohort.model_solver.singlescale_model, f)
 
-			with open(results_folder_path + "\\multiscale_model.pkl", 'wb') as f:
+			with open(os.path.join(results_folder_path, "multiscale_model.pkl"), 'wb') as f:
 				pickle.dump(cohort.model_solver.multiscale_model, f)
 
 
@@ -69,7 +70,7 @@ def generate_results_main(scenario_instance, args, results_folder_path):
 
 			model = cohort.model_solver.model
 
-			with open(results_folder_path + "\\model.pkl", 'wb') as f:
+			with open(os.path.join(results_folder_path, "model.pkl"), 'wb') as f:
 				pickle.dump(model, f)
 
 			# [subjects x states x samples]
@@ -84,7 +85,7 @@ def generate_results_main(scenario_instance, args, results_folder_path):
 			if args['to_excel']:
 				if not args['no_print']:
 					print(">>>>> Formatting and Saving Results")
-				with pandas.ExcelWriter(results_folder_path + "\\model_state_results.xlsx") as writer:
+				with pandas.ExcelWriter(os.path.join(results_folder_path, "model_state_results.xlsx")) as writer:
 					save_to_xls(state_results, state_names, state_units, writer, args["no_progress_bar"])
 
 	return cohort, None#get_metrics(cohort.singlescale_model)

@@ -48,7 +48,7 @@ class SingleScaleSolver(BaseSolver):
         state_results = self.model.states.as_array
         inputs = self.model.inputs.as_array
         parameters = self.model.parameters.as_array
-        print(inputs.shape)
+
         self.set_controller(self.scenario_instance.controller.name)
 
         state_results[:, :, 0] = self.model.initial_conditions.as_array

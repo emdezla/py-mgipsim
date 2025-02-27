@@ -1,12 +1,10 @@
 import cmd, subprocess, json
-
+import os
 from pprint import pprint
-
 from pymgipsim.Settings.parser import generate_settings_parser
 from pymgipsim.Utilities import simulation_folder
 from pymgipsim.Utilities.paths import default_settings_path, results_path
 from pymgipsim.Utilities.Scenario import scenario
-
 from pymgipsim.VirtualPatient.parser import generate_virtual_subjects_parser, generate_results_parser
 from pymgipsim.InputGeneration.parsers import generate_activity_parser, generate_sglt2i_settings_parser, generate_exog_insulin_parser, generate_carb_settings_parser, generate_multiscale_carb_settings_parser
 from pymgipsim.Controllers.parser import generate_controller_settings_parser
@@ -53,7 +51,7 @@ class SimulatorCMD(cmd.Cmd):
 	activity_args_prev = vars(generate_activity_parser(add_help = True).parse_args(''))
 	results_args_prev = vars(generate_results_parser(add_help = True).parse_args(''))
 
-	with open(default_settings_path + "\\scenario_default.json","r") as f: #
+	with open(os.path.join(default_settings_path, "scenario_default.json"), "r") as f:
 		simulation_scenario = scenario(**json.load(f))
 	f.close()
 
