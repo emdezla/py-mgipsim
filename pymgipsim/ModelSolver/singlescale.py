@@ -38,6 +38,8 @@ class SingleScaleSolver(BaseSolver):
                 self.model.preprocessing()
             case Controllers.SMDI.controller.Controller.name:
                 self.controller = Controllers.SMDI.controller.Controller(self.scenario_instance)
+                self.model.inputs.uInsulin.sampled_signal[:, 0] = UnitConversion.insulin.Uhr_to_mUmin(np.asarray(1))
+                self.model.preprocessing()
             case _:  # Default case
                 raise Exception("Undefined controller, Add it to the ModelSolver class.")
 
