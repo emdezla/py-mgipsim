@@ -21,7 +21,7 @@ class NMPC:
 
     """
 
-    def __init__(self, scenario: scenario):
+    def __init__(self, scenario: scenario, patient_idx):
 
         self.patient_idx = 0
         self.steps = 24
@@ -52,7 +52,8 @@ class NMPC:
         self.scenario = deepcopy(scenario)
         self.scenario.patient.model.name = IVP.Model.name
         self.scenario.patient.number_of_subjects = 1
-        self.scenario.patient.demographic_info.body_weight = [self.scenario.patient.demographic_info.body_weight[0]]
+        self.basal_rate = scenario.patient.demographic_info.basal[patient_idx]
+        self.scenario.patient.demographic_info.body_weight = [self.scenario.patient.demographic_info.body_weight[patient_idx]]
         self.scenario.patient.model.parameters = IVP.Parameters.generate(self.scenario)
         self.scenario.inputs.taud = generate_carb_absorption(self.scenario,None)
         self.solver = BaseSolver(self.scenario, IVP.Model.from_scenario(self.scenario))
@@ -68,15 +69,15 @@ class NMPC:
         # print(self.insulin_init)
 
     def run(self, sample, glucose):
-        inputs = self.solver.model.inputs
-        inputs.basal_insulin.sampled_signal, inputs.bolus_insulin.sampled_signal = np.zeros((1,self.steps)),np.zeros((1,self.steps))
-        inputs.carb.sampled_signal = self.carb[[0],sample:sample + self.steps]
-        inputs.taud.sampled_signal = self.taud[[0],sample:sample + self.steps]
+        open_loop_inputs = self.solver.model.inputs
+        open_loop_inputs.basal_insulin.sampled_signal, open_loop_inputs.bolus_insulin.sampled_signal = np.zeros((1,self.steps)),np.zeros((1,self.steps))
+        open_loop_inputs.carb.sampled_signal = self.carb[[0],sample:sample + self.steps]
+        open_loop_inputs.taud.sampled_signal = self.taud[[0],sample:sample + self.steps]
         self.solver.model.time.as_unix = self.time[sample:sample + self.steps]
         self.solver.model.preprocessing()
         if sample==0:
-            inputs.basal_insulin.sampled_signal[:,0] = self.solver.model.get_basal_equilibrium(self.solver.model.parameters.as_array, glucose)
-            self.solver.model.initial_conditions.as_array = self.solver.model.output_equilibrium(self.solver.model.parameters.as_array, inputs.as_array)
+            open_loop_inputs.basal_insulin.sampled_signal[:,0] = self.solver.model.get_basal_equilibrium(self.solver.model.parameters.as_array, glucose)
+            self.solver.model.initial_conditions.as_array = self.solver.model.output_equilibrium(self.solver.model.parameters.as_array, open_loop_inputs.as_array)
         self.solver.do_simulation(False)
         return
         # """ Performs gradient descent algorithm to find optimal insulin input.

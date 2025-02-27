@@ -44,12 +44,10 @@ class Model(BaseModel, UnitConversion):
 
         Ra = np.zeros((inputs.shape[0],inputs.shape[2]))
 
-
-
         for patientidx in range(inputs.shape[0]):
             carbi = carb[patientidx,:]
             taudi = taud[patientidx,:]
-            meal_times = self.time.as_unix[carbi>0]
+            meal_times = self.inputs.carb.start_time#self.time.as_unix[carbi>0]
             taudi = taudi[taudi>0]
             carbi = carbi[carbi>0]
 

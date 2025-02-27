@@ -6,5 +6,3 @@ import matplotlib.pyplot as plt
 args = generate_parser_cli().parse_args()
 
 run_simulator_cli(args)
-
-plt.show()

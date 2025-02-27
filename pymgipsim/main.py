@@ -11,7 +11,7 @@ from pymgipsim.generate_subjects import generate_virtual_subjects_main
 from pymgipsim.generate_plots import generate_plots_main
 from pymgipsim.generate_results import generate_results_main
 
-import cProfile, pstats
+# import cProfile, pstats
 
 """
 #######################
@@ -21,9 +21,9 @@ Main Functions for CLI
 
 def run_simulator_cli(args):
 
-    if args.profile:
-        profiler = cProfile.Profile()
-        profiler.enable()
+    # if args.profile:
+    #     profiler = cProfile.Profile()
+    #     profiler.enable()
 
     """ Initialization """
     
@@ -62,9 +62,9 @@ def run_simulator_cli(args):
     figures = generate_plots_main(results_folder_path, args)
 
 
-    if args.profile:
-        profiler.disable()
-        profiler_stats = pstats.Stats(profiler).sort_stats('tottime')
-        profiler_stats.print_stats(30)
+    # if args.profile:
+    #     profiler.disable()
+    #     profiler_stats = pstats.Stats(profiler).sort_stats('tottime')
+    #     profiler_stats.print_stats(30)
 
     return settings_file, model, figures
