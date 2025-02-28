@@ -96,23 +96,29 @@ class NMPC:
             float: insulin value to be injected in the present moment.
         
         """
-        binmap = np.asarray(self.scenario.inputs.meal_carb.start_time[0])<sample
-        meals_ctrl = np.asarray(self.scenario.inputs.meal_carb.magnitude[0])[binmap]
-        meal_times_ctrl = np.asarray(self.scenario.inputs.meal_carb.start_time[0])[binmap]
+        hor_scenario = deepcopy(self.scenario)
+        hor_scenario.settings.start_time = sample
+        hor_scenario.settings.end_time = sample + 120
+        binmap = np.asarray(hor_scenario.inputs.meal_carb.start_time[0])<sample
+        meals_ctrl = np.asarray(hor_scenario.inputs.meal_carb.magnitude[0])[binmap]
+        meal_times_ctrl = np.asarray(hor_scenario.inputs.meal_carb.start_time[0])[binmap]
         meal_durations_ctrl = 15.0*np.ones_like(meal_times_ctrl)
-        self.scenario.inputs.meal_carb = Events([meals_ctrl], [meal_times_ctrl], [meal_durations_ctrl])
-        self.scenario.inputs.taud = generate_carb_absorption(self.scenario,None)
+        hor_scenario.inputs.meal_carb = Events([meals_ctrl], [meal_times_ctrl], [meal_durations_ctrl])
+        hor_scenario.inputs.taud = generate_carb_absorption(self.scenario,None)
+        hor_scenario.inputs.basal_insulin = Events([[0.0]],[[0.0]])
+        hor_scenario.inputs.bolus_insulin = Events([[0.0]], [[0.0]])
 
-        self.solver = BaseSolver(self.scenario, IVP.Model.from_scenario(self.scenario))
+        self.solver = BaseSolver(hor_scenario, IVP.Model.from_scenario(hor_scenario))
         inputs = self.solver.model.inputs
-        inputs.basal_insulin.sampled_signal = np.zeros((1,self.steps - sample))
-        inputs.bolus_insulin.sampled_signal = np.zeros((1,self.steps - sample))
+        # inputs.basal_insulin.sampled_signal = np.zeros((1,self.steps - sample))
+        # inputs.bolus_insulin.sampled_signal = np.zeros((1,self.steps - sample))
         # inputs.carb.sampled_signal = self.carb[[0],sample : sample+self.steps]
         # inputs.taud.sampled_signal = self.taud[[0],sample : sample+self.steps]
-        self.solver.model.time.as_unix = self.time[sample : sample+self.steps]
+        # self.solver.model.time.as_unix = self.time[sample : sample+self.steps]
 
         # self.solver.
         self.solver.model.preprocessing()
+        self.solver.do_simulation(False)
         if sample==0:
             inputs.basal_insulin.sampled_signal[:,0] = self.solver.model.get_basal_equilibrium(self.solver.model.parameters.as_array, measured_glucose)
             self.solver.model.initial_conditions.as_array = self.solver.model.output_equilibrium(self.solver.model.parameters.as_array, inputs.as_array)
