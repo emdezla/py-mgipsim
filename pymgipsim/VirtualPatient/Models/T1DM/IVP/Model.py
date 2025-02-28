@@ -47,7 +47,8 @@ class Model(BaseModel, UnitConversion):
         for patientidx in range(inputs.shape[0]):
             carbi = carb[patientidx,:]
             taudi = taud[patientidx,:]
-            meal_times = self.inputs.carb.start_time#self.time.as_unix[carbi>0]
+            meal_times = self.inputs.carb.start_time[patientidx]#self.time.as_unix[carbi>0]
+            print(meal_times)
             taudi = taudi[taudi>0]
             carbi = carbi[carbi>0]
 
