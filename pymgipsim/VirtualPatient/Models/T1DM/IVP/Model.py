@@ -3,6 +3,7 @@ from pymgipsim.Utilities.Scenario import scenario
 from pymgipsim.Utilities.Timestamp import Timestamp
 
 from pymgipsim.InputGeneration.signal import Signal
+from pymgipsim.InputGeneration.waves import create_square_wave
 
 from .States import States
 from .Parameters import Parameters
@@ -44,11 +45,14 @@ class Model(BaseModel, UnitConversion):
 
         Ra = np.zeros((inputs.shape[0],inputs.shape[2]))
 
+        distributed_start_times = create_square_wave(self.time.as_unix,self.inputs.carb.start_time,
+                           self.inputs.carb.duration,self.inputs.carb.start_time,
+                           self.inputs.carb.sampling_time,with_duration=False)
+
         for patientidx in range(inputs.shape[0]):
             carbi = carb[patientidx,:]
             taudi = taud[patientidx,:]
-            meal_times = self.inputs.carb.start_time[patientidx]#self.time.as_unix[carbi>0]
-            print(meal_times)
+            meal_times = distributed_start_times[patientidx][carbi>0]#self.time.as_unix[carbi>0]
             taudi = taudi[taudi>0]
             carbi = carbi[carbi>0]
 

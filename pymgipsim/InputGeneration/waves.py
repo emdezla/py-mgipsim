@@ -10,7 +10,7 @@ def create_square_wave(
                         durations: np.ndarray,      # 3D array of durations for each event
                         amounts: np.ndarray,        # 3D array of amounts for each event
                         sampling_time: float,       # Sampling time for the signal
-                        ) -> np.ndarray:
+                        with_duration=True) -> np.ndarray:
     """
     Creates a scenario signal based on event start times, durations, and amounts.
 
@@ -36,7 +36,6 @@ def create_square_wave(
 
     # Initialize the signal array with zeros
     signal = np.zeros((amounts.shape[0],time.size))
-    with_duration = True
     # If durations are undefined it is assumed to be a measurement
     if durations.size == 0:
         durations = np.inf*np.ones_like(start_times)
