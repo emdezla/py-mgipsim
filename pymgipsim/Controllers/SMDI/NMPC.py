@@ -1,5 +1,6 @@
 import numpy as np
 import timeit
+import os
 
 from fontTools.misc.cython import returns
 from matplotlib import pyplot as plt
@@ -20,6 +21,7 @@ class NMPC:
     def __init__(self, scenario: scenario, patient_idx: int):
 
         self.patient_idx = 0
+        self.ctrl_sampling_time = 5
         self.steps = int((scenario.settings.end_time - scenario.settings.start_time) / scenario.settings.sampling_time)
         self.ideal_glucose = 110
         self.glucose_target = np.zeros(self.steps)
@@ -29,13 +31,13 @@ class NMPC:
         self.cgms = np.zeros(self.steps)
 
         self.multiple_taud = False
-        self.verbose = True
+        self.verbose = False
         self.count_meals = 0
         self.iterator = 0
         self.total_cost = 0
         self.counter_array = np.zeros((self.steps,))
         self.control_horizon = 1
-        self.prediction_horizon = 300
+        self.prediction_horizon = 120
         self.gradient_delta = 100.0
         self.max_grad_counter = 500
         self.epsilon = 1e-6
@@ -51,18 +53,18 @@ class NMPC:
         self.scenario.patient.demographic_info.body_weight = [self.scenario.patient.demographic_info.body_weight[patient_idx]]
         self.scenario.patient.model.parameters = IVP.Parameters.generate(self.scenario)
         self.scenario.inputs.taud = generate_carb_absorption(self.scenario,None)
-        self.solver = BaseSolver(self.scenario, IVP.Model.from_scenario(self.scenario))
-        self.carb = np.copy(self.solver.model.inputs.carb.sampled_signal)
-        self.taud = np.copy(self.solver.model.inputs.taud.sampled_signal)
-        self.time = np.copy(self.solver.model.time.as_unix)
         self.basal_rate = self.scenario.patient.demographic_info.basal[patient_idx]
         # self.model = IVP.Model.from_scenario(self.ctrl_scenario)
 
         # Initialize arrays
-        self.approx_x_init = self.solver.model.get_basal_equilibrium(self.solver.model.parameters.as_array, self.ideal_glucose)
-        self.approx_x_current = self.approx_x_init
-        self.insulin_init = 1200.0 * self.approx_x_init # self.patient_params.CI * 
-        print("Insulin init: ", self.insulin_init)
+        # self.approx_x_init = self.solver.model.get_basal_equilibrium(self.solver.model.parameters.as_array, self.ideal_glucose)
+        # self.approx_x_current = self.approx_x_init
+        # self.insulin_init = 1200.0 * self.approx_x_init # self.patient_params.CI * 
+        # print("Insulin init: ", self.insulin_init)
+
+        # Hardcoded init values for testing before identification algoritm
+        self.glucose_init = 108
+        self.before_first_meal = True
 
     def create_horizon_scenario(self, sample, states, patient_idx, length):
         """ Creates scenario for horizon simulation.
@@ -76,10 +78,17 @@ class NMPC:
         
         """
         hor_scenario = deepcopy(self.scenario)
-        hor_scenario.settings.start_time = self.time[sample]
-        hor_scenario.settings.end_time = self.time[sample] + length
-        # hor_scenario.input_generation = None
-        # hor_scenario.inputs = None # need empty inputs
+        hor_scenario.settings.start_time = 0
+        hor_scenario.settings.end_time = sample + self.prediction_horizon
+        binmap = np.asarray(hor_scenario.inputs.meal_carb.start_time[0])<sample
+        meals_ctrl = np.asarray(hor_scenario.inputs.meal_carb.magnitude[0])[binmap]
+        meal_times_ctrl = np.asarray(hor_scenario.inputs.meal_carb.start_time[0])[binmap]
+        meal_durations_ctrl = 15.0*np.ones_like(meal_times_ctrl)
+        hor_scenario.inputs.meal_carb = Events([meals_ctrl], [meal_times_ctrl], [meal_durations_ctrl])
+        hor_scenario.inputs.taud = generate_carb_absorption(hor_scenario,None)
+        # hor_scenario.inputs.basal_insulin = Events([[0.0]], [[0.0]])
+        # hor_scenario.inputs.bolus_insulin = Events([[0.0]], [[0.0]])
+        hor_scenario.settings.sampling_time = self.ctrl_sampling_time
 
         return hor_scenario
 
@@ -96,19 +105,12 @@ class NMPC:
             float: insulin value to be injected in the present moment.
         
         """
-        hor_scenario = deepcopy(self.scenario)
-        hor_scenario.settings.start_time = sample
-        hor_scenario.settings.end_time = sample + 120
-        binmap = np.asarray(hor_scenario.inputs.meal_carb.start_time[0])<sample
-        meals_ctrl = np.asarray(hor_scenario.inputs.meal_carb.magnitude[0])[binmap]
-        meal_times_ctrl = np.asarray(hor_scenario.inputs.meal_carb.start_time[0])[binmap]
-        meal_durations_ctrl = 15.0*np.ones_like(meal_times_ctrl)
-        hor_scenario.inputs.meal_carb = Events([meals_ctrl], [meal_times_ctrl], [meal_durations_ctrl])
-        hor_scenario.inputs.taud = generate_carb_absorption(self.scenario,None)
-        hor_scenario.inputs.basal_insulin = Events([[0.0]],[[0.0]])
-        hor_scenario.inputs.bolus_insulin = Events([[0.0]], [[0.0]])
-
+        hor_scenario = self.create_horizon_scenario(sample, states, patient_idx, self.prediction_horizon)
         self.solver = BaseSolver(hor_scenario, IVP.Model.from_scenario(hor_scenario))
+        self.carb = np.copy(self.solver.model.inputs.carb.sampled_signal)
+        self.taud = np.copy(self.solver.model.inputs.taud.sampled_signal)
+        self.time = np.copy(self.solver.model.time.as_unix)
+
         inputs = self.solver.model.inputs
         # inputs.basal_insulin.sampled_signal = np.zeros((1,self.steps - sample))
         # inputs.bolus_insulin.sampled_signal = np.zeros((1,self.steps - sample))
@@ -118,19 +120,13 @@ class NMPC:
 
         # self.solver.
         self.solver.model.preprocessing()
-        self.solver.do_simulation(False)
-        if sample==0:
-            inputs.basal_insulin.sampled_signal[:,0] = self.solver.model.get_basal_equilibrium(self.solver.model.parameters.as_array, measured_glucose)
-            self.solver.model.initial_conditions.as_array = self.solver.model.output_equilibrium(self.solver.model.parameters.as_array, inputs.as_array)
-
-        hor_scenario = self.create_horizon_scenario(sample, states, patient_idx, self.prediction_horizon) # TODO: Unnecessary scenario instance: use scenario instead
-        hor_solver = BaseSolver(hor_scenario, IVP.Model.from_scenario(hor_scenario))
-        horizon_time = np.linspace(self.time[-1] + 1, self.time[-1] + self.prediction_horizon, self.prediction_horizon // hor_scenario.settings.sampling_time)
-        extended_time = np.concatenate([self.time, horizon_time])
-        hor_solver.model.time.as_unix = extended_time[sample : sample+self.prediction_horizon//hor_scenario.settings.sampling_time]
-        hor_solver.model.preprocessing()
-        if sample==0:
-            hor_solver.model.initial_conditions.as_array = hor_solver.model.output_equilibrium(hor_solver.model.parameters.as_array, inputs.as_array)
+        self.basal_equilibrium = self.solver.model.get_basal_equilibrium(self.solver.model.parameters.as_array, self.glucose_init)
+        # if self.before_first_meal:
+        inputs.basal_insulin.sampled_signal[:, 0:sample-1] = self.basal_equilibrium
+        self.insulin_horizon = self.basal_equilibrium #np.zeros(self.control_horizon)
+        self.solver.model.initial_conditions.as_array = self.solver.model.output_equilibrium(self.solver.model.parameters.as_array, inputs.as_array)
+        
+        # self.plot_prediction(states, self.approx_x, patient_idx)
         
         # Set glucose target according to physical activity intensity
         # if physical_activity:
@@ -138,12 +134,12 @@ class NMPC:
         # else:
         self.glucose_target[self.iterator] = self.ideal_glucose
         
-        if self.iterator:
-            self.set_bolus_insulin(hor_scenario, np.append(self.insulin_horizon, np.zeros(self.prediction_horizon - self.control_horizon)))
+        # if self.iterator:
+        #     self.set_bolus_insulin(hor_scenario, np.append(self.insulin_horizon, np.zeros(self.prediction_horizon - self.control_horizon)))
         
+        # TODO: IVP output is normoglycemic without control (which is weird).
+        self.approx_x = self.solver.do_simulation(True)
         self.approx_x_current = measured_glucose
-        if self.iterator == 0:
-            self.insulin_horizon = np.ones(self.control_horizon) * self.insulin_init
         
         grad_counter = 0
         gradient_norm = 100 * self.epsilon
@@ -151,14 +147,16 @@ class NMPC:
         self.cost_array = np.zeros((self.max_grad_counter,))
         grad_array = np.zeros((self.max_grad_counter,))
         while grad_counter < self.max_grad_counter and gradient_norm > self.epsilon:
-            summed_arr = self.set_bolus_insulin(hor_scenario, np.append(self.insulin_horizon, np.zeros(self.prediction_horizon - self.control_horizon)))
-            gradient, self.cost_array[grad_counter] = self.get_gradient(hor_scenario, hor_solver, self.insulin_horizon, states, patient_idx)
+            # summed_arr = self.set_bolus_insulin(hor_scenario, np.append(self.insulin_horizon, np.zeros(self.prediction_horizon - self.control_horizon)))
+            inputs.basal_insulin.sampled_signal[:,0] = self.insulin_horizon
+            gradient, self.cost_array[grad_counter] = self.get_gradient(hor_scenario, self.solver, self.insulin_horizon, states, patient_idx)
             gradient_norm = np.linalg.norm(gradient)
             gradient = gradient * 10 ** 6
             grad_array[grad_counter] = gradient_norm
-            print(
-                "Step:" + str(grad_counter) + " Cost:" + str(self.cost_array[grad_counter]) + " Gradient norm: " + str(
-                    gradient_norm))
+            if self.verbose:
+                print(
+                    "Step:" + str(grad_counter) + " Cost:" + str(self.cost_array[grad_counter]) + " Gradient norm: " + str(
+                        gradient_norm))
         
             if not grad_counter or self.cost_array[grad_counter] < cost_optimal:
                 cost_optimal = self.cost_array[grad_counter]
@@ -174,31 +172,38 @@ class NMPC:
         
         elapsed_time = timeit.default_timer() - start_time
         if self.verbose:
-            print("Step:", self.iterator + 1, "/", self.steps, "   Elapsed time:", elapsed_time, "[s]")
+            os.system('cls' if os.name == 'nt' else 'clear') # Clear console otherwise it gets cluttered
+            print("Step:", (self.iterator + 1) * hor_scenario.settings.sampling_time, "/", self.steps, "   Elapsed time:", elapsed_time, "[s]")
         
         self.insulin[self.iterator] = insulin_optimal[0]
         
         self.set_bolus_insulin(hor_scenario, np.append(self.insulin[self.iterator], np.zeros(self.prediction_horizon - self.control_horizon)))
-        
+        # inputs.basal_insulin.sampled_signal[:,:] = insulin_optimal
         if self.verbose:
             print("CGM: ", measured_glucose, "  Insulin: ", insulin_optimal[0], "[uU/min]")
             print("First cost: ", self.cost_array[0], "Last cost: ", self.cost_array[-1], "Min cost: ",
-                  np.min(self.cost_array))
+              np.min(self.cost_array))
             print("--------------------------------------------------")
         
         # Simulate approximated patient in horizon
         self.state_init = self.approx_x_current
-        self.approx_x = hor_solver.do_simulation(True)#self.simulate_patient(hor_simulation_data)[1]
+        self.approx_x = self.solver.do_simulation(True)#self.simulate_patient(hor_simulation_data)[1]
         self.approx_x_current = self.approx_x[patient_idx,0,0]
         
         self.cgms[self.iterator] = measured_glucose
         self.iterator += 1
         bolus_Uhr = UnitConversion.insulin.mUmin_to_Uhr(insulin_optimal[0])
         bolus_mUmin = UnitConversion.insulin.Uhr_to_mUmin(bolus_Uhr)
-        # if sample == 0:
-        #     self.plot_prediction(states, self.approx_x, patient_idx)
-        # elif sample == 1200:
-        #     self.plot_prediction(states, self.approx_x, patient_idx)
+
+        # if sample > self.scenario.inputs.meal_carb.start_time[0][0]:
+        #     self.before_first_meal = False
+        print("\rBolus: ", bolus_Uhr, "Patient Basal: ", states[patient_idx, 0, 0], "IVP def Basal: ", inputs.basal_insulin.sampled_signal[:, 0:sample-1][0][-1], end="")
+        # self.basal_rate += bolus_Uhr #insert bolus Uhr
+        # inputs.bolus_insulin.sampled_signal[:, -1] = bolus_mUmin / 5
+        # self.insulin_horizon = np.ones(self.control_horizon) * (bolus_mUmin / len(self.insulin_horizon) * 5)
+        if any(meal_time < sample < meal_time + 5 for meal_time in self.scenario.inputs.meal_carb.start_time[0]):
+            self.plot_prediction(states, self.approx_x, inputs.basal_insulin.sampled_signal[:, 0:sample-1], patient_idx)
+    
         return bolus_mUmin, self.approx_x
 
     def quadratic_cost(self, glucose: np.ndarray, insulin: np.ndarray, patient_idx: int):
@@ -217,11 +222,11 @@ class NMPC:
         input_coeff_positive = 100
         input_coeff_negative = 10
         # Output cost (TODO: target should be a range not a single value. Being over 110 is not hyperglycemia)
-        for ii in range(len(glucose)):
-            if glucose[patient_idx][ii] <= self.glucose_target[self.iterator]:
-                cost += ((self.glucose_target[self.iterator] - glucose[patient_idx][ii]) / delta_hypo) ** 2
-            elif glucose[patient_idx][ii] > self.glucose_target[self.iterator]:
-                cost += ((self.glucose_target[self.iterator] - glucose[patient_idx][ii]) / delta_hyper) ** 2
+        for i in range(len(glucose)):
+            if glucose[i] <= self.glucose_target[self.iterator]:
+                cost += ((self.glucose_target[self.iterator] - glucose[i]) / delta_hypo) ** 2
+            elif glucose[i] > self.glucose_target[self.iterator]:
+                cost += ((self.glucose_target[self.iterator] - glucose[i]) / delta_hyper) ** 2
         # Input cost
         # for ii in range(len(insulin)):
         #     if insulin[ii] <= self.insulin_init:
@@ -244,25 +249,29 @@ class NMPC:
         gradient = np.zeros(self.control_horizon)
         shift = np.zeros(self.control_horizon)
     
+        # Simulate glyc trajecory without bolus insulin injected, store cost to cost_in
         self.state_init = self.approx_x_current
         insulin_check = np.copy(insulin_in)
         self.set_bolus_insulin(scenario, np.append(insulin_in, np.zeros(self.prediction_horizon - self.control_horizon)))
-        solver.do_simulation(True)
-        cost_in = self.quadratic_cost(UnitConversion.glucose.concentration_mmolL_to_mgdL(states[:, 8]), insulin_in, patient_idx) # TODO: pass measured_glucose, not state[:, 8] variable
+        estimation = solver.do_simulation(True)[0][0]
+        cost_in = self.quadratic_cost(UnitConversion.glucose.concentration_mmolL_to_mgdL(estimation), insulin_in, patient_idx) # TODO: pass measured_glucose, not state[:, 8] variable
     
-        for ii in range(self.control_horizon):
-            shift[ii] = self.gradient_delta
-            if ii > 0:
-                shift[ii - 1] = 0.0
-    
+        # Iterate over horizon and calc cost at each point
+        for i in range(self.control_horizon):
+            shift[i] = self.gradient_delta
+            if i > 0:
+                shift[i - 1] = 0.0
+
+            # Simulate glyc trajectory with bolus (gradient_delta???) and compare costs: cost_shift - const_in and store gradient
             self.state_init = self.approx_x_current
             self.set_bolus_insulin(scenario, np.append(insulin_in + shift, np.zeros(self.prediction_horizon - self.control_horizon)))
-            solver.do_simulation(True)
+            estimation = solver.do_simulation(True)[0][0]
     
-            insulin_check[ii] = insulin_check[ii] + self.gradient_delta
-            cost_shift = self.quadratic_cost(UnitConversion.glucose.concentration_mmolL_to_mgdL(states[:, 8]), insulin_check, patient_idx)
-            gradient[ii] = (cost_shift - cost_in) / self.gradient_delta
+            insulin_check[i] = insulin_check[i] + self.gradient_delta
+            cost_shift = self.quadratic_cost(UnitConversion.glucose.concentration_mmolL_to_mgdL(estimation), insulin_check, patient_idx)
+            gradient[i] = (cost_shift - cost_in) / self.gradient_delta
     
+        # plt.show()
         return gradient, cost_in
     
     def set_bolus_insulin(self, scenario : scenario, insulin_in: np.ndarray):
@@ -275,10 +284,10 @@ class NMPC:
                     int: number of insulin values outside of constraints.
     
         """
-        scenario.inputs.basal_insulin = insulin_in
+        scenario.inputs.bolus_insulin = insulin_in
         return np.sum(np.logical_or(insulin_in < 0.0, insulin_in > self.insulin_limit))
     
-    def plot_prediction(self, states, prediction, patient_idx):
+    def plot_prediction(self, states, prediction, ivp_basal, patient_idx):
         """ Plots prediction results.
     
         """
@@ -286,12 +295,22 @@ class NMPC:
         matplotlib.use('MacOSX')
         plt.figure()
         plt.subplot(2, 1, 1)
-        plt.plot(states[patient_idx, 8, :], label='IG')
-        plt.plot(prediction[patient_idx, 0, :], label='Gluc prediction')
+        gluc = UnitConversion.glucose.concentration_mmolL_to_mgdL(states[patient_idx, 8, :])
+        gluc = gluc[gluc > 0]
+        plt.plot(gluc, label='Simulator Gluc.')
+        horizon_time = np.linspace(len(gluc)-1, len(gluc)-1 + len(prediction[patient_idx, 0, :]) - 1, len(prediction[patient_idx, 0, :]))
+        horizon_time = np.linspace(0, len(prediction[patient_idx, 0, :]) * 5, len(prediction[patient_idx, 0, :]))
+        plt.plot(horizon_time, prediction[patient_idx, 0, :], label='IVP Gluc. (prediction)', linestyle='--')      
+        if max(prediction[patient_idx, 0, :]) > 1000: # don't screw up the plot if the prediction is way off
+            plt.ylim([min(gluc) - 10, max(gluc) + 10])
+        plt.grid()
+        plt.legend()
 
         plt.subplot(2, 1, 2)
-        plt.plot(states[patient_idx, 0, :], label='S1')
-        plt.plot(states[patient_idx, 2, :], label='I')
+        s1, I = states[patient_idx, 0, :], states[patient_idx, 2, :]
+        plt.plot(s1[s1>0], label='Simulator S1')
+        plt.plot(I[I>0], label='Simulator I')
+        plt.plot(ivp_basal[0], label='IVP basal', linestyle='--')
         plt.grid()
         plt.legend()
         plt.show()
