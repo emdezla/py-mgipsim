@@ -78,7 +78,7 @@ class NMPC:
         
         """
         hor_scenario = deepcopy(self.scenario)
-        hor_scenario.settings.start_time = 0
+        hor_scenario.settings.start_time = sample
         hor_scenario.settings.end_time = sample + self.prediction_horizon
         binmap = np.asarray(hor_scenario.inputs.meal_carb.start_time[0])<sample
         meals_ctrl = np.asarray(hor_scenario.inputs.meal_carb.magnitude[0])[binmap]
@@ -105,6 +105,8 @@ class NMPC:
             float: insulin value to be injected in the present moment.
         
         """
+        if any(meal_time < sample < meal_time + 5 for meal_time in self.scenario.inputs.meal_carb.start_time[0]):
+            print("")
         hor_scenario = self.create_horizon_scenario(sample, states, patient_idx, self.prediction_horizon)
         self.solver = BaseSolver(hor_scenario, IVP.Model.from_scenario(hor_scenario))
         self.carb = np.copy(self.solver.model.inputs.carb.sampled_signal)
@@ -139,6 +141,8 @@ class NMPC:
         
         # TODO: IVP output is normoglycemic without control (which is weird).
         self.approx_x = self.solver.do_simulation(True)
+        if any(meal_time < sample < meal_time + 5 for meal_time in self.scenario.inputs.meal_carb.start_time[0]):
+            self.plot_prediction(states, self.approx_x, inputs.basal_insulin.sampled_signal[:, 0:sample-1], patient_idx)
         self.approx_x_current = measured_glucose
         
         grad_counter = 0
@@ -203,6 +207,7 @@ class NMPC:
         # self.insulin_horizon = np.ones(self.control_horizon) * (bolus_mUmin / len(self.insulin_horizon) * 5)
         if any(meal_time < sample < meal_time + 5 for meal_time in self.scenario.inputs.meal_carb.start_time[0]):
             self.plot_prediction(states, self.approx_x, inputs.basal_insulin.sampled_signal[:, 0:sample-1], patient_idx)
+            plt.show()
     
         return bolus_mUmin, self.approx_x
 
@@ -292,7 +297,7 @@ class NMPC:
     
         """
         import matplotlib
-        matplotlib.use('MacOSX')
+        matplotlib.use('TkAgg')
         plt.figure()
         plt.subplot(2, 1, 1)
         gluc = UnitConversion.glucose.concentration_mmolL_to_mgdL(states[patient_idx, 8, :])
@@ -313,4 +318,3 @@ class NMPC:
         plt.plot(ivp_basal[0], label='IVP basal', linestyle='--')
         plt.grid()
         plt.legend()
-        plt.show()
