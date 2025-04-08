@@ -30,5 +30,5 @@ class Controller:
                 #     self.insulins.pop(0)
 
                 bolus, gluc_pred = self.controllers[patient_idx].run(sample, states, UnitConversion.glucose.concentration_mmolL_to_mgdL(measurements[patient_idx]), patient_idx)
-                inputs[patient_idx,3,sample:sample+self.control_sampling] = UnitConversion.insulin.Uhr_to_mUmin(self.controllers[patient_idx].basal_rate)
+                inputs[patient_idx,3,sample:sample+self.control_sampling] = UnitConversion.insulin.Uhr_to_mUmin(self.controllers[patient_idx].basal_rate) + bolus
         return
