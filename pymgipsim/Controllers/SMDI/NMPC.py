@@ -29,8 +29,8 @@ class NMPC:
         self.glucose_target_range = [70, 180]
         # Create containers
 
-        self.multiple_taud = False
-        self.verbose = True
+        self.verbose = False
+        self.use_built_in_plot = False
         self.iterator = 0
         self.control_horizon = 1
         self.prediction_horizon = 300
@@ -53,8 +53,11 @@ class NMPC:
         # Hardcoded init values for testing before identification algoritm
         self.glucose_init = 108
         self.before_first_meal = True
-        self.last_plot_est = None
+        self.last_plot_est = []
         self.estimations = []
+
+        # Time of next meal for wich the insulin bolus has already been injected
+        self.next_meal_bolus_injected = False
 
     def create_horizon_scenario(self, sample):
         """ Creates scenario for horizon simulation.
@@ -96,8 +99,19 @@ class NMPC:
         
         """
 
-        # Check if the sample is in the meal time
-        if not any(meal_time <= sample < meal_time + 4 for meal_time in self.scenario.inputs.meal_carb.start_time[0]):
+        # The end: plot full simulation
+        if self.use_built_in_plot and sample >= self.scenario.settings.end_time-5:
+            self.plot_prediction(states, None, None, None, patient_idx)
+
+        # If we have already injected bolus for the next meal, skip
+        # if sample < self.next_meal_bolus_injected or measured_glucose < self.glucose_target_range[0]:
+        #     return 0, None
+
+        # Check if meal is out of range or we have already injected insulin or if glucose is too low
+        if not any(meal_time - 60 <= sample < meal_time + 60 for meal_time in self.scenario.inputs.meal_carb.start_time[0]):
+            self.next_meal_bolus_injected = False
+            return 0, None
+        if self.next_meal_bolus_injected or measured_glucose < self.glucose_target_range[0]:
             return 0, None
         
         hor_scenario = self.create_horizon_scenario(sample)
@@ -170,14 +184,19 @@ class NMPC:
         # self.basal_rate += bolus_mUmin #insert bolus Uhr
         # inputs.bolus_insulin.sampled_signal[:, -1] = bolus_mUmin / 5
 
-        if self.verbose and np.min(cost_array) > 0 or bolus_Uhr > 0:
+        if self.verbose and (np.min(cost_array) > 0 or bolus_Uhr > 0):
             print("Step:", (self.iterator + 1) * hor_scenario.settings.sampling_time, "/", self.steps, "   Elapsed time:", elapsed_time, "[s]")
             print("CGM: ", measured_glucose, "  Insulin opt.: ", insulin_optimal, "[uU/min]")
             print("First cost: ", cost_array[0], "Last cost: ", cost_array[-1], "Min cost: ", np.min(cost_array))
             print("Bolus: ", bolus_mUmin, "[mU/min] Patient Basal: ", states[patient_idx, 0, 0], "IVP def Basal: ", inputs.basal_insulin.sampled_signal[:, 0:sample-1][0][-1])
             print("--------------------------------------------------")
 
-        self.plot_prediction(states, prediction, controlled_pred, inputs.bolus_insulin.sampled_signal[0, :], patient_idx)
+        # Used the bolus insulin for the next meal
+        if bolus_mUmin > 0:
+            self.next_meal_bolus_injected = True
+        
+            if self.use_built_in_plot:
+                self.plot_prediction(states, prediction, controlled_pred, inputs.bolus_insulin.sampled_signal[0, :], patient_idx)
             
         return bolus_mUmin, prediction
 
@@ -249,27 +268,48 @@ class NMPC:
         gluc = UnitConversion.glucose.concentration_mmolL_to_mgdL(states[patient_idx, 8, :])
         gluc = gluc[gluc > 0]
         plt.plot(gluc, label='Simulator Gluc.')
-        plt.axhline(self.glucose_target_range[0], color='red', linewidth=0.5)
-        plt.axhline(self.glucose_target_range[1], color='green', linewidth=0.5)
-        horizon_time = np.linspace(len(gluc)-1, len(gluc)-1 + self.prediction_horizon, len(prediction[patient_idx, 0, :]))
-        # horizon_time = np.linspace(0, len(prediction[patient_idx, 0, :]) * 5, len(prediction[patient_idx, 0, :]))
-        plt.plot(horizon_time, prediction[patient_idx, 0, :], label='IVP Gluc. (prediction)', linestyle='--', color='red')
-        for estimation in self.estimations:
-            plt.plot(horizon_time, estimation, linewidth=0.3)
-        plt.plot(horizon_time, controlled[patient_idx, 0, :], label='IVP Gluc. (controlled)', linestyle='--', color='green')
-        if self.last_plot_est:
-            plt.plot(self.last_plot_est[0], self.last_plot_est[1], label='IVP Gluc. (last pred)', linestyle='--', color='blue')
-        self.last_plot_est = [horizon_time, controlled[patient_idx, 0, :]]    
-        if max(prediction[patient_idx, 0, :]) > 2000: # don't screw up the plot if the prediction is way off
-            plt.ylim([min(gluc) - 10, max(gluc) + 10])
         plt.grid()
         plt.legend()
 
+        # Plot glucose target range
+        plt.axhline(self.glucose_target_range[0], color='red', linewidth=0.5)
+        plt.axhline(self.glucose_target_range[1], color='green', linewidth=0.5)
+
+        # Plot past estimations to compare with actual glucose
+        if len(self.last_plot_est):
+            for est in self.last_plot_est:
+                plt.plot(est[0], est[1], linewidth=0.5, linestyle='--', color='blue', label='Past Estimation')
+
+        # Plot prediction with and without control            
+        if prediction is not None:
+            horizon_time = np.linspace(len(gluc)-1, len(gluc)-1 + self.prediction_horizon, len(prediction[patient_idx, 0, :]))
+            # horizon_time = np.linspace(0, len(prediction[patient_idx, 0, :]) * 5, len(prediction[patient_idx, 0, :]))
+            plt.plot(horizon_time, prediction[patient_idx, 0, :], label='IVP Gluc. (prediction)', linestyle='--', color='red')
+            for estimation in self.estimations:
+                plt.plot(horizon_time, estimation, linewidth=0.3)
+            plt.plot(horizon_time, controlled[patient_idx, 0, :], label='IVP Gluc. (controlled)', linestyle='--', color='green')
+
+            # Store estimations
+            self.last_plot_est.append([horizon_time, controlled[patient_idx, 0, :]])
+            
+            # Scale down plot if prediction is too high
+            if max(prediction[patient_idx, 0, :]) > 2000:
+                plt.ylim([min(gluc) - 10, max(gluc) + 10])
+
+        # Plot meal times as arrows (dirac delta)
+        meal_times = self.scenario.inputs.meal_carb.start_time[0]
+        meal_magnitudes = self.scenario.inputs.meal_carb.magnitude[0]
+        for meal_time, meal_magnitude in zip(meal_times, meal_magnitudes):
+            if meal_time < len(gluc):  # Ensure meal time is within the plot range
+                plt.arrow(meal_time, 0, 0, meal_magnitude, head_width=5, fc='black', ec='black')
+
+        # Plot insulin
         plt.subplot(2, 1, 2)
         s1, I = states[patient_idx, 0, :], states[patient_idx, 2, :]
         plt.plot(s1[s1>0], label='Simulator S1')
         plt.plot(I[I>0], label='Simulator I')
-        plt.plot(horizon_time, ivp_basal/1000, label='IVP basal', linestyle='--')
+        if prediction is not None:
+            plt.plot(horizon_time, ivp_basal/1000, label='IVP basal', linestyle='--')
         # plt.plot(horizon_time, controlled[patient_idx, 2, :]/1000, label='IVP Ip', linestyle='--')
         # plt.plot(horizon_time, controlled[patient_idx, 3, :]/1000, label='IVP Isc', linestyle='--')
         plt.grid()
