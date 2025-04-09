@@ -13,7 +13,10 @@ from pymgipsim.VirtualPatient.Models.T1DM import IVP
 from pymgipsim.InputGeneration.carb_energy_settings import generate_carb_absorption
 from pymgipsim.Utilities.units_conversions_constants import UnitConversion
 import matplotlib
-matplotlib.use('MacOSX')
+try:
+    matplotlib.use('MacOSX')
+except:
+    pass
 
 class NMPC:
     """ Impulsive model predictive controller class with saturation.
@@ -48,6 +51,9 @@ class NMPC:
         self.scenario.patient.model.parameters = IVP.Parameters.generate(self.scenario)
         self.scenario.inputs.taud = generate_carb_absorption(self.scenario,None)
         self.basal_rate = self.scenario.patient.demographic_info.basal[patient_idx]
+        self.announced_meal_starts = np.array(self.scenario.inputs.meal_carb.start_time[patient_idx])
+        self.announced_meal_amounts = np.array(self.scenario.inputs.meal_carb.magnitude[patient_idx])
+        self.carb_insulin_ratio = self.scenario.patient.demographic_info.carb_insulin_ratio[patient_idx]
         # self.model = IVP.Model.from_scenario(self.ctrl_scenario)
 
         # Hardcoded init values for testing before identification algoritm

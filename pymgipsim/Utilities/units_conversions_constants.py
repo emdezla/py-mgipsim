@@ -70,6 +70,10 @@ class InsulinUnits:
         return U*1000
 
     @staticmethod
+    def mU_to_uU(mU):
+        return mU*1000.0
+
+    @staticmethod
     def U_to_uU(U):
         return U * 1e6
     
