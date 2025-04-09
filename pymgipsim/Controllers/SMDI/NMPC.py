@@ -10,6 +10,7 @@ from pymgipsim.Utilities.Scenario import scenario
 from copy import deepcopy
 from pymgipsim.ModelSolver.BaseSolvers import BaseSolver
 from pymgipsim.VirtualPatient.Models.T1DM import IVP
+from pymgipsim.VirtualPatient.Models.T1DM.IVP import Parameters
 from pymgipsim.InputGeneration.carb_energy_settings import generate_carb_absorption
 from pymgipsim.Utilities.units_conversions_constants import UnitConversion
 import matplotlib
@@ -32,8 +33,8 @@ class NMPC:
         self.glucose_target_range = [70, 180]
         # Create containers
 
-        self.verbose = False
-        self.use_built_in_plot = False
+        self.verbose = True
+        self.use_built_in_plot = True
         self.iterator = 0
         self.control_horizon = 1
         self.prediction_horizon = 300
@@ -61,11 +62,12 @@ class NMPC:
         self.before_first_meal = True
         self.last_plot_est = []
         self.estimations = []
+        self.bolus_time_range = [120, 120]
 
         # Time of next meal for wich the insulin bolus has already been injected
         self.next_meal_bolus_injected = False
 
-    def create_horizon_scenario(self, sample):
+    def create_horizon_scenario(self, sample, ivp_params):
         """ Creates scenario for horizon simulation.
         
         Args:
@@ -88,10 +90,12 @@ class NMPC:
         # hor_scenario.inputs.basal_insulin = Events([[0.0]], [[0.0]])
         # hor_scenario.inputs.bolus_insulin = Events([[0.0]], [[0.0]])
         hor_scenario.settings.sampling_time = self.ctrl_sampling_time
+        hor_scenario.patient.model.parameters = ivp_params
+        # hor_scenario.patient.model.parameters = Parameters(np.asarray(ivp_params))
 
         return hor_scenario
 
-    def run(self, sample, states, measured_glucose : float, patient_idx: int):
+    def run(self, sample, states, measured_glucose : float, patient_idx: int, ivp_params : Parameters, ivp_last_state : np.ndarray):
         """ Performs gradient descent algorithm to find optimal insulin input.
         
         Args:
@@ -114,19 +118,20 @@ class NMPC:
         #     return 0, None
 
         # Check if meal is out of range or we have already injected insulin or if glucose is too low
-        if not any(meal_time - 60 <= sample < meal_time + 60 for meal_time in self.scenario.inputs.meal_carb.start_time[0]):
+        if not any(meal_time - self.bolus_time_range[0] <= sample < meal_time + self.bolus_time_range[1] for meal_time in self.scenario.inputs.meal_carb.start_time[0]):
             self.next_meal_bolus_injected = False
             return 0, None
         if self.next_meal_bolus_injected or measured_glucose < self.glucose_target_range[0]:
             return 0, None
         
-        hor_scenario = self.create_horizon_scenario(sample)
+        hor_scenario = self.create_horizon_scenario(sample, ivp_params)
         self.solver = BaseSolver(hor_scenario, IVP.Model.from_scenario(hor_scenario))
         self.carb = np.copy(self.solver.model.inputs.carb.sampled_signal)
         self.taud = np.copy(self.solver.model.inputs.taud.sampled_signal)
         self.time = np.copy(self.solver.model.time.as_unix)
 
         inputs = self.solver.model.inputs
+        self.solver.model.initial_conditions.as_array = ivp_last_state
 
         self.glucose_init = measured_glucose
 
