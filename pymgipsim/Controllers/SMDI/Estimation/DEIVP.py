@@ -6,6 +6,7 @@ from typing import List
 from scipy.stats import qmc
 from matplotlib import pyplot as plt
 import math
+import matplotlib
 
 class DifferentialEvolution:
     """ Observer class.
@@ -121,8 +122,15 @@ class DifferentialEvolution:
                 print("Generation:",str(i)," Best:", str(np.min(fitnesses)), " Constaint ratio:",str(constraint_ratio))
         minidx = np.argmin(fitnesses)
         print("Cost achieved:", str(np.min(fitnesses)))
-        print(glucose_array)
-        print(self.sim_glucose[minidx])
+        #print(glucose_array)
+        #print(self.sim_glucose[minidx])
+        try:
+            matplotlib.use("TkAgg")
+        except:
+            pass
+        plt.figure()
+        plt.plot(glucose_array)
+        plt.plot(self.sim_glucose[minidx])
         return parameter_array[minidx]
 
     @staticmethod
@@ -220,6 +228,7 @@ class DifferentialEvolution:
                 Ip = x_init[2]
                 Ieff = x_init[1]
                 G = x_init[0]
+            patient_glucose[0] = G
             rmse = 0
             section = t_sections[0]
             EGPk = EGP[0]
@@ -238,7 +247,7 @@ class DifferentialEvolution:
                 Ip = (-Ip + Isc) / patient[3] * 5 + Ip
                 Isc = (-Isc + (basal_cuda[k] + bolus_cuda[k]) / patient[1]) / patient[2] * 5 + Isc
                 rmse = rmse + (G - glucose_array[k + 1]) ** 2
-                patient_glucose[k] = G
+                patient_glucose[k+1] = G
             fitnesses[i] = math.sqrt(rmse / sim_length)
 
     @staticmethod

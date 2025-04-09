@@ -45,18 +45,18 @@ class Model(BaseModel, UnitConversion):
 
         Ra = np.zeros((inputs.shape[0],inputs.shape[2]))
 
-        distributed_start_times = create_square_wave(self.time.as_unix,self.inputs.carb.start_time,
+        self.distributed_start_times = create_square_wave(self.time.as_unix,self.inputs.carb.start_time,
                            self.inputs.carb.duration,self.inputs.carb.start_time,
                            self.inputs.carb.sampling_time,with_duration=False)
-        distributed_taud = create_square_wave(self.time.as_unix,self.inputs.carb.start_time,
+        self.distributed_taud = create_square_wave(self.time.as_unix,self.inputs.carb.start_time,
                            self.inputs.carb.duration,self.inputs.taud.magnitude,
                            self.inputs.carb.sampling_time,with_duration=False)
-        distributed_carbs = carb*self.inputs.carb.sampling_time
+        self.distributed_carbs = carb*self.inputs.carb.sampling_time
 
         for patientidx in range(inputs.shape[0]):
-            carbi = distributed_carbs[patientidx,:]
-            taudi = distributed_taud[patientidx,:]
-            meal_times = distributed_start_times[patientidx][carbi>0]#self.time.as_unix[carbi>0]
+            carbi = self.distributed_carbs[patientidx,:]
+            taudi = self.distributed_taud[patientidx,:]
+            meal_times = self.distributed_start_times[patientidx][carbi>0]#self.time.as_unix[carbi>0]
             taudi = taudi[taudi>0]
             carbi = carbi[carbi>0]
 
