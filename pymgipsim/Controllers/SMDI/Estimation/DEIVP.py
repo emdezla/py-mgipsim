@@ -118,8 +118,8 @@ class DifferentialEvolution:
                                      observer.no_sections,observer.patient_parameters.CI[0],observer.number_of_meal_param_coeff,
                                      observer.no_meals, observer.steady_state_glucose_lower_bound, observer.steady_state_glucose_upper_bound,
                                   old_scalar_params, self.scalar_params_array, self.sim_glucose, new_glucose)
-            if observer.verbose:
-                print("Generation:",str(i)," Best:", str(np.min(fitnesses)), " Constaint ratio:",str(constraint_ratio))
+            # if observer.verbose:
+                # print("Generation:",str(i)," Best:", str(np.min(fitnesses)), " Constaint ratio:",str(constraint_ratio))
         minidx = np.argmin(fitnesses)
         print("Cost achieved:", str(np.min(fitnesses)))
         #print(glucose_array)
@@ -128,9 +128,9 @@ class DifferentialEvolution:
             matplotlib.use("TkAgg")
         except:
             pass
-        plt.figure()
-        plt.plot(glucose_array)
-        plt.plot(self.sim_glucose[minidx])
+        # plt.figure()
+        # plt.plot(glucose_array)
+        # plt.plot(self.sim_glucose[minidx])
         return parameter_array[minidx]
 
     @staticmethod

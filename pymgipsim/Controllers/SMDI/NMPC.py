@@ -30,14 +30,15 @@ class NMPC:
         self.ctrl_sampling_time = 5
         self.steps = int((scenario.settings.end_time - scenario.settings.start_time) / scenario.settings.sampling_time)
         self.ideal_glucose = 110
-        self.glucose_target_range = [70, 180]
+        self.glucose_target_range = [100, 200]
+        self.hypo_hyper_range = [70, 180]
         # Create containers
 
         self.verbose = True
         self.use_built_in_plot = True
         self.iterator = 0
         self.control_horizon = 1
-        self.prediction_horizon = 300
+        self.prediction_horizon = 360
         self.gradient_delta = 100.0
         self.max_grad_counter = 500
         self.epsilon = 1e-6
@@ -62,7 +63,7 @@ class NMPC:
         self.before_first_meal = True
         self.last_plot_est = []
         self.estimations = []
-        self.bolus_time_range = [120, 120]
+        self.bolus_time_range = [60, 60]
 
         # Time of next meal for wich the insulin bolus has already been injected
         self.next_meal_bolus_injected = False
@@ -118,11 +119,11 @@ class NMPC:
         #     return 0, None
 
         # Check if meal is out of range or we have already injected insulin or if glucose is too low
-        if not any(meal_time - self.bolus_time_range[0] <= sample < meal_time + self.bolus_time_range[1] for meal_time in self.scenario.inputs.meal_carb.start_time[0]):
-            self.next_meal_bolus_injected = False
-            return 0, None
-        if self.next_meal_bolus_injected or measured_glucose < self.glucose_target_range[0]:
-            return 0, None
+        # if not any(meal_time - self.bolus_time_range[0] <= sample < meal_time + self.bolus_time_range[1] for meal_time in self.scenario.inputs.meal_carb.start_time[0]):
+        #     self.next_meal_bolus_injected = False
+        #     return 0, None
+        # if self.next_meal_bolus_injected or measured_glucose < self.glucose_target_range[0]:
+        #     return 0, None
         
         hor_scenario = self.create_horizon_scenario(sample, ivp_params)
         self.solver = BaseSolver(hor_scenario, IVP.Model.from_scenario(hor_scenario))
@@ -131,7 +132,6 @@ class NMPC:
         self.time = np.copy(self.solver.model.time.as_unix)
 
         inputs = self.solver.model.inputs
-        self.solver.model.initial_conditions.as_array = ivp_last_state
 
         self.glucose_init = measured_glucose
 
@@ -141,7 +141,10 @@ class NMPC:
         inputs.basal_insulin.sampled_signal[:, 0:sample-1] = self.basal_equilibrium
 
         bolus_insulin = 0
-        self.solver.model.initial_conditions.as_array = self.solver.model.output_equilibrium(self.solver.model.parameters.as_array, inputs.as_array)
+        # self.solver.model.initial_conditions.as_array = self.solver.model.output_equilibrium(self.solver.model.parameters.as_array, inputs.as_array)
+        self.solver.model.initial_conditions.as_array = ivp_last_state
+        self.solver.model.initial_conditions.as_array[0] = measured_glucose
+        
         
         grad_counter = 0
         gradient_norm = 100 * self.epsilon
@@ -279,17 +282,24 @@ class NMPC:
         gluc = UnitConversion.glucose.concentration_mmolL_to_mgdL(states[patient_idx, 8, :])
         gluc = gluc[gluc > 0]
         plt.plot(gluc, label='Simulator Gluc.')
-        plt.grid()
-        plt.legend()
+
+        # Plot glucose hyper- and hypoglycemia levels
+        plt.axhline(self.hypo_hyper_range[0], color='red', linewidth=0.5)
+        plt.text(1, self.hypo_hyper_range[0], 'Hypoglycemia', color='red', fontsize=8)
+        plt.axhline(self.hypo_hyper_range[1], color='green', linewidth=0.5)
+        plt.text(1, self.hypo_hyper_range[1], 'Hyperglycemia', color='green', fontsize=8)
 
         # Plot glucose target range
-        plt.axhline(self.glucose_target_range[0], color='red', linewidth=0.5)
-        plt.axhline(self.glucose_target_range[1], color='green', linewidth=0.5)
+        plt.axhline(self.glucose_target_range[0], color='red', linestyle = '--', linewidth=0.5, alpha=0.5)
+        plt.text(1, self.glucose_target_range[0], 'Lower limit', color='red', fontsize=8)
+        plt.axhline(self.glucose_target_range[1], color='green', linestyle = '--', linewidth=0.5, alpha=0.5)
+        plt.text(1, self.glucose_target_range[1], 'Upper limit', color='green', fontsize=8)
 
         # Plot past estimations to compare with actual glucose
         if len(self.last_plot_est):
             for est in self.last_plot_est:
-                plt.plot(est[0], est[1], linewidth=0.5, linestyle='--', color='blue', label='Past Estimation')
+                plt.plot(est[0], est[1], linewidth=0.5, linestyle='--', color='blue')
+            plt.plot(0, 0, linewidth=0.5, linestyle='--', color='blue', label='Past estimations')
 
         # Plot prediction with and without control            
         if prediction is not None:
@@ -313,6 +323,10 @@ class NMPC:
         for meal_time, meal_magnitude in zip(meal_times, meal_magnitudes):
             if meal_time < len(gluc):  # Ensure meal time is within the plot range
                 plt.arrow(meal_time, 0, 0, meal_magnitude, head_width=5, fc='black', ec='black')
+
+        
+        plt.grid()
+        plt.legend()
 
         # Plot insulin
         plt.subplot(2, 1, 2)

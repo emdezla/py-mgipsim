@@ -19,9 +19,9 @@ class Controller:
         if sample % self.control_sampling == 0:
 
             for patient_idx, controller, estimator in zip(range(len(self.controllers),), self.controllers, self.estimators):
-                if sample==UnitConversion.time.convert_hour_to_min(30):
+                # if sample==UnitConversion.time.convert_hour_to_min(30):
                     # Estimate patient parameters based on 24h+ data
-                    estimator.run(sample, patient_idx, self.measurements, self.insulins)
+                    # estimator.run(sample, patient_idx, self.measurements, self.insulins)
 
                 bolus = 0
                 binmap = np.logical_and(controller.announced_meal_starts <= sample,
@@ -29,11 +29,13 @@ class Controller:
                 if np.any(binmap):
                     bolus = UnitConversion.insulin.U_to_mU(controller.announced_meal_amounts[
                                                                binmap] / controller.carb_insulin_ratio / self.control_sampling)
-                # Open-loop MDI therapy until patient parameters are not estimated
-                if sample>=UnitConversion.time.convert_hour_to_min(30):
-                    # Call NMPC for bolus calculation
-                    bolus, gluc_pred = controller.run(sample, states, UnitConversion.glucose.concentration_mmolL_to_mgdL(measurements[patient_idx]),
-                                                       patient_idx, estimator.scenario.patient.model.parameters, estimator.solver.model.states.as_array[0, :, -1])
+                    # Open-loop MDI therapy until patient parameters are not estimated
+                    if sample>=UnitConversion.time.convert_hour_to_min(30):
+                        # Run estimator
+                        estimator.run(sample, patient_idx, self.measurements, self.insulins)
+                        # Call NMPC for bolus calculation
+                        bolus, gluc_pred = controller.run(sample, states, UnitConversion.glucose.concentration_mmolL_to_mgdL(measurements[patient_idx]),
+                                                        patient_idx, estimator.scenario.patient.model.parameters, estimator.solver.model.states.as_array[0, :, -1])
                 inputs[patient_idx,3,sample:sample+self.control_sampling] = UnitConversion.insulin.Uhr_to_mUmin(controller.basal_rate) + bolus
 
                 self.measurements.append(UnitConversion.glucose.concentration_mmolL_to_mgdL(measurements[patient_idx]))

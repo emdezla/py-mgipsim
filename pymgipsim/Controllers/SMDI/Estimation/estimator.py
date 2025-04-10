@@ -36,7 +36,7 @@ class Estimator:
         self.basal_insulin: float = UnitConversion.insulin.Uhr_to_uUmin(scenario.patient.demographic_info.basal[0])
         self.with_meal_estimation = False
         self.number_of_meal_param_coeff = 1
-        self.max_iterations = 1000
+        self.max_iterations = 3000
         self.optimization_random_seed = 1
         self.optimization_threads = np.inf
         self.is_historical_init_state = False
@@ -134,9 +134,9 @@ class Estimator:
         # self.solver.model.states.as_array[0, :, -1]
 
 
-        plt.plot(self.solver.model.states.as_array[0,0,:])
-        plt.legend(["CGM","Diff. Evolution fit","Base solver with fitted params"])
-        plt.show()
+        # plt.plot(self.solver.model.states.as_array[0,0,:])
+        # plt.legend(["CGM","Diff. Evolution fit","Base solver with fitted params"])
+        # plt.show()
 
     def cost_function(self, optimization_params: List[float]):
         """ Cost function of the identification.
