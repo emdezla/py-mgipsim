@@ -10,6 +10,7 @@ class Controller:
     name = "SMDI"
 
     def __init__(self, scenario_instance):
+        self.scenario = scenario_instance
         self.control_sampling = int(5/scenario_instance.settings.sampling_time)
         self.controllers = [NMPC(scenario_instance, patient_idx) for patient_idx in range(scenario_instance.patient.number_of_subjects)]
         self.estimators = [Estimator(scenario_instance, patient_idx) for patient_idx in range(scenario_instance.patient.number_of_subjects)]
@@ -45,6 +46,10 @@ class Controller:
                         bolus, gluc_pred = controller.run(sample, states, measurements_mgdl,
                                                         patient_idx, estimator.scenario.patient.model.parameters, estimator.solver.model.states.as_array[0, :, -1],
                                                           estimator.avg_carb_time)
+
+                if sample >= self.scenario.settings.end_time - self.control_sampling and controller.use_built_in_plot:
+                    # Plot past predictions at last sample
+                    controller.plot_prediction(states, None, None, None, patient_idx)
 
                 match self.model_name:
                     case T1DM.ExtHovorka.Model.name:

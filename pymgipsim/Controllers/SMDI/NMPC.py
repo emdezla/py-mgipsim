@@ -30,8 +30,8 @@ class NMPC:
         self.patient_idx = 0
         self.ctrl_sampling_time = 5
         self.steps = int((scenario.settings.end_time - scenario.settings.start_time) / scenario.settings.sampling_time)
-        self.ideal_glucose = 110
-        self.glucose_target_range = [110, 180]
+        self.ideal_glucose = 100
+        self.glucose_target_range = [80, 140]
         self.hypo_hyper_range = [70, 180]
         # Create containers
 
@@ -40,12 +40,12 @@ class NMPC:
         self.iterator = 0
         self.control_horizon = 1
         self.prediction_horizon = 360
-        self.gradient_delta = 100.0
         self.max_grad_counter = 500
-        self.epsilon = 1e-6
+        self.epsilon = 1e-3
         self.grad_gamma = 0.9
-        self.grad_stepsize = 0.01
-        self.insulin_limit = 25e6  # hard constraint, 25 U
+        self.grad_stepsize = 10000
+        self.grad_max_stepsize = 2e5 # 0.2 U/min
+        self.insulin_limit = 25e6  # hard constraint, 25 U/min
 
         self.model_name = scenario.patient.model.name
         self.scenario = deepcopy(scenario)
@@ -66,10 +66,10 @@ class NMPC:
         self.before_first_meal = True
         self.last_plot_est = []
         self.estimations = []
-        self.bolus_time_range = [60, 60]
 
         # Time of next meal for wich the insulin bolus has already been injected
         self.next_meal_bolus_injected = False
+        self.use_target_range = False
 
     def create_horizon_scenario(self, sample, ivp_params, ivp_carb_time):
         """ Creates scenario for horizon simulation.
@@ -112,22 +112,8 @@ class NMPC:
             float: insulin value to be injected in the present moment.
         
         """
-
-        # The end: plot full simulation
-        if self.use_built_in_plot and sample >= self.scenario.settings.end_time-5:
-            self.plot_prediction(states, None, None, None, patient_idx)
-
-        # If we have already injected bolus for the next meal, skip
-        # if sample < self.next_meal_bolus_injected or measured_glucose < self.glucose_target_range[0]:
-        #     return 0, None
-
-        # Check if meal is out of range or we have already injected insulin or if glucose is too low
-        # if not any(meal_time - self.bolus_time_range[0] <= sample < meal_time + self.bolus_time_range[1] for meal_time in self.scenario.inputs.meal_carb.start_time[0]):
-        #     self.next_meal_bolus_injected = False
-        #     return 0, None
-        # if self.next_meal_bolus_injected or measured_glucose < self.glucose_target_range[0]:
-        #     return 0, None
         
+        # Create horizon scenario
         hor_scenario = self.create_horizon_scenario(sample, ivp_params, ivp_carb_time)
         self.solver = BaseSolver(hor_scenario, IVP.Model.from_scenario(hor_scenario))
         self.carb = np.copy(self.solver.model.inputs.carb.sampled_signal)
@@ -148,40 +134,30 @@ class NMPC:
         self.solver.model.initial_conditions.as_array = ivp_last_state
         self.solver.model.initial_conditions.as_array[0] = measured_glucose
         
-        
+        # Model Predictive Control
         grad_counter = 0
-        gradient_norm = 100 * self.epsilon
+        gradient = self.epsilon + 1
         start_time = timeit.default_timer()
+        insulin_array = np.zeros((self.max_grad_counter,))
         cost_array = np.zeros((self.max_grad_counter,))
         gradi_array = np.zeros((self.max_grad_counter,))
-        grad_array = np.zeros((self.max_grad_counter,))
         self.estimations = []
 
-        while grad_counter < self.max_grad_counter and gradient_norm > self.epsilon:
+        while grad_counter < self.max_grad_counter and abs(gradient) > self.epsilon:
             gradient, cost_array[grad_counter] = self.get_gradient(bolus_insulin, inputs)
-            gradient_norm = np.linalg.norm(gradient)
-            gradient = gradient * 10 ** 6
+            insulin_array[grad_counter] = bolus_insulin
+            gradient = gradient * 10 ** -3 + self.epsilon
             gradi_array[grad_counter] = gradient
-            grad_array[grad_counter] = gradient_norm
         
             if not grad_counter or cost_array[grad_counter] < cost_optimal:
                 cost_optimal = cost_array[grad_counter]
                 insulin_optimal = bolus_insulin
-            else:
-                pass
-        
-            # Gradient descent NOT used! Finding local minimum instead
-            bolus_insulin = bolus_insulin + 10000 #- self.grad_stepsize * gradient
+            
+            # Gradient descent
+            bolus_insulin = bolus_insulin + min(self.grad_max_stepsize, self.grad_stepsize / gradient)
             # Applying saturation
             bolus_insulin = np.clip(bolus_insulin, 0, self.insulin_limit)
             grad_counter += 1
-            # if self.verbose and self.cost_array[grad_counter] > 0 or gradient_norm > 0:
-            #     print(
-            #         "Step:" + str(grad_counter) + " Cost:" + str(self.cost_array[grad_counter]) + " Gradient norm: " + str(
-            #             gradient_norm))
-
-        # if gradient_norm > 0:
-        #     plt.show()
         
         elapsed_time = timeit.default_timer() - start_time
         self.iterator += 1
@@ -202,18 +178,25 @@ class NMPC:
         # inputs.bolus_insulin.sampled_signal[:, -1] = bolus_mUmin / 5
 
         if self.verbose and (np.min(cost_array) > 0 or bolus_Uhr > 0):
+            print("MPC prediction results-----------------------------------")
             print("Step:", (self.iterator + 1) * hor_scenario.settings.sampling_time, "/", self.steps, "   Elapsed time:", elapsed_time, "[s]")
             print("CGM: ", measured_glucose, "  Insulin opt.: ", insulin_optimal, "[uU/min]")
-            print("First cost: ", cost_array[0], "Last cost: ", cost_array[-1], "Min cost: ", np.min(cost_array))
+            print("First cost: ", cost_array[0], "Last cost: ", cost_array[-1], "Min cost: ", np.min(cost_array), "Iterations: ", grad_counter)
             print("Bolus: ", bolus_mUmin, "[mU/min] Patient Basal: ", states[patient_idx, 0, 0], "IVP def Basal: ", inputs.basal_insulin.sampled_signal[:, 0:sample-1][0][-1])
-            print("--------------------------------------------------")
+            print("---------------------------------------------------------")
 
         # Used the bolus insulin for the next meal
         if bolus_mUmin > 0:
             self.next_meal_bolus_injected = True
         
             if self.use_built_in_plot:
-                self.plot_prediction(states, prediction, controlled_pred, inputs.bolus_insulin.sampled_signal[0, :], patient_idx)
+                # Save past predictions for plotting
+                gluc = UnitConversion.glucose.concentration_mmolL_to_mgdL(states[patient_idx, 8, :])
+                gluc = gluc[gluc > 0]
+                horizon_time = np.linspace(len(gluc)-1, len(gluc)-1 + self.prediction_horizon, len(prediction[patient_idx, 0, :]))
+                self.last_plot_est.append([horizon_time, controlled_pred[patient_idx, 0, :]])
+                # Plot current prediction
+                # self.plot_prediction(states, prediction, controlled_pred, inputs.bolus_insulin.sampled_signal[0, :], patient_idx)
             
         return bolus_mUmin, prediction
 
@@ -229,12 +212,18 @@ class NMPC:
         """
         cost = 0.0
         delta_hypo = 1.0
-        delta_hyper = 20.0
+        delta_hyper = 10.0
         for i in range(len(glucose)):
-            if glucose[i] <= 120:
-                cost += ((self.ideal_glucose - glucose[i]) / delta_hypo) ** 2
-            elif glucose[i] > 120:
-                cost += ((self.ideal_glucose - glucose[i]) / delta_hyper) ** 2
+            if self.use_target_range:
+                if glucose[i] <= self.glucose_target_range[0]:
+                    cost += ((self.ideal_glucose - glucose[i]) / delta_hypo) ** 2
+                elif glucose[i] > self.glucose_target_range[1]:
+                    cost += ((self.ideal_glucose - glucose[i]) / delta_hyper) ** 2
+            else: # Use ideal glucose as target value
+                if glucose[i] <= self.ideal_glucose:
+                    cost += ((self.ideal_glucose - glucose[i]) / delta_hypo) ** 2
+                elif glucose[i] > self.ideal_glucose:
+                    cost += ((self.ideal_glucose - glucose[i]) / delta_hyper) ** 2
     
         return cost
     
@@ -249,7 +238,7 @@ class NMPC:
                 tuple[ndarray, float]: gradient of insulin vector, cost calculated with insulin_in.
         """
         gradient = 0
-        shift = 1
+        shift = 100
     
         # Simulate glyc trajecory with insulin_in injected, store cost to cost_in
         inputs.basal_insulin.sampled_signal[:, :] = self.basal_equilibrium
@@ -261,7 +250,7 @@ class NMPC:
         self.set_bolus_insulin(insulin_in + shift, inputs)
         gluc_estimation = self.solver.do_simulation(True)[0][0]
         cost_shift = self.quadratic_cost(gluc_estimation)
-        gradient = (cost_shift - cost_in) / self.gradient_delta
+        gradient = (cost_in - cost_shift)
         if gradient != 0:
             # plt.plot(gluc_estimation)
             self.estimations.append(np.copy(gluc_estimation))
@@ -297,10 +286,10 @@ class NMPC:
         plt.text(1, self.hypo_hyper_range[1], 'Hyperglycemia', color='green', fontsize=8)
 
         # Plot glucose target range
-        plt.axhline(self.glucose_target_range[0], color='red', linestyle = '--', linewidth=0.5, alpha=0.5)
-        plt.text(1, self.glucose_target_range[0], 'Lower limit', color='red', fontsize=8)
-        plt.axhline(self.glucose_target_range[1], color='green', linestyle = '--', linewidth=0.5, alpha=0.5)
-        plt.text(1, self.glucose_target_range[1], 'Upper limit', color='green', fontsize=8)
+        # plt.axhline(self.glucose_target_range[0], color='red', linestyle = '--', linewidth=0.5, alpha=0.5)
+        # plt.text(1, self.glucose_target_range[0], 'Lower limit', color='red', fontsize=8)
+        # plt.axhline(self.glucose_target_range[1], color='green', linestyle = '--', linewidth=0.5, alpha=0.5)
+        # plt.text(1, self.glucose_target_range[1], 'Upper limit', color='green', fontsize=8)
 
         # Plot past estimations to compare with actual glucose
         if len(self.last_plot_est):
