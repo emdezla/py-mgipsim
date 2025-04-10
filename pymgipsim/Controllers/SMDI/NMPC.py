@@ -13,6 +13,7 @@ from pymgipsim.VirtualPatient.Models.T1DM import IVP
 from pymgipsim.VirtualPatient.Models.T1DM.IVP import Parameters
 from pymgipsim.InputGeneration.carb_energy_settings import generate_carb_absorption
 from pymgipsim.Utilities.units_conversions_constants import UnitConversion
+from pymgipsim.VirtualPatient.Models import T1DM
 import matplotlib
 try:
     matplotlib.use('MacOSX')
@@ -30,7 +31,7 @@ class NMPC:
         self.ctrl_sampling_time = 5
         self.steps = int((scenario.settings.end_time - scenario.settings.start_time) / scenario.settings.sampling_time)
         self.ideal_glucose = 110
-        self.glucose_target_range = [100, 200]
+        self.glucose_target_range = [110, 180]
         self.hypo_hyper_range = [70, 180]
         # Create containers
 
@@ -46,6 +47,7 @@ class NMPC:
         self.grad_stepsize = 0.01
         self.insulin_limit = 25e6  # hard constraint, 25 U
 
+        self.model_name = scenario.patient.model.name
         self.scenario = deepcopy(scenario)
         self.scenario.patient.model.name = IVP.Model.name
         self.scenario.patient.number_of_subjects = 1
@@ -56,6 +58,7 @@ class NMPC:
         self.announced_meal_starts = np.array(self.scenario.inputs.meal_carb.start_time[patient_idx])
         self.announced_meal_amounts = np.array(self.scenario.inputs.meal_carb.magnitude[patient_idx])
         self.carb_insulin_ratio = self.scenario.patient.demographic_info.carb_insulin_ratio[patient_idx]
+
         # self.model = IVP.Model.from_scenario(self.ctrl_scenario)
 
         # Hardcoded init values for testing before identification algoritm
@@ -68,7 +71,7 @@ class NMPC:
         # Time of next meal for wich the insulin bolus has already been injected
         self.next_meal_bolus_injected = False
 
-    def create_horizon_scenario(self, sample, ivp_params):
+    def create_horizon_scenario(self, sample, ivp_params, ivp_carb_time):
         """ Creates scenario for horizon simulation.
         
         Args:
@@ -87,7 +90,7 @@ class NMPC:
         meal_times_ctrl = np.asarray(hor_scenario.inputs.meal_carb.start_time[0])[binmap]
         meal_durations_ctrl = 15.0*np.ones_like(meal_times_ctrl)
         hor_scenario.inputs.meal_carb = Events([meals_ctrl], [meal_times_ctrl], [meal_durations_ctrl])
-        hor_scenario.inputs.taud = generate_carb_absorption(hor_scenario,None)
+        hor_scenario.inputs.taud = generate_carb_absorption(hor_scenario,None, carb_time=ivp_carb_time)
         # hor_scenario.inputs.basal_insulin = Events([[0.0]], [[0.0]])
         # hor_scenario.inputs.bolus_insulin = Events([[0.0]], [[0.0]])
         hor_scenario.settings.sampling_time = self.ctrl_sampling_time
@@ -96,7 +99,7 @@ class NMPC:
 
         return hor_scenario
 
-    def run(self, sample, states, measured_glucose : float, patient_idx: int, ivp_params : Parameters, ivp_last_state : np.ndarray):
+    def run(self, sample, states, measured_glucose : float, patient_idx: int, ivp_params : Parameters, ivp_last_state : np.ndarray, ivp_carb_time: float):
         """ Performs gradient descent algorithm to find optimal insulin input.
         
         Args:
@@ -125,7 +128,7 @@ class NMPC:
         # if self.next_meal_bolus_injected or measured_glucose < self.glucose_target_range[0]:
         #     return 0, None
         
-        hor_scenario = self.create_horizon_scenario(sample, ivp_params)
+        hor_scenario = self.create_horizon_scenario(sample, ivp_params, ivp_carb_time)
         self.solver = BaseSolver(hor_scenario, IVP.Model.from_scenario(hor_scenario))
         self.carb = np.copy(self.solver.model.inputs.carb.sampled_signal)
         self.taud = np.copy(self.solver.model.inputs.taud.sampled_signal)
@@ -228,9 +231,9 @@ class NMPC:
         delta_hypo = 1.0
         delta_hyper = 20.0
         for i in range(len(glucose)):
-            if glucose[i] <= self.glucose_target_range[0]:
+            if glucose[i] <= 120:
                 cost += ((self.ideal_glucose - glucose[i]) / delta_hypo) ** 2
-            elif glucose[i] > self.glucose_target_range[1]:
+            elif glucose[i] > 120:
                 cost += ((self.ideal_glucose - glucose[i]) / delta_hyper) ** 2
     
         return cost
@@ -279,7 +282,11 @@ class NMPC:
         """
         plt.figure()
         plt.subplot(2, 1, 1)
-        gluc = UnitConversion.glucose.concentration_mmolL_to_mgdL(states[patient_idx, 8, :])
+        match self.model_name:
+            case T1DM.ExtHovorka.Model.name:
+                gluc = UnitConversion.glucose.concentration_mmolL_to_mgdL(states[patient_idx, 8, :])
+            case T1DM.IVP.Model.name:
+                gluc = states[patient_idx, 0, :]
         gluc = gluc[gluc > 0]
         plt.plot(gluc, label='Simulator Gluc.')
 

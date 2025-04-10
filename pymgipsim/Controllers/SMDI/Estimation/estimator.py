@@ -1,3 +1,4 @@
+import copy
 from typing import List
 import scipy.optimize as opt
 import scipy.io as io
@@ -31,8 +32,8 @@ class Estimator:
         self.upper_bounds: np.ndarray = np.array([], dtype=np.float32)
         self.interpolated_glucose_level: np.ndarray = np.array([], dtype=np.float32)
         self.optimized_params: List[float] = []
-        self.steady_state_glucose_lower_bound = 100.0
-        self.steady_state_glucose_upper_bound = 200.0
+        self.steady_state_glucose_lower_bound = 80.0
+        self.steady_state_glucose_upper_bound = 130.0
         self.basal_insulin: float = UnitConversion.insulin.Uhr_to_uUmin(scenario.patient.demographic_info.basal[0])
         self.with_meal_estimation = False
         self.number_of_meal_param_coeff = 1
@@ -73,7 +74,7 @@ class Estimator:
         self.insulins = np.asarray(insulins)
         self.scenario.settings.end_time = sample
         self.time = np.arange(0,sample+self.scenario.settings.sampling_time,self.scenario.settings.sampling_time)
-        binmap = np.asarray(self.scenario.inputs.meal_carb.start_time[patient_idx])<sample
+        binmap = np.asarray(self.scenario.inputs.meal_carb.start_time[patient_idx])<(sample-self.scenario.settings.sampling_time)
         self.meals = np.asarray(self.scenario.inputs.meal_carb.magnitude[patient_idx])[binmap]
         self.meal_times = np.asarray(self.scenario.inputs.meal_carb.start_time[patient_idx])[binmap]
         self.no_meals = np.sum(binmap)
@@ -132,10 +133,11 @@ class Estimator:
         # self.scenario.patient.model.parameters
         # Last state:
         # self.solver.model.states.as_array[0, :, -1]
+        self.avg_carb_time = np.asarray(self.optimized_params[4:4 + self.no_meals]).mean()
 
-
+        # plt.plot(measurements)
         # plt.plot(self.solver.model.states.as_array[0,0,:])
-        # plt.legend(["CGM","Diff. Evolution fit","Base solver with fitted params"])
+        # plt.legend(["CGM","Base solver with fitted params"])
         # plt.show()
 
     def cost_function(self, optimization_params: List[float]):
@@ -158,12 +160,13 @@ class Estimator:
         ivp_inputs.taud = Events([np.asarray(optimization_params[4:4 + self.no_meals])],[self.meal_times],[np.ones_like(self.meal_times)])
         ivp_inputs.basal_insulin = Events([[0.0]],[[0.0]])
         ivp_inputs.bolus_insulin = Events([[0.0]],[[0.0]])
-        self.scenario.inputs = ivp_inputs
+        hor_scenario = copy.deepcopy(self.scenario)
+        hor_scenario.inputs = ivp_inputs
 
-        model = IVP.Model.from_scenario(self.scenario)
+        model = IVP.Model.from_scenario(hor_scenario)
         model.inputs.basal_insulin.sampled_signal = self.insulins[None,:]
 
-        self.solver = BaseSolver(self.scenario, model)
+        self.solver = BaseSolver(hor_scenario, model)
         self.solver.model.preprocessing()
 
         self.solver.do_simulation(True)

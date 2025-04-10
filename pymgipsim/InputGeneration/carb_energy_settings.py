@@ -30,10 +30,10 @@ def make_carb_settings(scenario_instance: scenario, args: argparse.Namespace):
             scenario_instance.input_generation.am_snack_carb_range = (np.array(snack_cho) / 2 ).tolist()
             scenario_instance.input_generation.pm_snack_carb_range = (np.array(snack_cho) / 2 ).tolist()
 
-def generate_carb_absorption(scenario_instance: scenario, args):
+def generate_carb_absorption(scenario_instance: scenario, args, carb_time: float = 40.0):
     meal_times = np.asarray(scenario_instance.inputs.meal_carb.start_time)
     meal_durations = np.asarray(scenario_instance.inputs.meal_carb.duration)
-    meal_magnitudes = 60.0*np.ones_like(meal_durations)
+    meal_magnitudes = carb_time*np.ones_like(meal_durations)
     carb_absorption_time = Events(start_time= meal_times, duration=meal_durations,
                            magnitude=meal_magnitudes).as_dict()
     return carb_absorption_time
