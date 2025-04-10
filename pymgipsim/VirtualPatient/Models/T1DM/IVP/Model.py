@@ -45,20 +45,14 @@ class Model(BaseModel, UnitConversion):
 
         Ra = np.zeros((inputs.shape[0],inputs.shape[2]))
 
-        self.distributed_start_times = create_square_wave(self.time.as_unix,self.inputs.carb.start_time,
-                           self.inputs.carb.duration,self.inputs.carb.start_time,
-                           self.inputs.carb.sampling_time,with_duration=False)
-        self.distributed_taud = create_square_wave(self.time.as_unix,self.inputs.carb.start_time,
-                           self.inputs.carb.duration,self.inputs.taud.magnitude,
-                           self.inputs.carb.sampling_time,with_duration=False)
-        self.distributed_carbs = carb*self.inputs.carb.sampling_time
+        start_times = np.asarray(self.inputs.carb.start_time)
+        taud = np.asarray(self.inputs.taud.magnitude)
+        carbs = np.asarray(self.inputs.carb.magnitude)
 
         for patientidx in range(inputs.shape[0]):
-            carbi = self.distributed_carbs[patientidx,:]
-            taudi = self.distributed_taud[patientidx,:]
-            meal_times = self.distributed_start_times[patientidx][carbi>0]#self.time.as_unix[carbi>0]
-            taudi = taudi[taudi>0]
-            carbi = carbi[carbi>0]
+            carbi = carbs[patientidx]
+            taudi = taud[patientidx]
+            meal_times = start_times[patientidx]
 
             rate_of_appearance_time_array_full = np.transpose(np.linspace(self.time.as_unix[0]-meal_times,self.time.as_unix[-1]-meal_times,self.time.as_unix.shape[0]))
             rate_of_appearance_time_array_full[rate_of_appearance_time_array_full<0.0] = 0.0
