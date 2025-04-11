@@ -37,11 +37,11 @@ class NMPC:
 
         self.verbose = True
         self.use_built_in_plot = True
-        self.iterator = 0
-        self.control_horizon = 1
+        # self.control_horizon = 5 # Single injection works fine
+        self.control_horizon = 30 # Change control horizon time to use single/multiple injection. (1 injection / controller sampling time)
         self.prediction_horizon = 360
-        self.max_grad_counter = 500
-        self.epsilon = 1e-3
+        self.max_grad_counter = 1000
+        self.epsilon = 10e-2
         self.grad_gamma = 0.9
         self.grad_stepsize = 10000
         self.grad_max_stepsize = 2e5 # 0.2 U/min
@@ -64,12 +64,23 @@ class NMPC:
         # Hardcoded init values for testing before identification algoritm
         self.glucose_init = 108
         self.before_first_meal = True
-        self.last_plot_est = []
+        self.past_est_plots = []
+        self.past_boluses = []
         self.estimations = []
 
-        # Time of next meal for wich the insulin bolus has already been injected
-        self.next_meal_bolus_injected = False
+        # Select to use target range or ideal glucose as target value
         self.use_target_range = False
+        self.check_settings()
+
+
+    def check_settings(self):
+        """ Assertations for controller settings.
+        
+        """
+        assert self.control_horizon > 0, "Control horizon must be greater than 0."
+        assert self.control_horizon <= self.prediction_horizon, "Control horizon must be less than or equal to prediction horizon."
+        assert self.control_horizon % self.ctrl_sampling_time == 0, "Control horizon must be a multiple of the control sampling time."
+
 
     def create_horizon_scenario(self, sample, ivp_params, ivp_carb_time):
         """ Creates scenario for horizon simulation.
@@ -129,38 +140,18 @@ class NMPC:
         
         inputs.basal_insulin.sampled_signal[:, 0:sample-1] = self.basal_equilibrium
 
-        bolus_insulin = 0
         # self.solver.model.initial_conditions.as_array = self.solver.model.output_equilibrium(self.solver.model.parameters.as_array, inputs.as_array)
         self.solver.model.initial_conditions.as_array = ivp_last_state
         self.solver.model.initial_conditions.as_array[0] = measured_glucose
         
         # Model Predictive Control
-        grad_counter = 0
-        gradient = self.epsilon + 1
         start_time = timeit.default_timer()
-        insulin_array = np.zeros((self.max_grad_counter,))
-        cost_array = np.zeros((self.max_grad_counter,))
-        gradi_array = np.zeros((self.max_grad_counter,))
         self.estimations = []
+        cost_array = np.zeros((self.max_grad_counter,))
 
-        while grad_counter < self.max_grad_counter and abs(gradient) > self.epsilon:
-            gradient, cost_array[grad_counter] = self.get_gradient(bolus_insulin, inputs)
-            insulin_array[grad_counter] = bolus_insulin
-            gradient = gradient * 10 ** -3 + self.epsilon
-            gradi_array[grad_counter] = gradient
-        
-            if not grad_counter or cost_array[grad_counter] < cost_optimal:
-                cost_optimal = cost_array[grad_counter]
-                insulin_optimal = bolus_insulin
-            
-            # Gradient descent
-            bolus_insulin = bolus_insulin + min(self.grad_max_stepsize, self.grad_stepsize / gradient)
-            # Applying saturation
-            bolus_insulin = np.clip(bolus_insulin, 0, self.insulin_limit)
-            grad_counter += 1
+        insulin_optimal, grad_counter = self.gradient_descent(inputs, cost_array)
         
         elapsed_time = timeit.default_timer() - start_time
-        self.iterator += 1
 
         bolus_mUmin = insulin_optimal / 1000
         bolus_Uhr = UnitConversion.insulin.mUmin_to_Uhr(bolus_mUmin)
@@ -171,34 +162,54 @@ class NMPC:
         # Simulate approximated patient in horizon
         prediction = np.copy(self.solver.do_simulation(True))
 
-        inputs.bolus_insulin.sampled_signal[:, 0] = insulin_optimal
+        self.set_bolus_insulins(insulin_optimal, inputs)
         controlled_pred = np.copy(self.solver.do_simulation(True))
 
         # self.basal_rate += bolus_mUmin #insert bolus Uhr
         # inputs.bolus_insulin.sampled_signal[:, -1] = bolus_mUmin / 5
 
-        if self.verbose and (np.min(cost_array) > 0 or bolus_Uhr > 0):
+        if self.verbose:
             print("MPC prediction results-----------------------------------")
-            print("Step:", (self.iterator + 1) * hor_scenario.settings.sampling_time, "/", self.steps, "   Elapsed time:", elapsed_time, "[s]")
-            print("CGM: ", measured_glucose, "  Insulin opt.: ", insulin_optimal, "[uU/min]")
-            print("First cost: ", cost_array[0], "Last cost: ", cost_array[-1], "Min cost: ", np.min(cost_array), "Iterations: ", grad_counter)
-            print("Bolus: ", bolus_mUmin, "[mU/min] Patient Basal: ", states[patient_idx, 0, 0], "IVP def Basal: ", inputs.basal_insulin.sampled_signal[:, 0:sample-1][0][-1])
+            print(f"Step: {sample}/{self.steps}   Elapsed time: {elapsed_time:.4f} [s] CGM: {measured_glucose:.4f}")
+            print(f"Insulins: {bolus_Uhr} [U/hr]")
+            print(f"First cost: {cost_array[0]:.4f} Last cost: {cost_array[-1]:.4f} Min cost: {np.min(cost_array):.4f} Iterations: {grad_counter}")
+            print(f"Patient Basal: {states[patient_idx, 0, 0]:.4f} IVP def Basal: {inputs.basal_insulin.sampled_signal[:, 0:sample-1][0][-1]:.4f}")  # Print array
             print("---------------------------------------------------------")
 
-        # Used the bolus insulin for the next meal
-        if bolus_mUmin > 0:
-            self.next_meal_bolus_injected = True
-        
-            if self.use_built_in_plot:
-                # Save past predictions for plotting
-                gluc = UnitConversion.glucose.concentration_mmolL_to_mgdL(states[patient_idx, 8, :])
-                gluc = gluc[gluc > 0]
-                horizon_time = np.linspace(len(gluc)-1, len(gluc)-1 + self.prediction_horizon, len(prediction[patient_idx, 0, :]))
-                self.last_plot_est.append([horizon_time, controlled_pred[patient_idx, 0, :]])
-                # Plot current prediction
-                # self.plot_prediction(states, prediction, controlled_pred, inputs.bolus_insulin.sampled_signal[0, :], patient_idx)
+        if self.use_built_in_plot:
+            # Save past predictions for plotting
+            gluc = UnitConversion.glucose.concentration_mmolL_to_mgdL(states[patient_idx, 8, :])
+            gluc = gluc[gluc > 0]
+            horizon_time = np.linspace(len(gluc)-1, len(gluc)-1 + self.prediction_horizon, len(prediction[patient_idx, 0, :]))
+            self.past_est_plots.append([horizon_time, controlled_pred[patient_idx, 0, :]])
+            for i in range(len(bolus_Uhr)):
+                self.past_boluses.append([sample + i * self.ctrl_sampling_time, bolus_Uhr[i]])
+            # Plot current prediction
+            # self.plot_prediction(states, prediction, controlled_pred, inputs.bolus_insulin.sampled_signal[0, :], patient_idx)
             
         return bolus_mUmin, prediction
+    
+    def gradient_descent(self, inputs, cost_array):
+        num_of_bolus = int(self.control_horizon/self.ctrl_sampling_time)
+        bolus_insulins = np.zeros((num_of_bolus,))
+        grad_counter = 0
+        gradient = self.epsilon + 1 
+        while grad_counter < self.max_grad_counter and np.any(abs(gradient) > self.epsilon):
+            gradient, cost_array[grad_counter] = self.get_gradient(bolus_insulins, inputs)
+            gradient = gradient * 10 ** -3 + self.epsilon
+        
+            if not grad_counter or cost_array[grad_counter] < cost_optimal:
+                cost_optimal = cost_array[grad_counter]
+                insulin_optimal = bolus_insulins
+            
+            # Gradient descent
+            max_grad_idx = np.argmax(gradient)
+            bolus_insulins[max_grad_idx] = bolus_insulins[max_grad_idx] + min(self.grad_max_stepsize, self.grad_stepsize / gradient[max_grad_idx])
+
+            # Applying saturation
+            bolus_insulins[max_grad_idx] = np.clip(bolus_insulins[max_grad_idx], 0, self.insulin_limit)
+            grad_counter += 1
+        return insulin_optimal, grad_counter
 
     def quadratic_cost(self, glucose: np.ndarray):
         """ Quadratic cost function: delivers asymmetric quadratic cost consisting of input and output costs.
@@ -237,32 +248,40 @@ class NMPC:
             Returns:
                 tuple[ndarray, float]: gradient of insulin vector, cost calculated with insulin_in.
         """
-        gradient = 0
+        gradient = np.zeros((len(insulin_in),))
         shift = 100
     
         # Simulate glyc trajecory with insulin_in injected, store cost to cost_in
         inputs.basal_insulin.sampled_signal[:, :] = self.basal_equilibrium
-        self.set_bolus_insulin(insulin_in, inputs)
+        self.set_bolus_insulins(insulin_in, inputs)
         gluc_estimation = self.solver.do_simulation(True)[0][0]
         cost_in = self.quadratic_cost(gluc_estimation)
-        
+
         # Simulate glyc trajectory with insulin_in + shift and compare costs: cost_shift - const_in and store gradient
-        self.set_bolus_insulin(insulin_in + shift, inputs)
-        gluc_estimation = self.solver.do_simulation(True)[0][0]
-        cost_shift = self.quadratic_cost(gluc_estimation)
-        gradient = (cost_in - cost_shift)
-        if gradient != 0:
-            # plt.plot(gluc_estimation)
-            self.estimations.append(np.copy(gluc_estimation))
+        for i in range(len(insulin_in)):
+            insulin_in[i] = insulin_in[i] + shift
+            if i > 0:
+                insulin_in[i-1] = insulin_in[i-1] - shift
+            self.set_bolus_insulins(insulin_in, inputs)
+            gluc_estimation = self.solver.do_simulation(True)[0][0]
+            cost_shift = self.quadratic_cost(gluc_estimation)
+            gradient[i] = (cost_in - cost_shift) / shift
         return gradient, cost_in
     
-    def set_bolus_insulin(self, insulin_in: np.ndarray, inputs):
+    def set_bolus_insulins(self, insulins_in: np.ndarray, inputs):
         """ Sets bolus insulin values for virtual patient simulation.
+            Inject either a single bolus or a vector of boluses.
+            If a vector is given, the length of the vector must match the length of the horizon.
     
                 Args:
                     insulin_in (ndarray): insulin input.
+                    inputs (Inputs): inputs for the virtual patient.
         """
-        inputs.basal_insulin.sampled_signal[:, 0] += insulin_in
+        assert len(insulins_in) == 1 or len(insulins_in)*self.ctrl_sampling_time == self.control_horizon, \
+        "Insulin input length is bigger than 1 but does not match control horizon length at current sampling rate."
+
+        for i in range(0, len(insulins_in)):
+            inputs.basal_insulin.sampled_signal[:,i] += insulins_in[i]
         return
     
     def plot_prediction(self, states, prediction, controlled, ivp_basal, patient_idx):
@@ -292,8 +311,8 @@ class NMPC:
         # plt.text(1, self.glucose_target_range[1], 'Upper limit', color='green', fontsize=8)
 
         # Plot past estimations to compare with actual glucose
-        if len(self.last_plot_est):
-            for est in self.last_plot_est:
+        if len(self.past_est_plots):
+            for est in self.past_est_plots:
                 plt.plot(est[0], est[1], linewidth=0.5, linestyle='--', color='blue')
             plt.plot(0, 0, linewidth=0.5, linestyle='--', color='blue', label='Past estimations')
 
@@ -307,7 +326,7 @@ class NMPC:
             plt.plot(horizon_time, controlled[patient_idx, 0, :], label='IVP Gluc. (controlled)', linestyle='--', color='green')
 
             # Store estimations
-            self.last_plot_est.append([horizon_time, controlled[patient_idx, 0, :]])
+            self.past_est_plots.append([horizon_time, controlled[patient_idx, 0, :]])
             
             # Scale down plot if prediction is too high
             if max(prediction[patient_idx, 0, :]) > 2000:
@@ -319,7 +338,13 @@ class NMPC:
         for meal_time, meal_magnitude in zip(meal_times, meal_magnitudes):
             if meal_time < len(gluc):  # Ensure meal time is within the plot range
                 plt.arrow(meal_time, 0, 0, meal_magnitude, head_width=5, fc='black', ec='black')
+        plt.arrow(0, 0, 0, 0, fc='black', ec='black', label='Meals')
 
+        # Plot past boluses
+        if len(self.past_boluses):
+            for bolus in self.past_boluses:
+                plt.arrow(bolus[0], 0, 0, bolus[1], head_width=5, fc='red', ec='red')
+            plt.arrow(0, 0, 0, 0, fc='red', ec='red', label='Boluses')
         
         plt.grid()
         plt.legend()

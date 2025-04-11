@@ -32,7 +32,7 @@ class Controller:
                     case T1DM.IVP.Model.name:
                         measurements_mgdl = measurements[patient_idx]
 
-                bolus = 0
+                bolus = np.zeros(1)
                 binmap = np.logical_and(controller.announced_meal_starts <= sample,
                                         sample < controller.announced_meal_starts + 4)
                 if np.any(binmap):
@@ -53,10 +53,12 @@ class Controller:
 
                 match self.model_name:
                     case T1DM.ExtHovorka.Model.name:
-                        inputs[patient_idx, 3, sample:sample + self.control_sampling] = UnitConversion.insulin.Uhr_to_mUmin(controller.basal_rate) + bolus
+                        for i in range(len(bolus)):
+                            inputs[patient_idx, 3, sample:sample + self.control_sampling * (i+1)] = UnitConversion.insulin.Uhr_to_mUmin(controller.basal_rate) + bolus[i]
                         self.insulins.append(UnitConversion.insulin.mU_to_uU(inputs[patient_idx, 3, sample]))
                     case T1DM.IVP.Model.name:
-                        inputs[patient_idx,0,sample:sample+self.control_sampling] = UnitConversion.insulin.Uhr_to_uUmin(controller.basal_rate) + 1000*bolus
+                        for i in range(len(bolus)):
+                            inputs[patient_idx,0,sample:sample+self.control_sampling * (i+1)] = UnitConversion.insulin.Uhr_to_uUmin(controller.basal_rate) + 1000*bolus[i]
                         self.insulins.append(inputs[patient_idx, 0, sample])
 
                 self.measurements.append(measurements_mgdl)
