@@ -10,13 +10,27 @@ class Controller:
     name = "SMDI"
 
     def __init__(self, scenario_instance):
+        self.model_name = scenario_instance.patient.model.name
         self.scenario = scenario_instance
         self.control_sampling = int(5/scenario_instance.settings.sampling_time)
         self.controllers = [NMPC(scenario_instance, patient_idx) for patient_idx in range(scenario_instance.patient.number_of_subjects)]
         self.estimators = [Estimator(scenario_instance, patient_idx) for patient_idx in range(scenario_instance.patient.number_of_subjects)]
         self.measurements = []
         self.insulins = []
-        self.model_name = scenario_instance.patient.model.name
+        match self.model_name:
+            case T1DM.ExtHovorka.Model.name:
+                self.to_mgdl = UnitConversion.glucose.concentration_mmolL_to_mgdL
+                self.rate_to_uUmin = UnitConversion.insulin.mU_to_uU
+                self.to_rate = lambda rate, bolus : UnitConversion.insulin.Uhr_to_mUmin(rate) + bolus
+                self.insulin_idx = 3
+                self.glucose_idx = 8
+            case T1DM.IVP.Model.name:
+                self.to_mgdl = lambda mgdl : mgdl
+                self.rate_to_uUmin = lambda uU : uU
+                self.to_rate = lambda rate, bolus : UnitConversion.insulin.Uhr_to_uUmin(rate) + UnitConversion.insulin.mU_to_uU(bolus)
+                self.insulin_idx = 0
+                self.glucose_idx = 0
+
 
     def run(self, measurements, inputs, states, sample):
         if sample % self.control_sampling == 0:
@@ -25,12 +39,7 @@ class Controller:
                 # if sample==UnitConversion.time.convert_hour_to_min(30):
                     # Estimate patient parameters based on 24h+ data
                     # estimator.run(sample, patient_idx, self.measurements, self.insulins)
-
-                match self.model_name:
-                    case T1DM.ExtHovorka.Model.name:
-                        measurements_mgdl = UnitConversion.glucose.concentration_mmolL_to_mgdL(measurements[patient_idx])
-                    case T1DM.IVP.Model.name:
-                        measurements_mgdl = measurements[patient_idx]
+                measurements_mgdl = self.to_mgdl(measurements[patient_idx])
 
                 bolus = np.zeros(1)
                 binmap = np.logical_and(controller.announced_meal_starts <= sample,
@@ -51,16 +60,10 @@ class Controller:
                     # Plot past predictions at last sample
                     controller.plot_prediction(states, None, None, None, patient_idx)
 
-                match self.model_name:
-                    case T1DM.ExtHovorka.Model.name:
-                        for i in range(len(bolus)):
-                            inputs[patient_idx, 3, sample:sample + self.control_sampling * (i+1)] = UnitConversion.insulin.Uhr_to_mUmin(controller.basal_rate) + bolus[i]
-                        self.insulins.append(UnitConversion.insulin.mU_to_uU(inputs[patient_idx, 3, sample]))
-                    case T1DM.IVP.Model.name:
-                        for i in range(len(bolus)):
-                            inputs[patient_idx,0,sample:sample+self.control_sampling * (i+1)] = UnitConversion.insulin.Uhr_to_uUmin(controller.basal_rate) + 1000*bolus[i]
-                        self.insulins.append(inputs[patient_idx, 0, sample])
+                for i in range(len(bolus)):
+                    inputs[patient_idx, self.insulin_idx, sample:sample + self.control_sampling * (i+1)] = self.to_rate(controller.basal_rate, bolus[i])
 
+                self.insulins.append(self.rate_to_uUmin(inputs[patient_idx, self.insulin_idx, sample]))
                 self.measurements.append(measurements_mgdl)
 
         return

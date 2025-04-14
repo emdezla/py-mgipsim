@@ -178,7 +178,11 @@ class NMPC:
 
         if self.use_built_in_plot:
             # Save past predictions for plotting
-            gluc = UnitConversion.glucose.concentration_mmolL_to_mgdL(states[patient_idx, 8, :])
+            match self.model_name:
+                case T1DM.ExtHovorka.Model.name:
+                    gluc = UnitConversion.glucose.concentration_mmolL_to_mgdL(states[patient_idx, 8, :])
+                case T1DM.IVP.Model.name:
+                    gluc = states[patient_idx, 0, :]
             gluc = gluc[gluc > 0]
             horizon_time = np.linspace(len(gluc)-1, len(gluc)-1 + self.prediction_horizon, len(prediction[patient_idx, 0, :]))
             self.past_est_plots.append([horizon_time, controlled_pred[patient_idx, 0, :]])
