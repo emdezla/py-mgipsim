@@ -317,8 +317,8 @@ class NMPC:
         # Plot past estimations to compare with actual glucose
         if len(self.past_est_plots):
             for est in self.past_est_plots:
-                plt.plot(est[0], est[1], linewidth=0.5, linestyle='--', color='blue')
-            plt.plot(0, 0, linewidth=0.5, linestyle='--', color='blue', label='Past estimations')
+                plt.plot(est[0], est[1], linewidth=0.5, linestyle='--', color='grey')
+            plt.plot(0, 0, linewidth=0.5, linestyle='--', color='grey', label='Past estimations')
 
         # Plot prediction with and without control            
         if prediction is not None:
@@ -347,7 +347,8 @@ class NMPC:
         # Plot past boluses
         if len(self.past_boluses):
             for bolus in self.past_boluses:
-                plt.arrow(bolus[0], 0, 0, bolus[1], head_width=5, fc='red', ec='red')
+                if bolus[1] > 0:
+                    plt.arrow(bolus[0], 0, 0, bolus[1], head_width=5, fc='red', ec='red')
             plt.arrow(0, 0, 0, 0, fc='red', ec='red', label='Boluses')
         
         plt.grid()

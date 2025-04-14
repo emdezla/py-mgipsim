@@ -44,6 +44,14 @@ class SingleScaleSolver(BaseSolver):
                     case T1DM.IVP.Model.name:
                         self.model.inputs.basal_insulin.sampled_signal[:,0:5] = UnitConversion.insulin.Uhr_to_uUmin(np.asarray([x.basal_rate for x in self.controller.controllers]))
                 self.model.preprocessing()
+            case Controllers.MPCPump.controller.Controller.name:
+                self.controller = Controllers.MPCPump.controller.Controller(self.scenario_instance)
+                match self.controller.model_name:
+                    case T1DM.ExtHovorka.Model.name:
+                        self.model.inputs.uInsulin.sampled_signal[:, 0:5] = UnitConversion.insulin.Uhr_to_mUmin(np.asarray([x.basal_rate for x in self.controller.controllers]))
+                    case T1DM.IVP.Model.name:
+                        self.model.inputs.basal_insulin.sampled_signal[:,0:5] = UnitConversion.insulin.Uhr_to_uUmin(np.asarray([x.basal_rate for x in self.controller.controllers]))
+                self.model.preprocessing()
             case _:  # Default case
                 raise Exception("Undefined controller, Add it to the ModelSolver class.")
 

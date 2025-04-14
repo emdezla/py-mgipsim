@@ -37,7 +37,7 @@ class Estimator:
         self.basal_insulin: float = UnitConversion.insulin.Uhr_to_uUmin(scenario.patient.demographic_info.basal[0])
         self.with_meal_estimation = False
         self.number_of_meal_param_coeff = 1
-        self.max_iterations = 3000
+        self.max_iterations = 1000
         self.optimization_random_seed = 1
         self.optimization_threads = np.inf
         self.is_historical_init_state = False
