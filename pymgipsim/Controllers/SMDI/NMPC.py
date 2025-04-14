@@ -40,9 +40,8 @@ class NMPC:
         # self.control_horizon = 5 # Single injection works fine
         self.control_horizon = 30 # Change control horizon time to use single/multiple injection. (1 injection / controller sampling time)
         self.prediction_horizon = 360
-        self.max_grad_counter = 1000
-        self.epsilon = 10e-2
-        self.grad_gamma = 0.9
+        self.max_grad_counter = 500
+        self.epsilon = 1e-3
         self.grad_stepsize = 10000
         self.grad_max_stepsize = 2e5 # 0.2 U/min
         self.insulin_limit = 25e6  # hard constraint, 25 U/min
@@ -170,8 +169,8 @@ class NMPC:
 
         if self.verbose:
             print("MPC prediction results-----------------------------------")
-            print(f"Step: {sample}/{self.steps}   Elapsed time: {elapsed_time:.4f} [s] CGM: {measured_glucose:.4f}")
-            print(f"Insulins: {bolus_Uhr} [U/hr]")
+            print(f"Step: {sample}/{self.steps}   Elapsed time: {elapsed_time:.4f} [s] \033[92m CGM: {measured_glucose:.4f} [mg/dL] \033[0m")
+            print(f"\033[91m Insulins: {bolus_Uhr} [U/hr] \033[0m")
             print(f"First cost: {cost_array[0]:.4f} Last cost: {cost_array[-1]:.4f} Min cost: {np.min(cost_array):.4f} Iterations: {grad_counter}")
             print(f"Patient Basal: {states[patient_idx, 0, 0]:.4f} IVP def Basal: {inputs.basal_insulin.sampled_signal[:, 0:sample-1][0][-1]:.4f}")  # Print array
             print("---------------------------------------------------------")
@@ -198,13 +197,13 @@ class NMPC:
         bolus_insulins = np.zeros((num_of_bolus,))
         grad_counter = 0
         gradient = self.epsilon + 1 
-        while grad_counter < self.max_grad_counter and np.any(abs(gradient) > self.epsilon):
+        while grad_counter < self.max_grad_counter and np.any(abs(gradient) - self.epsilon > 0) or grad_counter < 2:
             gradient, cost_array[grad_counter] = self.get_gradient(bolus_insulins, inputs)
-            gradient = gradient * 10 ** -3 + self.epsilon
+            gradient = gradient * 10 ** -3
         
             if not grad_counter or cost_array[grad_counter] < cost_optimal:
                 cost_optimal = cost_array[grad_counter]
-                insulin_optimal = bolus_insulins
+                insulin_optimal = np.copy(bolus_insulins)
             
             # Gradient descent
             max_grad_idx = np.argmax(gradient)
@@ -270,6 +269,7 @@ class NMPC:
             gluc_estimation = self.solver.do_simulation(True)[0][0]
             cost_shift = self.quadratic_cost(gluc_estimation)
             gradient[i] = (cost_in - cost_shift) / shift
+        insulin_in[-1] = insulin_in[-1] - shift
         return gradient, cost_in
     
     def set_bolus_insulins(self, insulins_in: np.ndarray, inputs):

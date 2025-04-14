@@ -18,6 +18,7 @@ class Controller:
         self.measurements = []
         self.insulins = []
         self.boluses = np.zeros((scenario_instance.patient.number_of_subjects, scenario_instance.settings.end_time // scenario_instance.settings.sampling_time))
+        [setattr(controller, 'control_horizon', 5) for controller in self.controllers]
         match self.model_name:
             case T1DM.ExtHovorka.Model.name:
                 self.to_mgdl = UnitConversion.glucose.concentration_mmolL_to_mgdL
