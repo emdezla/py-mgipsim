@@ -17,6 +17,7 @@ class Controller:
         self.estimators = [Estimator(scenario_instance, patient_idx) for patient_idx in range(scenario_instance.patient.number_of_subjects)]
         self.measurements = []
         self.insulins = []
+        self.boluses = np.zeros((scenario_instance.patient.number_of_subjects, scenario_instance.settings.end_time // scenario_instance.settings.sampling_time))
         match self.model_name:
             case T1DM.ExtHovorka.Model.name:
                 self.to_mgdl = UnitConversion.glucose.concentration_mmolL_to_mgdL
@@ -41,9 +42,10 @@ class Controller:
                     # estimator.run(sample, patient_idx, self.measurements, self.insulins)
                 measurements_mgdl = self.to_mgdl(measurements[patient_idx])
 
-                bolus = np.zeros(1)
+                bolus = np.zeros((1,))
                 binmap = np.logical_and(controller.announced_meal_starts <= sample,
                                         sample < controller.announced_meal_starts + 4)
+                # Next meal announced
                 if np.any(binmap):
                     bolus = UnitConversion.insulin.U_to_mU(controller.announced_meal_amounts[
                                                                binmap] / controller.carb_insulin_ratio / self.control_sampling)
@@ -55,14 +57,15 @@ class Controller:
                         bolus, gluc_pred = controller.run(sample, states, measurements_mgdl,
                                                         patient_idx, estimator.scenario.patient.model.parameters, estimator.solver.model.states.as_array[0, :, -1],
                                                           estimator.avg_carb_time)
+                    for i in range(bolus.shape[0]):
+                        if bolus[i] > 0:
+                            self.boluses[patient_idx, sample//self.control_sampling + i] = bolus[i]
 
+                # Plot past predictions at last sample
                 if sample >= self.scenario.settings.end_time - self.control_sampling and controller.use_built_in_plot:
-                    # Plot past predictions at last sample
                     controller.plot_prediction(states, None, None, None, patient_idx)
 
-                for i in range(len(bolus)):
-                    inputs[patient_idx, self.insulin_idx, sample:sample + self.control_sampling * (i+1)] = self.to_rate(controller.basal_rate, bolus[i])
-
+                inputs[patient_idx, self.insulin_idx, sample:sample + self.control_sampling] = self.to_rate(controller.basal_rate, self.boluses[patient_idx, sample//self.control_sampling])
                 self.insulins.append(self.rate_to_uUmin(inputs[patient_idx, self.insulin_idx, sample]))
                 self.measurements.append(measurements_mgdl)
 
