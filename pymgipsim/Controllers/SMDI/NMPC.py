@@ -71,6 +71,8 @@ class NMPC:
         self.use_target_range = False
         self.check_settings()
 
+        self.observer_preds = np.zeros(0,)
+        self.ctrl_observer = None
 
     def check_settings(self):
         """ Assertations for controller settings.
@@ -80,6 +82,52 @@ class NMPC:
         assert self.control_horizon <= self.prediction_horizon, "Control horizon must be less than or equal to prediction horizon."
         assert self.control_horizon % self.ctrl_sampling_time == 0, "Control horizon must be a multiple of the control sampling time."
 
+    def create_contorller_observer(self, sample, ivp_params, ivp_last_state, ivp_carb_time):
+        """ Create observer for controller.
+        Args:
+            scenario (scenario): scenario for the virtual patient.
+            patient_idx (int): index of the patient.
+        """
+        self.ctrl_observer = deepcopy(self.scenario)
+        self.ctrl_observer.settings.start_time = 0
+        self.ctrl_observer.settings.end_time = self.ctrl_sampling_time
+        self.ctrl_observer.settings.sampling_time = self.ctrl_sampling_time
+        self.ctrl_observer.patient.model.parameters = ivp_params
+        binmap = np.asarray(self.ctrl_observer.inputs.meal_carb.start_time[0])<sample
+        meals_ctrl = np.asarray(self.ctrl_observer.inputs.meal_carb.magnitude[0])[binmap]
+        meal_times_ctrl = np.asarray(self.ctrl_observer.inputs.meal_carb.start_time[0])[binmap]
+        meal_durations_ctrl = 15.0*np.ones_like(meal_times_ctrl)
+        self.ctrl_observer.inputs.meal_carb = Events([meals_ctrl], [meal_times_ctrl], [meal_durations_ctrl])
+        self.ctrl_observer.inputs.taud = generate_carb_absorption(self.ctrl_observer, None, carb_time=ivp_carb_time)
+        self.observer_solver = BaseSolver(self.ctrl_observer, IVP.Model.from_scenario(self.ctrl_observer))
+        self.observer_solver.model.preprocessing()
+        self.observer_solver.model.initial_conditions.as_array = ivp_last_state
+
+    def simulate_observer(self, measured_glucose : float, sample):
+        """ Simulates observer for controller.
+        
+        Args:
+            measured_glucose (float): last CGM measurement.
+        
+        Returns:
+            SimulationData: simulation data for observer.
+        
+        """
+        if sample < self.ctrl_sampling_time:
+            return
+        self.ctrl_observer.settings.start_time = sample - self.ctrl_sampling_time
+        self.ctrl_observer.settings.end_time = sample
+        self.observer_solver.model.initial_conditions.as_array[0] = measured_glucose
+        self.observer_solver.model.inputs.basal_insulin.sampled_signal[:, :] = \
+            self.observer_solver.model.get_basal_equilibrium(self.observer_solver.model.parameters.as_array, measured_glucose)
+        # Add past boluses to basal insulin sampled signal
+        for bolus in self.past_boluses:
+            if bolus[0] >= sample - self.ctrl_sampling_time and bolus[0] < sample:
+                self.observer_solver.model.inputs.basal_insulin.sampled_signal[:, 0] += UnitConversion.insulin.Uhr_to_mUmin(bolus[1])
+        # Simulate 5min
+        observed_states = self.observer_solver.do_simulation(True)
+        self.observer_preds = np.concatenate((self.observer_preds, observed_states[0][0]))
+        return observed_states
 
     def create_horizon_scenario(self, sample, ivp_params, ivp_carb_time):
         """ Creates scenario for horizon simulation.
@@ -292,7 +340,7 @@ class NMPC:
         """ Plots prediction results.
     
         """
-        plt.figure()
+        fig = plt.figure()
         plt.subplot(2, 1, 1)
         match self.model_name:
             case T1DM.ExtHovorka.Model.name:
@@ -301,6 +349,9 @@ class NMPC:
                 gluc = states[patient_idx, 0, :]
         gluc = gluc[gluc > 0]
         plt.plot(gluc, label='Simulator Gluc.')
+        obs_start = UnitConversion.time.convert_hour_to_min(30)
+        observer_time = np.linspace(obs_start, len(gluc)-1, len(self.observer_preds))
+        plt.plot(observer_time, self.observer_preds, label='Observer Gluc.', linestyle='--', color='red')
 
         # Plot glucose hyper- and hypoglycemia levels
         plt.axhline(self.hypo_hyper_range[0], color='red', linewidth=0.5)
@@ -366,4 +417,5 @@ class NMPC:
         plt.grid()
         plt.legend()
         plt.ylabel('Insulin [mU/min]')
+        fig.canvas.manager.full_screen_toggle()
         plt.show()
