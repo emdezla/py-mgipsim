@@ -52,7 +52,7 @@ class Controller:
                     controller.last_measurement = measurements_mgdl
                     controller.first_glucose = measurements_mgdl
                 # # Simulate 5 min with Observer
-                if sample >= UnitConversion.time.convert_hour_to_min(30) and (sample + 5) % 360 == 0:
+                if sample >= UnitConversion.time.convert_hour_to_min(30): #and (sample + 5) % 360 == 0:
                     controller.update_observer(measurements_mgdl, sample)
                     # (Re)create observer if not yet created or 2 hrs passed
                     # if controller.ctrl_observer == None:# or sample % 120 == 0:
