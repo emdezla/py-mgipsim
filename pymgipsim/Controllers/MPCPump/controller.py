@@ -19,7 +19,8 @@ class Controller:
         self.insulins = []
         self.boluses = np.zeros((scenario_instance.patient.number_of_subjects, scenario_instance.settings.end_time // scenario_instance.settings.sampling_time))
         self.avg_carb_time = None
-        [setattr(controller, 'control_horizon', 5) for controller in self.controllers]
+        [setattr(controller, 'control_horizon', 10) for controller in self.controllers]
+        [setattr(controller, 'assume_basal', False) for controller in self.controllers]
         match self.model_name:
             case T1DM.ExtHovorka.Model.name:
                 self.to_mgdl = UnitConversion.glucose.concentration_mmolL_to_mgdL
@@ -51,19 +52,20 @@ class Controller:
                 if np.any(binmap):
                     bolus = UnitConversion.insulin.U_to_mU(controller.announced_meal_amounts[
                                                                binmap] / controller.carb_insulin_ratio / self.control_sampling)
+                    
+                if sample >= UnitConversion.time.convert_hour_to_min(30) and sample % 120 == 0:
+                    estimator.run(sample, patient_idx, self.measurements, self.insulins)
+                    controller.ivp_carb_time = np.copy(estimator.avg_carb_time)
+                    controller.ivp_params = np.copy(estimator.scenario.patient.model.parameters)
+                    controller.ivp_last_state = np.copy(estimator.solver.model.states.as_array[0, :, -1])
+                    controller.last_measurement = measurements_mgdl
+
                 # Open-loop MDI therapy until patient parameters are not estimated
                 if sample>=UnitConversion.time.convert_hour_to_min(30):
-                    # (Re)create observer if not yet created or 2 hrs passed
-                    if controller.ctrl_observer == None or sample % 120 == 0:
-                        estimator.run(sample, patient_idx, self.measurements, self.insulins)
-                        self.avg_carb_time = estimator.avg_carb_time
-                        controller.create_contorller_observer(sample, estimator.scenario.patient.model.parameters, \
-                                                              estimator.solver.model.states.as_array[0, :, -1], estimator.avg_carb_time)
-                    observer_states = controller.simulate_observer(measurements_mgdl, sample) # Update observer states
+                    controller.update_observer(measurements_mgdl, sample) # Update observer states
                     # Call NMPC for bolus calculation
                     bolus, gluc_pred = controller.run(sample, states, measurements_mgdl,
-                                                    patient_idx, controller.ctrl_observer.patient.model.parameters, observer_states[0, :, -1],
-                                                        estimator.avg_carb_time)
+                                                    patient_idx, estimator.scenario.patient.model.parameters, estimator.avg_carb_time)
                 for i in range(bolus.shape[0]):
                     if bolus[i] > 0:
                         self.boluses[patient_idx, sample//self.control_sampling + i] = bolus[i]
