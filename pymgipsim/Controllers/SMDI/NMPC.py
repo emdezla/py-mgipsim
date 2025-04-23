@@ -86,12 +86,12 @@ class NMPC:
         assert self.control_horizon % self.ctrl_sampling_time == 0, "Control horizon must be a multiple of the control sampling time."
     
     def update_observer(self, measured_glucose, sample):
-        self.observer_scenario.settings.start_time = sample - 72*self.ctrl_sampling_time #360
-        self.observer_scenario.settings.end_time = sample
-        #binmap = (np.asarray(self.observer_scenario.inputs.meal_carb.start_time[0]) < self.observer_scenario.settings.end_time) #& \
-             #(np.asarray(self.observer_scenario.inputs.meal_carb.start_time[0]) > self.observer_scenario.settings.start_time)
-        meals_ctrl = np.asarray(self.observer_scenario.inputs.meal_carb.magnitude[0])#[binmap]
-        meal_times_ctrl = np.asarray(self.observer_scenario.inputs.meal_carb.start_time[0])#[binmap]
+        self.observer_scenario.settings.start_time = sample - self.ctrl_sampling_time #360
+        self.observer_scenario.settings.end_time = sample + 1
+        binmap = (np.asarray(self.observer_scenario.inputs.meal_carb.start_time[0]) <= self.observer_scenario.settings.end_time) & \
+             (np.asarray(self.observer_scenario.inputs.meal_carb.start_time[0]) > self.observer_scenario.settings.start_time - 10 * 60)
+        meals_ctrl = np.asarray(self.observer_scenario.inputs.meal_carb.magnitude[0])[binmap]
+        meal_times_ctrl = np.asarray(self.observer_scenario.inputs.meal_carb.start_time[0])[binmap]
         meal_durations_ctrl = 1.0*np.ones_like(meal_times_ctrl)
         self.observer_scenario.inputs.meal_carb = Events([meals_ctrl], [meal_times_ctrl], [meal_durations_ctrl])
         self.observer_scenario.inputs.taud = generate_carb_absorption(self.observer_scenario,None, carb_time=self.ivp_carb_time)
@@ -101,7 +101,7 @@ class NMPC:
         observer_solver = BaseSolver(self.observer_scenario, IVP.Model.from_scenario(self.observer_scenario))
         observer_solver.model.preprocessing()
         observer_solver.model.initial_conditions.as_array = self.ivp_last_state
-        observer_solver.model.initial_conditions.as_array[0] = self.last_measurement
+        # observer_solver.model.initial_conditions.as_array[0] = self.last_measurement
         observer_solver.model.inputs.basal_insulin.sampled_signal[:, :] = UnitConversion.insulin.Uhr_to_uUmin(self.basal_rate)
         # Add past boluses to basal insulin sampled signal
         for bolus in self.past_boluses:
@@ -186,7 +186,7 @@ class NMPC:
         inputs.basal_insulin.sampled_signal[:, 0:sample-1] = self.basal_equilibrium
 
         # self.solver.model.initial_conditions.as_array = self.solver.model.output_equilibrium(self.solver.model.parameters.as_array, inputs.as_array)
-        self.solver.model.initial_conditions.as_array = self.ivp_last_state
+        self.solver.model.initial_conditions.as_array = np.copy(self.ivp_last_state)
         self.solver.model.initial_conditions.as_array[0] = measured_glucose
         
         # Model Predictive Control
