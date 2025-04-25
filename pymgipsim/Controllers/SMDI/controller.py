@@ -39,9 +39,6 @@ class Controller:
         if sample % self.control_sampling == 0:
 
             for patient_idx, controller, estimator in zip(range(len(self.controllers),), self.controllers, self.estimators):
-                # if sample==UnitConversion.time.convert_hour_to_min(30):
-                    # Estimate patient parameters based on 24h+ data
-                    # estimator.run(sample, patient_idx, self.measurements, self.insulins)
                 measurements_mgdl = self.to_mgdl(measurements[patient_idx])
                 
                 if sample == UnitConversion.time.convert_hour_to_min(30):
@@ -65,15 +62,13 @@ class Controller:
                     # Open-loop MDI therapy until patient parameters are not estimated
                     if sample>=UnitConversion.time.convert_hour_to_min(30):
                         # Call NMPC for bolus calculation
-                        bolus, gluc_pred = controller.run(sample, states, measurements_mgdl,
-                                                        patient_idx, estimator.scenario.patient.model.parameters, estimator.avg_carb_time)
+                        bolus, gluc_pred = controller.run(sample, states, measurements_mgdl, patient_idx)
                     for i in range(bolus.shape[0]):
                         if bolus[i] > 0:
                             self.boluses[patient_idx, sample//self.control_sampling + i] = bolus[i]
 
                 # Plot past predictions at last sample
                 if sample >= self.scenario.settings.end_time - self.control_sampling and controller.use_built_in_plot:
-                    # controller.update_observer(measurements_mgdl, sample)
                     controller.plot_prediction(states, None, None, None, patient_idx)
 
                 inputs[patient_idx, self.insulin_idx, sample:sample + self.control_sampling] = self.to_rate(controller.basal_rate, self.boluses[patient_idx, sample//self.control_sampling])

@@ -75,6 +75,9 @@ class NMPC:
         self.observer_preds = np.zeros(0,)
         self.observer_insulin = np.zeros(0,)
         self.last_measurement = 0
+        self.ivp_last_state = np.zeros(0,)
+        self.ivp_params = np.zeros(0,)
+        self.ivp_carb_time = 40
 
     def check_settings(self):
         """ Assertations for controller settings.
@@ -114,7 +117,7 @@ class NMPC:
         self.observer_insulin = np.concatenate((self.observer_insulin, observer_states[0][2][1:]))
         self.last_measurement = measured_glucose
 
-    def create_horizon_scenario(self, sample, ivp_params, ivp_carb_time):
+    def create_horizon_scenario(self, sample):
         """ Creates scenario for horizon simulation.
         
         Args:
@@ -130,12 +133,9 @@ class NMPC:
         meal_times_ctrl = np.asarray(self.announced_meal_starts)[binmap]
         meal_durations_ctrl = 15.0*np.ones_like(meal_times_ctrl)
         hor_scenario.inputs.meal_carb = Events([meals_ctrl], [meal_times_ctrl], [meal_durations_ctrl])
-        hor_scenario.inputs.taud = generate_carb_absorption(hor_scenario,None, carb_time=40)
-        # hor_scenario.inputs.basal_insulin = Events([[0.0]], [[0.0]])
-        # hor_scenario.inputs.bolus_insulin = Events([[0.0]], [[0.0]])
+        hor_scenario.inputs.taud = generate_carb_absorption(hor_scenario,None, carb_time=self.ivp_carb_time) #MPCPump /w Hovorka: carb_time=55
         hor_scenario.settings.sampling_time = self.ctrl_sampling_time
-        # hor_scenario.patient.model.parameters = ivp_params
-        # hor_scenario.patient.model.parameters = Parameters(np.asarray(ivp_params))
+        hor_scenario.patient.model.parameters = self.ivp_params
 
         self.solver = BaseSolver(hor_scenario, IVP.Model.from_scenario(hor_scenario))
         self.carb = np.copy(self.solver.model.inputs.carb.sampled_signal)
@@ -150,16 +150,10 @@ class NMPC:
             self.basal_equilibrium = self.solver.model.get_basal_equilibrium(self.solver.model.parameters.as_array, self.glucose_init)
             inputs.basal_insulin.sampled_signal[:, 0:sample-1] = self.basal_equilibrium
 
-        # for bolus in self.past_boluses:
-        #     if bolus[0] >= hor_scenario.settings.start_time and bolus[0] < hor_scenario.settings.end_time and bolus[1] > 0:
-        #         self.solver.model.inputs.basal_insulin.sampled_signal[:, (bolus[0] - hor_scenario.settings.start_time) // hor_scenario.settings.sampling_time] \
-        #             += UnitConversion.insulin.Uhr_to_uUmin(bolus[1])
-
-        # self.solver.model.initial_conditions.as_array = self.solver.model.output_equilibrium(self.solver.model.parameters.as_array, inputs.as_array)
         self.solver.model.initial_conditions.as_array = np.copy(self.ivp_last_state)
         self.solver.model.initial_conditions.as_array[0] = self.glucose_init
 
-    def run(self, sample, states, measured_glucose : float, patient_idx: int, ivp_params : Parameters, ivp_carb_time: float):
+    def run(self, sample, states, measured_glucose : float, patient_idx: int):
         """ Performs gradient descent algorithm to find optimal insulin input.
         
         Args:
@@ -174,8 +168,8 @@ class NMPC:
         """
         self.glucose_init = measured_glucose
         # Create horizon scenario
-        self.create_horizon_scenario(sample, ivp_params, ivp_carb_time)
-        self.solver.model.initial_conditions.as_array = states[patient_idx, :, sample-1]
+        self.create_horizon_scenario(sample)
+
         inputs = self.solver.model.inputs
 
         # Model Predictive Control
@@ -195,6 +189,7 @@ class NMPC:
             inputs.basal_insulin.sampled_signal[:, 0:sample-1] = self.basal_equilibrium
         else:
             inputs.basal_insulin.sampled_signal[:, 0:sample-1] = 0
+            self.basal_rate = np.zeros_like(self.basal_rate)
         
         # Simulate approximated patient in horizon
         prediction = np.copy(self.solver.do_simulation(True))
@@ -406,8 +401,6 @@ class NMPC:
         plt.plot(observer_time, self.observer_insulin * 100, label='Observer Ip.', linestyle='--', color='red')
         if prediction is not None:
             plt.plot(horizon_time, ivp_basal/1000, label='IVP basal', linestyle='--')
-        # plt.plot(horizon_time, controlled[patient_idx, 2, :]/1000, label='IVP Ip', linestyle='--')
-        # plt.plot(horizon_time, controlled[patient_idx, 3, :]/1000, label='IVP Isc', linestyle='--')
         plt.grid()
         plt.legend()
         plt.ylabel('Insulin [mU/min]')
