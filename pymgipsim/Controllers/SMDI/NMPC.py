@@ -121,9 +121,6 @@ class NMPC:
             sample (int): current sample.
             states (ndarray): patient states.
         
-        Returns:
-            Scenario: scenario for horizon simulation.
-        
         """
         hor_scenario = deepcopy(self.scenario)
         hor_scenario.settings.start_time = sample
@@ -133,14 +130,34 @@ class NMPC:
         meal_times_ctrl = np.asarray(self.announced_meal_starts)[binmap]
         meal_durations_ctrl = 15.0*np.ones_like(meal_times_ctrl)
         hor_scenario.inputs.meal_carb = Events([meals_ctrl], [meal_times_ctrl], [meal_durations_ctrl])
-        hor_scenario.inputs.taud = generate_carb_absorption(hor_scenario,None, carb_time=ivp_carb_time)
+        hor_scenario.inputs.taud = generate_carb_absorption(hor_scenario,None, carb_time=40)
         # hor_scenario.inputs.basal_insulin = Events([[0.0]], [[0.0]])
         # hor_scenario.inputs.bolus_insulin = Events([[0.0]], [[0.0]])
         hor_scenario.settings.sampling_time = self.ctrl_sampling_time
-        hor_scenario.patient.model.parameters = ivp_params
+        # hor_scenario.patient.model.parameters = ivp_params
         # hor_scenario.patient.model.parameters = Parameters(np.asarray(ivp_params))
 
-        return hor_scenario
+        self.solver = BaseSolver(hor_scenario, IVP.Model.from_scenario(hor_scenario))
+        self.carb = np.copy(self.solver.model.inputs.carb.sampled_signal)
+        self.taud = np.copy(self.solver.model.inputs.taud.sampled_signal)
+        self.time = np.copy(self.solver.model.time.as_unix)
+
+        inputs = self.solver.model.inputs
+
+        self.solver.model.preprocessing()
+
+        if self.assume_basal:
+            self.basal_equilibrium = self.solver.model.get_basal_equilibrium(self.solver.model.parameters.as_array, self.glucose_init)
+            inputs.basal_insulin.sampled_signal[:, 0:sample-1] = self.basal_equilibrium
+
+        # for bolus in self.past_boluses:
+        #     if bolus[0] >= hor_scenario.settings.start_time and bolus[0] < hor_scenario.settings.end_time and bolus[1] > 0:
+        #         self.solver.model.inputs.basal_insulin.sampled_signal[:, (bolus[0] - hor_scenario.settings.start_time) // hor_scenario.settings.sampling_time] \
+        #             += UnitConversion.insulin.Uhr_to_uUmin(bolus[1])
+
+        # self.solver.model.initial_conditions.as_array = self.solver.model.output_equilibrium(self.solver.model.parameters.as_array, inputs.as_array)
+        self.solver.model.initial_conditions.as_array = np.copy(self.ivp_last_state)
+        self.solver.model.initial_conditions.as_array[0] = self.glucose_init
 
     def run(self, sample, states, measured_glucose : float, patient_idx: int, ivp_params : Parameters, ivp_carb_time: float):
         """ Performs gradient descent algorithm to find optimal insulin input.
@@ -155,27 +172,12 @@ class NMPC:
             float: insulin value to be injected in the present moment.
         
         """
-        # self.update_observer(measured_glucose, sample)
+        self.glucose_init = measured_glucose
         # Create horizon scenario
-        hor_scenario = self.create_horizon_scenario(sample, ivp_params, ivp_carb_time)
-        self.solver = BaseSolver(hor_scenario, IVP.Model.from_scenario(hor_scenario))
-        self.carb = np.copy(self.solver.model.inputs.carb.sampled_signal)
-        self.taud = np.copy(self.solver.model.inputs.taud.sampled_signal)
-        self.time = np.copy(self.solver.model.time.as_unix)
-
+        self.create_horizon_scenario(sample, ivp_params, ivp_carb_time)
+        self.solver.model.initial_conditions.as_array = states[patient_idx, :, sample-1]
         inputs = self.solver.model.inputs
 
-        self.glucose_init = measured_glucose
-
-        self.solver.model.preprocessing()
-        if self.assume_basal:
-            self.basal_equilibrium = self.solver.model.get_basal_equilibrium(self.solver.model.parameters.as_array, self.glucose_init)
-            inputs.basal_insulin.sampled_signal[:, 0:sample-1] = self.basal_equilibrium
-
-        # self.solver.model.initial_conditions.as_array = self.solver.model.output_equilibrium(self.solver.model.parameters.as_array, inputs.as_array)
-        self.solver.model.initial_conditions.as_array = np.copy(self.ivp_last_state)
-        self.solver.model.initial_conditions.as_array[0] = measured_glucose
-        
         # Model Predictive Control
         start_time = timeit.default_timer()
         self.estimations = []

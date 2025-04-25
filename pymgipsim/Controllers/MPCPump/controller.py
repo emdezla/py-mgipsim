@@ -19,7 +19,7 @@ class Controller:
         self.insulins = []
         self.boluses = np.zeros((scenario_instance.patient.number_of_subjects, scenario_instance.settings.end_time // scenario_instance.settings.sampling_time))
         self.avg_carb_time = None
-        [setattr(controller, 'control_horizon', 10) for controller in self.controllers]
+        [setattr(controller, 'control_horizon', 5) for controller in self.controllers]
         [setattr(controller, 'assume_basal', False) for controller in self.controllers]
         match self.model_name:
             case T1DM.ExtHovorka.Model.name:
@@ -53,7 +53,7 @@ class Controller:
                     bolus = UnitConversion.insulin.U_to_mU(controller.announced_meal_amounts[
                                                                binmap] / controller.carb_insulin_ratio / self.control_sampling)
                     
-                if sample >= UnitConversion.time.convert_hour_to_min(30) and sample % 120 == 0:
+                if sample == UnitConversion.time.convert_hour_to_min(30):
                     estimator.run(sample, patient_idx, self.measurements, self.insulins)
                     controller.ivp_carb_time = np.copy(estimator.avg_carb_time)
                     controller.ivp_params = np.copy(estimator.scenario.patient.model.parameters)
