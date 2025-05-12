@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 from pymgipsim.Utilities.Scenario import demographic_info
 from .NMPC import NMPC
@@ -15,8 +16,8 @@ class Controller:
         self.control_sampling = int(5/scenario_instance.settings.sampling_time)
         self.controllers = [NMPC(scenario_instance, patient_idx) for patient_idx in range(scenario_instance.patient.number_of_subjects)]
         self.estimators = [Estimator(scenario_instance, patient_idx) for patient_idx in range(scenario_instance.patient.number_of_subjects)]
-        self.measurements = []
-        self.insulins = []
+        self.measurements = [[] for patient_idx in range(scenario_instance.patient.number_of_subjects)]
+        self.insulins = [[] for patient_idx in range(scenario_instance.patient.number_of_subjects)]
         self.boluses = np.zeros((scenario_instance.patient.number_of_subjects, scenario_instance.settings.end_time // scenario_instance.settings.sampling_time))
         [setattr(controller, 'control_horizon', 5) for controller in self.controllers]
         [setattr(controller, 'assume_basal', True) for controller in self.controllers]
@@ -43,7 +44,7 @@ class Controller:
                 
                 if sample == UnitConversion.time.convert_hour_to_min(30):
                     # Run estimator once
-                    estimator.run(sample, patient_idx, self.measurements, self.insulins)
+                    estimator.run(sample, patient_idx, self.measurements[patient_idx], self.insulins[patient_idx])
                     controller.ivp_carb_time = np.copy(estimator.avg_carb_time)
                     controller.ivp_params = np.copy(estimator.scenario.patient.model.parameters)
                     controller.ivp_last_state = np.copy(estimator.solver.model.states.as_array[0, :, -1])
@@ -57,9 +58,12 @@ class Controller:
                                         sample < controller.announced_meal_starts + 4)
                 # Next meal announced
                 if np.any(binmap):
-                    bolus = UnitConversion.insulin.U_to_mU(controller.announced_meal_amounts[
-                                                               binmap] / controller.carb_insulin_ratio / self.control_sampling)
                     # Open-loop MDI therapy until patient parameters are not estimated
+                    if sample <= UnitConversion.time.convert_hour_to_min(30):
+                        # controller.carb_insulin_ratio = random.uniform(0.95, 1.05) * controller.carb_insulin_ratio # Randomize C:I ratio (unstable)
+                        bolus = UnitConversion.insulin.U_to_mU(controller.announced_meal_amounts[
+                                                               binmap] / controller.carb_insulin_ratio / self.control_sampling)
+                    # SMDI therapy after patient parameters are estimated
                     if sample>=UnitConversion.time.convert_hour_to_min(30):
                         # Call NMPC for bolus calculation
                         bolus, gluc_pred = controller.run(sample, states, measurements_mgdl, patient_idx)
@@ -72,7 +76,7 @@ class Controller:
                     controller.plot_prediction(states, None, None, None, patient_idx)
 
                 inputs[patient_idx, self.insulin_idx, sample:sample + self.control_sampling] = self.to_rate(controller.basal_rate, self.boluses[patient_idx, sample//self.control_sampling])
-                self.insulins.append(self.rate_to_uUmin(inputs[patient_idx, self.insulin_idx, sample]))
-                self.measurements.append(measurements_mgdl)
+                self.insulins[patient_idx].append(self.rate_to_uUmin(inputs[patient_idx, self.insulin_idx, sample]))
+                self.measurements[patient_idx].append(measurements_mgdl)
 
         return
