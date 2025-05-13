@@ -45,7 +45,7 @@ class Controller:
                 carb_insulin_ratio = self.scenario.patient.demographic_info.carb_insulin_ratio[patient_idx]
                 correction_bolus = self.scenario.patient.demographic_info.correction_bolus[patient_idx]
                 carb = np.asarray(self.scenario.inputs.meal_carb.magnitude[patient_idx])[binmap]
-                bolus_magnitude = UnitConversion.insulin.U_to_mU(carb[0]/carb_insulin_ratio) + max((measurements_mgdl - 120)/correction_bolus,0.0)
+                bolus_magnitude = UnitConversion.insulin.U_to_mU(carb[0]/carb_insulin_ratio + max((measurements_mgdl - 120)/correction_bolus,0.0))
 
             insulin.append(self.to_rate(basal,bolus_magnitude/self.scenario.settings.sampling_time))
         inputs[:, self.insulin_idx, sample] = np.asarray(insulin)
