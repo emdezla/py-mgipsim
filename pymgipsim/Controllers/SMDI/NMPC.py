@@ -57,9 +57,7 @@ class NMPC:
         self.announced_meal_starts = np.array(self.scenario.inputs.meal_carb.start_time[patient_idx])
         self.announced_meal_amounts = np.array(self.scenario.inputs.meal_carb.magnitude[patient_idx])
         self.carb_insulin_ratio = self.scenario.patient.demographic_info.carb_insulin_ratio[patient_idx]
-        self.observer_scenario = deepcopy(scenario)
-        # self.model = IVP.Model.from_scenario(self.ctrl_scenario)
-
+        self.create_observer_scenario(scenario, patient_idx)
         # Hardcoded init values for testing before identification algoritm
         self.glucose_init = 108
         self.before_first_meal = True
@@ -87,16 +85,40 @@ class NMPC:
         assert self.control_horizon <= self.prediction_horizon, "Control horizon must be less than or equal to prediction horizon."
         assert self.control_horizon % self.ctrl_sampling_time == 0, "Control horizon must be a multiple of the control sampling time."
     
+    def create_observer_scenario(self, fscenario : scenario, patient_idx : int):
+        """ Creates scenario for observer simulation.
+        
+        Args:
+            sample (int): current sample.
+        
+        """
+        self.observer_scenario = deepcopy(fscenario)
+        self.observer_scenario.patient.number_of_subjects = 1
+        self.observer_scenario.patient.model.name = IVP.Model.name
+        self.observer_scenario.patient.demographic_info.body_weight = [fscenario.patient.demographic_info.body_weight[patient_idx]]
+        self.observer_scenario.patient.mscale.parameters = fscenario.patient.mscale.parameters[patient_idx]
+        # Filter for patient_idx in basal and bolus insulin
+        observer_inputs = self.observer_scenario.inputs
+        scenario_inputs = fscenario.inputs
+        try:
+            observer_inputs.basal_insulin = Events([scenario_inputs.basal_insulin.magnitude[patient_idx]], [scenario_inputs.basal_insulin.start_time[patient_idx]], [scenario_inputs.basal_insulin.duration[patient_idx]])
+        except IndexError:
+            observer_inputs.basal_insulin = Events([scenario_inputs.basal_insulin.magnitude[patient_idx]], [scenario_inputs.basal_insulin.start_time[patient_idx]], [scenario_inputs.basal_insulin.duration])
+            if observer_inputs.basal_insulin.duration.size == 0:
+                observer_inputs.basal_insulin.duration = [np.array([0.0])]
+        observer_inputs.bolus_insulin = Events([scenario_inputs.bolus_insulin.magnitude[patient_idx]], [scenario_inputs.bolus_insulin.start_time[patient_idx]], [scenario_inputs.bolus_insulin.duration[patient_idx]])
+
     def update_observer(self, measured_glucose, sample):
-        self.observer_scenario.settings.start_time = sample - 5 #360
+        self.observer_scenario.settings.start_time = sample - self.ctrl_sampling_time #360
         self.observer_scenario.settings.end_time = sample + 1
         binmap = (np.asarray(self.announced_meal_starts) < self.observer_scenario.settings.end_time) & \
              (np.asarray(self.announced_meal_starts) >= self.observer_scenario.settings.start_time - 60*10)
         meals_ctrl = np.asarray(self.announced_meal_amounts)[binmap]
         meal_times_ctrl = np.asarray(self.announced_meal_starts)[binmap]
         meal_durations_ctrl = 1.0*np.ones_like(meal_times_ctrl)
-        self.observer_scenario.inputs.meal_carb = Events([meals_ctrl], [meal_times_ctrl], [meal_durations_ctrl])
-        self.observer_scenario.inputs.taud = generate_carb_absorption(self.observer_scenario,None, carb_time=self.ivp_carb_time)
+        observer_inputs = self.observer_scenario.inputs
+        observer_inputs.meal_carb = Events([meals_ctrl], [meal_times_ctrl], [meal_durations_ctrl])
+        observer_inputs.taud = generate_carb_absorption(self.observer_scenario,None, carb_time=self.ivp_carb_time)
         self.observer_scenario.settings.sampling_time = self.ctrl_sampling_time
         self.observer_scenario.patient.model.parameters = self.ivp_params
 
@@ -117,7 +139,7 @@ class NMPC:
         self.observer_insulin = np.concatenate((self.observer_insulin, observer_states[0][2][1:]))
         self.last_measurement = measured_glucose
 
-    def create_horizon_scenario(self, sample):
+    def create_horizon_scenario(self, sample, patient_idx):
         """ Creates scenario for horizon simulation.
         
         Args:
@@ -126,19 +148,25 @@ class NMPC:
         
         """
         hor_scenario = deepcopy(self.scenario)
-        hor_scenario.settings.start_time = sample*self.scenario.settings.sampling_time
-        print(hor_scenario.settings.start_time)
-        hor_scenario.settings.end_time = sample*self.scenario.settings.sampling_time + self.prediction_horizon
-        # print(sample)
-        # print(sample+self.prediction_horizon)
-        binmap = np.asarray(self.announced_meal_starts)<=sample*self.scenario.settings.sampling_time
+        hor_scenario.settings.start_time = sample
+        hor_scenario.settings.end_time = sample + self.prediction_horizon
+        binmap = np.asarray(self.announced_meal_starts)<sample
         meals_ctrl = np.asarray(self.announced_meal_amounts)[binmap]
         meal_times_ctrl = np.asarray(self.announced_meal_starts)[binmap]
         meal_durations_ctrl = 15.0*np.ones_like(meal_times_ctrl)
-        hor_scenario.inputs.meal_carb = Events([meals_ctrl], [meal_times_ctrl], [meal_durations_ctrl])
-        hor_scenario.inputs.taud = generate_carb_absorption(hor_scenario,None, carb_time=40.0) #MPCPump /w Hovorka: carb_time=55
-        hor_scenario.settings.sampling_time = 5
-        # hor_scenario.patient.model.parameters = self.ivp_params
+        horizon_inputs = hor_scenario.inputs
+        horizon_inputs.meal_carb = Events([meals_ctrl], [meal_times_ctrl], [meal_durations_ctrl])
+        horizon_inputs.taud = generate_carb_absorption(hor_scenario,None, carb_time=self.ivp_carb_time) #MPCPump /w Hovorka: carb_time=55
+        try:
+            horizon_inputs.basal_insulin = Events([horizon_inputs.basal_insulin.magnitude[patient_idx]], [horizon_inputs.basal_insulin.start_time[patient_idx]], [horizon_inputs.basal_insulin.duration[patient_idx]])
+        except IndexError:
+            horizon_inputs.basal_insulin = Events([horizon_inputs.basal_insulin.magnitude[patient_idx]], [horizon_inputs.basal_insulin.start_time[patient_idx]], [horizon_inputs.basal_insulin.duration])
+            if horizon_inputs.basal_insulin.duration.size == 0:
+                horizon_inputs.basal_insulin.duration = [np.array([0.0])]
+        horizon_inputs.bolus_insulin = Events([horizon_inputs.bolus_insulin.magnitude[patient_idx]], [horizon_inputs.bolus_insulin.start_time[patient_idx]], [horizon_inputs.bolus_insulin.duration[patient_idx]])
+
+        hor_scenario.settings.sampling_time = self.ctrl_sampling_time
+        hor_scenario.patient.model.parameters = self.ivp_params
 
         self.solver = BaseSolver(hor_scenario, IVP.Model.from_scenario(hor_scenario))
         self.carb = np.copy(self.solver.model.inputs.carb.sampled_signal)
@@ -171,8 +199,7 @@ class NMPC:
         """
         self.glucose_init = measured_glucose
         # Create horizon scenario
-        self.create_horizon_scenario(sample)
-        self.solver.model.initial_conditions.as_array = states[patient_idx, :, sample]
+        self.create_horizon_scenario(sample, patient_idx)
 
         inputs = self.solver.model.inputs
 
@@ -200,7 +227,6 @@ class NMPC:
 
         self.set_bolus_insulins(insulin_optimal, inputs)
         controlled_pred = np.copy(self.solver.do_simulation(True))
-        # print(controlled_pred)
 
         # self.basal_rate += bolus_mUmin #insert bolus Uhr
         # inputs.bolus_insulin.sampled_signal[:, -1] = bolus_mUmin / 5
@@ -221,10 +247,9 @@ class NMPC:
                 case T1DM.IVP.Model.name:
                     gluc = states[patient_idx, 0, :]
             gluc = gluc[gluc > 0]
-            horizon_time = np.linspace(len(gluc)-1, len(gluc)-2 + self.prediction_horizon/self.scenario.settings.sampling_time, len(prediction[patient_idx, 0, :]))
-            print(horizon_time)
+            horizon_time = np.linspace(len(gluc)-1, len(gluc)-1 + self.prediction_horizon, len(prediction[0, 0, :]))
             if np.any(bolus_Uhr) > 0:
-                self.past_est_plots.append([horizon_time, controlled_pred[patient_idx, 0, :]])
+                self.past_est_plots.append([horizon_time, controlled_pred[0, 0, :]])
             for i in range(len(bolus_Uhr)):
                 self.past_boluses.append([sample + i * self.ctrl_sampling_time, bolus_Uhr[i]])
             # Plot current prediction
@@ -344,7 +369,7 @@ class NMPC:
                 gluc = states[patient_idx, 0, :]
         gluc = gluc[gluc > 0]
         plt.plot(gluc, label='Simulator Gluc.')
-        obs_start = UnitConversion.time.convert_hour_to_min(30)/self.scenario.settings.sampling_time
+        obs_start = UnitConversion.time.convert_hour_to_min(30)
         observer_time = np.linspace(obs_start, len(gluc)-1, len(self.observer_preds))
         plt.plot(observer_time, self.observer_preds, label='Observer Gluc.', linestyle='--', color='red')
 
@@ -361,15 +386,14 @@ class NMPC:
         # plt.text(1, self.glucose_target_range[1], 'Upper limit', color='green', fontsize=8)
 
         # Plot past estimations to compare with actual glucose
-        print(len(self.past_est_plots))
         if len(self.past_est_plots):
             for est in self.past_est_plots:
-                plt.plot(est[0], est[1], linewidth=0.75, linestyle='--', color='black')
+                plt.plot(est[0], est[1], linewidth=0.5, linestyle='--', color='grey')
             plt.plot(0, 0, linewidth=0.5, linestyle='--', color='grey', label='Past estimations')
 
-        # Plot prediction with and without control
+        # Plot prediction with and without control            
         if prediction is not None:
-            horizon_time = np.linspace(len(gluc)-1, len(gluc)-1 + self.prediction_horizon/self.scenario.settings.sampling_time, len(prediction[patient_idx, 0, :]))
+            horizon_time = np.linspace(len(gluc)-1, len(gluc)-1 + self.prediction_horizon, len(prediction[patient_idx, 0, :]))
             # horizon_time = np.linspace(0, len(prediction[patient_idx, 0, :]) * 5, len(prediction[patient_idx, 0, :]))
             plt.plot(horizon_time, prediction[patient_idx, 0, :], label='IVP Gluc. (prediction)', linestyle='--', color='red')
             for estimation in self.estimations:
@@ -378,13 +402,13 @@ class NMPC:
 
             # Store estimations
             self.past_est_plots.append([horizon_time, controlled[patient_idx, 0, :]])
-
+            
             # Scale down plot if prediction is too high
             if max(prediction[patient_idx, 0, :]) > 2000:
                 plt.ylim([min(gluc) - 10, max(gluc) + 10])
 
         # Plot meal times as arrows (dirac delta)
-        meal_times = np.asarray(self.scenario.inputs.meal_carb.start_time[0])/self.scenario.settings.sampling_time
+        meal_times = self.scenario.inputs.meal_carb.start_time[0]
         meal_magnitudes = self.scenario.inputs.meal_carb.magnitude[0]
         for meal_time, meal_magnitude in zip(meal_times, meal_magnitudes):
             if meal_time < len(gluc):  # Ensure meal time is within the plot range
@@ -397,7 +421,7 @@ class NMPC:
                 if bolus[1] > 0:
                     plt.arrow(bolus[0], 0, 0, bolus[1], head_width=5, fc='red', ec='red')
             plt.arrow(0, 0, 0, 0, fc='red', ec='red', label='Boluses')
-
+        
         plt.grid()
         plt.legend()
 
@@ -411,5 +435,5 @@ class NMPC:
         plt.grid()
         plt.legend()
         plt.ylabel('Insulin [mU/min]')
-        # fig.canvas.manager.full_screen_toggle() # Fullscreen
+        fig.canvas.manager.full_screen_toggle() # Fullscreen
         plt.show()
