@@ -36,6 +36,14 @@ class SingleScaleSolver(BaseSolver):
                 self.controller = Controllers.HCL0.controller.Controller(self.scenario_instance)
                 self.model.inputs.uInsulin.sampled_signal[:, 0] = UnitConversion.insulin.Uhr_to_mUmin(np.asarray([x.demographic_info.basal_rate for x in self.controller.controllers]))
                 self.model.preprocessing()
+            case Controllers.MDI.controller.Controller.name:
+                self.controller = Controllers.MDI.controller.Controller(self.scenario_instance)
+                match self.controller.model_name:
+                    case T1DM.ExtHovorka.Model.name:
+                        self.model.inputs.uInsulin.sampled_signal[:, 0] = self.controller.basal_rate
+                    case T1DM.IVP.Model.name:
+                        self.model.inputs.basal_insulin.sampled_signal[:, 0] = self.controller.basal_rate
+                self.model.preprocessing()
             case Controllers.SMDI.controller.Controller.name:
                 self.controller = Controllers.SMDI.controller.Controller(self.scenario_instance)
                 match self.controller.model_name:

@@ -48,6 +48,7 @@ class Estimator:
         self.no_meals = 0
         self.no_sections = 1
         self.optimizer = DifferentialEvolution()
+        self.sim_sampling_time = scenario.settings.sampling_time
         self.scenario = deepcopy(scenario)
         if self.with_meal_estimation:
             self.number_of_meal_param_coeff = 2
@@ -72,8 +73,8 @@ class Estimator:
         self.interpolated_glucose_level = np.asarray(measurements)
 
         self.insulins = np.asarray(insulins)
-        self.scenario.settings.end_time = sample
-        self.time = np.arange(0,sample+self.scenario.settings.sampling_time,self.scenario.settings.sampling_time)
+        self.scenario.settings.end_time = int(sample*self.sim_sampling_time)
+        self.time = np.arange(0,self.scenario.settings.end_time+self.scenario.settings.sampling_time,self.scenario.settings.sampling_time)
         binmap = np.asarray(self.scenario.inputs.meal_carb.start_time[patient_idx])<(sample-self.scenario.settings.sampling_time)
         self.meals = np.asarray(self.scenario.inputs.meal_carb.magnitude[patient_idx])[binmap]
         self.meal_times = np.asarray(self.scenario.inputs.meal_carb.start_time[patient_idx])[binmap]
@@ -164,6 +165,7 @@ class Estimator:
         hor_scenario.inputs = ivp_inputs
 
         model = IVP.Model.from_scenario(hor_scenario)
+        print(self.insulins.shape)
         model.inputs.basal_insulin.sampled_signal = self.insulins[None,:]
 
         self.solver = BaseSolver(hor_scenario, model)

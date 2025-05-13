@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import numpy as np
 
 from pymgipsim.Utilities.Scenario import demographic_info
@@ -17,7 +18,7 @@ class Controller:
         self.estimators = [Estimator(scenario_instance, patient_idx) for patient_idx in range(scenario_instance.patient.number_of_subjects)]
         self.measurements = []
         self.insulins = []
-        self.boluses = np.zeros((scenario_instance.patient.number_of_subjects, scenario_instance.settings.end_time // scenario_instance.settings.sampling_time))
+        self.boluses = np.zeros((scenario_instance.patient.number_of_subjects, int(scenario_instance.settings.end_time // scenario_instance.settings.sampling_time)))
         [setattr(controller, 'control_horizon', 5) for controller in self.controllers]
         [setattr(controller, 'assume_basal', True) for controller in self.controllers]
         match self.model_name:
@@ -37,11 +38,10 @@ class Controller:
 
     def run(self, measurements, inputs, states, sample):
         if sample % self.control_sampling == 0:
-
             for patient_idx, controller, estimator in zip(range(len(self.controllers),), self.controllers, self.estimators):
                 measurements_mgdl = self.to_mgdl(measurements[patient_idx])
                 
-                if sample == UnitConversion.time.convert_hour_to_min(30):
+                if int(sample*self.scenario.settings.sampling_time) == UnitConversion.time.convert_hour_to_min(30):
                     # Run estimator once
                     estimator.run(sample, patient_idx, self.measurements, self.insulins)
                     controller.ivp_carb_time = np.copy(estimator.avg_carb_time)
@@ -49,26 +49,30 @@ class Controller:
                     controller.ivp_last_state = np.copy(estimator.solver.model.states.as_array[0, :, -1])
                     controller.last_measurement = measurements_mgdl
                 # Simulate 5 min with Observer
-                if sample >= UnitConversion.time.convert_hour_to_min(30):
+                if int(sample*self.scenario.settings.sampling_time) >= UnitConversion.time.convert_hour_to_min(30):
                     controller.update_observer(measurements_mgdl, sample)
 
                 bolus = np.zeros((1,))
-                binmap = np.logical_and(controller.announced_meal_starts <= sample,
-                                        sample < controller.announced_meal_starts + 4)
+                binmap = np.logical_and(controller.announced_meal_starts <= sample*self.scenario.settings.sampling_time,
+                                        sample*self.scenario.settings.sampling_time < controller.announced_meal_starts + 4)
                 # Next meal announced
                 if np.any(binmap):
                     bolus = UnitConversion.insulin.U_to_mU(controller.announced_meal_amounts[
-                                                               binmap] / controller.carb_insulin_ratio / self.control_sampling)
+                                                               binmap] / controller.carb_insulin_ratio / 5)
                     # Open-loop MDI therapy until patient parameters are not estimated
-                    if sample>=UnitConversion.time.convert_hour_to_min(30):
+                    if int(sample*self.scenario.settings.sampling_time)>=UnitConversion.time.convert_hour_to_min(30):
                         # Call NMPC for bolus calculation
                         bolus, gluc_pred = controller.run(sample, states, measurements_mgdl, patient_idx)
+                        # print(bolus)
+                        # plt.figure()
+                        # plt.plot(gluc_pred[0,0,:])
+                        # plt.show()
                     for i in range(bolus.shape[0]):
                         if bolus[i] > 0:
                             self.boluses[patient_idx, sample//self.control_sampling + i] = bolus[i]
 
                 # Plot past predictions at last sample
-                if sample >= self.scenario.settings.end_time - self.control_sampling and controller.use_built_in_plot:
+                if sample >= self.scenario.settings.end_time/self.scenario.settings.sampling_time - 5 and controller.use_built_in_plot:
                     controller.plot_prediction(states, None, None, None, patient_idx)
 
                 inputs[patient_idx, self.insulin_idx, sample:sample + self.control_sampling] = self.to_rate(controller.basal_rate, self.boluses[patient_idx, sample//self.control_sampling])
