@@ -4,13 +4,22 @@ import numpy as np
 from pymgipsim.Utilities.units_conversions_constants import UnitConversion
 from pymgipsim.InputGeneration.signal import Signal
 from pymgipsim.VirtualPatient.Models import T1DM
+from copy import deepcopy
 
 class Controller:
     name = "MDI"
     def __init__(self, scenario_instance: scenario):
         time = np.arange(scenario_instance.settings.start_time,scenario_instance.settings.end_time,scenario_instance.settings.sampling_time)
         self.model_name = scenario_instance.patient.model.name
-        self.scenario = scenario_instance
+        self.scenario = deepcopy(scenario_instance)
+
+        rng = np.random.default_rng(42)
+        ground_truth_meals = np.asarray(self.scenario.inputs.meal_carb.magnitude)
+        # Draw 5 samples from a normal distribution with mean=0 and std=1
+        # Very rough estimation from https://www.liebertpub.com/doi/10.1089/dia.2019.0502
+        samples = rng.normal(loc=0.0, scale=1.0, size=ground_truth_meals.shape)
+        self.scenario.inputs.meal_carb.magnitude = ground_truth_meals + ground_truth_meals/5.0*samples
+        self.scenario.inputs.meal_carb.magnitude[self.scenario.inputs.meal_carb.magnitude<0.0] = 0.0
 
         match self.model_name:
             case T1DM.ExtHovorka.Model.name:
