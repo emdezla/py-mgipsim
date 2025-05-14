@@ -13,6 +13,11 @@ from pymgipsim.generate_results import generate_results_main
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
+from pymgipsim.Utilities.Scenario import scenario
+from tqdm import tqdm
+import json
+from scipy.stats import norm
+import csv
 
 if __name__ == '__main__':
     """ Parse Arguments  """
@@ -31,11 +36,14 @@ if __name__ == '__main__':
     args.controller_name = "MDI" # Select controller folder in pymgipsim/Controller/...
     args.model_name = "T1DM.ExtHovorka" # Select Hovorka model
     # args.patient_names = ["Patient_1"] # Select Patient in pymgipsim/VirtualPatient/Models/T1DM/ExtHovorka/Patients
-    args.patient_names = ["Patient_1", "Patient_2", "Patient_3", "Patient_4", "Patient_5", "Patient_6", "Patient_7", "Patient_8", "Patient_9"] # Select Patient in pymgipsim/VirtualPatient/Models/T1DM/ExtHovorka/Patients
+    # args.patient_names = ["Patient_1", "Patient_2"] # Select Patient in pymgipsim/VirtualPatient/Models/T1DM/ExtHovorka/Patients
     args.running_speed = 0.0 # Turn off physical activity
     args.plot_patient = 0 # Plots patient glucose, intakes, heartrate
     args.random_seed = 0
     args.number_of_days = 7
+    args.no_progress_bar = True
+    args.no_print = True
+    generate_new_meals = True # Set to True to generate new meals, False to use previous from csv files
 
     CI_range = range(12, 40)
     CF_range = range(30, 70)
@@ -53,39 +61,87 @@ if __name__ == '__main__':
 
         settings_file = generate_inputs_main(scenario_instance = settings_file, args = args, results_folder_path=results_folder_path)
 
-    # Hardcode random sequence of breakfast, lunch, and dinner carb values for 20 days
-    hardcoded_breakfast_carb_values = [45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 40, 45, 50, 55, 60, 65, 70, 75]
-    hardcoded_lunch_carb_values = [55, 65, 75, 85, 95, 45, 55, 65, 75, 85, 95, 50, 60, 70, 80, 90, 40, 50, 60, 70]
-    hardcoded_dinner_carb_values = [70, 85, 100, 40, 55, 70, 85, 100, 40, 55, 70, 85, 100, 45, 60, 75, 90, 50, 65, 80]
-    # Hardcode start_time arrays for breakfast, lunch, and dinner
+    # Hardcode random start_time arrays for breakfast, lunch, and dinner
     hardcoded_breakfast_start_times = [400, 410, 420, 430, 440, 450, 460, 470, 480, 360, 370, 380, 390, 400, 410, 420, 430, 440, 450, 460]
     hardcoded_lunch_start_times = [730, 740, 750, 760, 770, 780, 790, 800, 810, 820, 830, 720, 730, 740, 750, 760, 770, 780, 790, 800]
     hardcoded_dinner_start_times = [1100, 1110, 1120, 1130, 1140, 1150, 1160, 1170, 1180, 1190, 1200, 1080, 1090, 1100, 1110, 1120, 1130, 1140, 1150, 1160]
-    # Hardcode duration arrays for breakfast, lunch, and dinner
+    # Hardcode random duration arrays for breakfast, lunch, and dinner
     hardcoded_breakfast_durations = [10, 15, 20, 5, 10, 15, 20, 5, 10, 15, 20, 5, 10, 15, 20, 5, 10, 15, 20, 5]
     hardcoded_lunch_durations = [15, 20, 5, 10, 15, 20, 5, 10, 15, 20, 5, 10, 15, 20, 5, 10, 15, 20, 5, 10]
     hardcoded_dinner_durations = [20, 5, 10, 15, 20, 5, 10, 15, 20, 5, 10, 15, 20, 5, 10, 15, 20, 5, 10, 15]
 
-    # Set the hardcoded values in the scenario for the specified number of days
-    settings_file.inputs.meal_carb.magnitude = np.zeros((settings_file.patient.number_of_subjects, args.number_of_days * 3))
-    settings_file.inputs.meal_carb.start_time = np.zeros((settings_file.patient.number_of_subjects, args.number_of_days * 3))
-    settings_file.inputs.meal_carb.duration = np.zeros((settings_file.patient.number_of_subjects, args.number_of_days * 3))
-    for j in range(settings_file.patient.number_of_subjects):
-        for i in range(args.number_of_days):
-            settings_file.inputs.meal_carb.magnitude[j][3 * i] = hardcoded_breakfast_carb_values[i]
-            settings_file.inputs.meal_carb.magnitude[j][3 * i + 1] = hardcoded_lunch_carb_values[i]
-            settings_file.inputs.meal_carb.magnitude[j][3 * i + 2 ] = hardcoded_dinner_carb_values[i]
+    # Load meal statistics from mpc_meal_stats.json
+    with open('meal_tir_stats.json', 'r') as f:
+        meal_tir_stats : dict = json.load(f)
 
-            settings_file.inputs.meal_carb.start_time[j][3 * i] = hardcoded_breakfast_start_times[i]
-            settings_file.inputs.meal_carb.start_time[j][3 * i + 1] = hardcoded_lunch_start_times[i]
-            settings_file.inputs.meal_carb.start_time[j][3 * i + 2] = hardcoded_dinner_start_times[i]
+    # Iterate over each patient in the settings_file
+    for patient_idx in range(settings_file.patient.number_of_subjects):
 
-            settings_file.inputs.meal_carb.duration[j][3 * i] = hardcoded_breakfast_durations[i]
-            settings_file.inputs.meal_carb.duration[j][3 * i + 1] = hardcoded_lunch_durations[i]
-            settings_file.inputs.meal_carb.duration[j][3 * i + 2] = hardcoded_dinner_durations[i]
+        # Get the mean and std for the current patient from the JSON file
+        mean_meals_per_day = list(meal_tir_stats.values())[patient_idx]['mean_carb_intake']
+        std_meals_per_day = list(meal_tir_stats.values())[patient_idx]['std_carb_intake']
+
+        # Generate random meal values for each day such that the mean and std match the JSON values
+        daily_meals = norm.rvs(loc=mean_meals_per_day, scale=std_meals_per_day, size=args.number_of_days)
+
+        # Ensure no negative meal values
+        daily_meals = np.abs(daily_meals)
+
+        # Save the generated meal_carb magnitudes into a CSV file
+        csv_filename = f"patient_{patient_idx + 1}_meal_carb_magnitudes.csv"
+
+
+        if generate_new_meals:
+            file = open(csv_filename, mode='w', newline='')
+            writer = csv.writer(file)
+            writer.writerow(["Day", "Meal", "Carb Magnitude"])
+        else:
+            # Load the meal carb magnitudes from the CSV file
+            file = open(csv_filename, mode='r')
+            reader = csv.reader(file)
+            next(reader)
+            for row in reader:
+                day = int(row[0])
+                meal = row[1]
+                carb_magnitude = float(row[2])
+
+                if meal == "Breakfast":
+                    settings_file.inputs.meal_carb.magnitude[patient_idx][3 * (day - 1)] = carb_magnitude
+                elif meal == "Lunch":
+                    settings_file.inputs.meal_carb.magnitude[patient_idx][3 * (day - 1) + 1] = carb_magnitude
+                elif meal == "Dinner":
+                    settings_file.inputs.meal_carb.magnitude[patient_idx][3 * (day - 1) + 2] = carb_magnitude
+
+        # Distribute the daily meal values across breakfast, lunch, and dinner
+        for day_idx in range(args.number_of_days):
+            if generate_new_meals:
+                breakfast_ratio, lunch_ratio, dinner_ratio = np.random.dirichlet([1, 1, 1])
+                breakfast_carb = daily_meals[day_idx] * breakfast_ratio
+                lunch_carb = daily_meals[day_idx] * lunch_ratio
+                dinner_carb = daily_meals[day_idx] * dinner_ratio
+
+                settings_file.inputs.meal_carb.magnitude[patient_idx][3 * day_idx] = breakfast_carb
+                settings_file.inputs.meal_carb.magnitude[patient_idx][3 * day_idx + 1] = lunch_carb
+                settings_file.inputs.meal_carb.magnitude[patient_idx][3 * day_idx + 2] = dinner_carb
+                
+                writer.writerow([day_idx + 1, "Breakfast", settings_file.inputs.meal_carb.magnitude[patient_idx][3 * day_idx]])
+                writer.writerow([day_idx + 1, "Lunch", settings_file.inputs.meal_carb.magnitude[patient_idx][3 * day_idx + 1]])
+                writer.writerow([day_idx + 1, "Dinner", settings_file.inputs.meal_carb.magnitude[patient_idx][3 * day_idx + 2]])
+
+            settings_file.inputs.meal_carb.start_time[patient_idx][3 * day_idx] = hardcoded_breakfast_start_times[day_idx]
+            settings_file.inputs.meal_carb.start_time[patient_idx][3 * day_idx + 1] = hardcoded_lunch_start_times[day_idx]
+            settings_file.inputs.meal_carb.start_time[patient_idx][3 * day_idx + 2] = hardcoded_dinner_start_times[day_idx]
+
+            settings_file.inputs.meal_carb.duration[patient_idx][3 * day_idx] = hardcoded_breakfast_durations[day_idx]
+            settings_file.inputs.meal_carb.duration[patient_idx][3 * day_idx + 1] = hardcoded_lunch_durations[day_idx]
+            settings_file.inputs.meal_carb.duration[patient_idx][3 * day_idx + 2] = hardcoded_dinner_durations[day_idx]
+        print(f"Patient {patient_idx + 1} daily carbs \nmean: generated: {np.mean(daily_meals):.2f} g in study: {mean_meals_per_day:.2f} g, \nstd: generated: {np.std(daily_meals):.2f} g in study: {std_meals_per_day:.2f} g")
+        # Close the CSV file
+        file.close()
+
         
     TIR_matrix = np.zeros((len(CI_range), len(CF_range), settings_file.patient.number_of_subjects))
-    for i in CI_range:
+    for i in tqdm(CI_range):
         for j in CF_range:
             settings_file.patient.demographic_info.carb_insulin_ratio = [i] * settings_file.patient.number_of_subjects
             settings_file.patient.demographic_info.correction_bolus = [j] * settings_file.patient.number_of_subjects
@@ -101,8 +157,37 @@ if __name__ == '__main__':
             # Store the average TIR for the current CI and CF in the matrix
             TIR_matrix[i - CI_range[0]][j - CF_range[0]] = TIR
 
-            print(f"\rCI: {i}, CF: {j}, AVG TIR: {np.mean(TIR):.2f}%")
-    
+            # print(f"\rCI: {i}, CF: {j}, AVG TIR: {np.mean(TIR):.2f}%")
+
+    # Select CI, CF value pair for each patient
+    selected_CI_CF_pairs = []
+    for patient_idx in range(settings_file.patient.number_of_subjects):
+        mean_tir = list(meal_tir_stats.values())[patient_idx]['mean_tir']
+
+        # Find the CI, CF pair where TIR matches the mean_tir
+        closest_match = None
+        closest_diff = float('inf')
+        for ci_idx, ci in enumerate(CI_range):
+            for cf_idx, cf in enumerate(CF_range):
+                tir_value = TIR_matrix[ci_idx, cf_idx, patient_idx]
+                diff = abs(tir_value - mean_tir)
+                if diff < closest_diff:
+                    closest_diff = diff
+                    closest_match = (ci, cf)
+
+        selected_CI_CF_pairs.append(closest_match)
+
+    # Print the selected CI, CF pairs for each patient
+    for patient_idx, (ci, cf) in enumerate(selected_CI_CF_pairs):
+        print(f"Patient {patient_idx + 1}: Selected CI = {ci}, CF = {cf}, TIR from simulation = {TIR_matrix[ci - CI_range[0], cf - CF_range[0], patient_idx]:.2f}%, Mean TIR from study = {list(meal_tir_stats.values())[patient_idx]['mean_tir']:.2f}%")
+    # Save the selected CI, CF pairs into a JSON file
+    selected_CI_CF_dict = {
+        list(meal_tir_stats.keys())[patient_idx]: {"Selected_CI": ci, "Selected_CF": cf}
+        for patient_idx, (ci, cf) in enumerate(selected_CI_CF_pairs)
+    }
+
+    with open('selected_CI_CF_pairs.json', 'w') as json_file:
+        json.dump(selected_CI_CF_dict, json_file, indent=4)
 
     # Convert CI_range and CF_range to numpy arrays
     CI_range_array = np.array(list(CI_range))
@@ -117,7 +202,7 @@ if __name__ == '__main__':
     # Create a single figure with separate 3D subplots for each patient
     num_patients = TIR_matrix_array.shape[2]
     fig = plt.figure()
-    fig.canvas.manager.full_screen_toggle() # Fullscreen
+    # fig.canvas.manager.full_screen_toggle() # Fullscreen
     # Set the figure to full screen
     # fig.set_size_inches(18.5, 10.5, forward=True)
     for patient_idx in range(num_patients):
@@ -139,4 +224,5 @@ if __name__ == '__main__':
 
     # Adjust layout and show the plot
     plt.tight_layout()
-    plt.show()
+    plt.savefig('TIR_surface_plot.png', dpi=300)
+    # plt.show()
