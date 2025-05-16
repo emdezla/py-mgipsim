@@ -19,6 +19,8 @@ import json
 from scipy.stats import norm
 import csv
 import os
+import threading
+from copy import deepcopy
 
 def glycemic_risk_index(values):
     """
@@ -29,6 +31,23 @@ def glycemic_risk_index(values):
     lbgi = np.mean(np.where(f < 0, f, 0) ** 2) * 22.77
     hbgi = np.mean(np.where(f > 0, f, 0) ** 2) * 22.77
     return lbgi + hbgi
+
+def parallel_run_simulation(i : int, settings_file : scenario, args, results_folder_path, GRI_matrix : np.ndarray):
+    for j in tqdm(CF_range, disable = (not i == CI_range[0])):
+        settings_file.patient.demographic_info.carb_insulin_ratio = [i] * settings_file.patient.number_of_subjects
+        settings_file.patient.demographic_info.correction_bolus = [j] * settings_file.patient.number_of_subjects
+        model,_ = generate_results_main(scenario_instance = settings_file, args = vars(args), results_folder_path = results_folder_path)
+        
+        # Calculate GRI (Glycemia Risk Index) for all patients
+        GRI = []
+        patient_idx = 1
+        for glucose_values in model.glucose:
+            gri = glycemic_risk_index(glucose_values)
+            GRI.append(gri)
+            patient_idx += 1
+
+        # Store the average GRI for the current CI and CF in the matrix
+        GRI_matrix[i - CI_range[0]][j - CF_range[0]] = GRI
 
 if __name__ == '__main__':
     """ Parse Arguments  """
@@ -50,19 +69,21 @@ if __name__ == '__main__':
     # args.patient_names = ["Patient_1", "Patient_2"] # Select Patient in pymgipsim/VirtualPatient/Models/T1DM/ExtHovorka/Patients
     args.running_speed = 0.0 # Turn off physical activity
     args.plot_patient = 0 # Plots patient glucose, intakes, heartrate
+    args.am_snack_carb_range = [0, 0] # Set to 0 to disable snack
+    args.pm_snack_carb_range = [0, 0] # Set to 0 to disable snack 
     args.random_seed = 0
     args.number_of_days = 7
     args.no_progress_bar = True
     args.no_print = True
-    generate_new_meals = True # Set to True to generate new meals, False to use previous from csv files
+    generate_new_meals = False # Set to True to generate new meals, False to use previous from csv files
     resources_directory = "mpc_test"
 
     # Define paths for reading and writing resources
     meal_stats_path = os.path.join(resources_directory, 'meal_tir_stats.json')
-    selected_pairs_path = os.path.join(resources_directory, 'selected_CI_CF_pairs.json')
-    surface_plot_path = os.path.join(resources_directory, 'GRI_surface_plot.png')
-    plots_directory = os.path.join(resources_directory, "GRI_surface_plots")
-    gluc_plots_directory = os.path.join(resources_directory, "Glucose_plots")
+    selected_pairs_path = os.path.join(results_folder_path, 'selected_CI_CF_pairs.json')
+    surface_plot_path = os.path.join(results_folder_path, 'GRI_surface_plot.png')
+    plots_directory = os.path.join(results_folder_path, "GRI_surface_plots")
+    # gluc_plots_directory = os.path.join(resources_directory, "Glucose_plots")
     # Create a subdirectory for csv files
     csv_directory = os.path.join(resources_directory, "meal_carb_magnitudes")
 
@@ -73,14 +94,14 @@ if __name__ == '__main__':
     # Ensure the resources directories exist
     os.makedirs(resources_directory, exist_ok=True)
     os.makedirs(plots_directory, exist_ok=True)
-    os.makedirs(gluc_plots_directory, exist_ok=True)
+    # os.makedirs(gluc_plots_directory, exist_ok=True)
     os.makedirs(csv_directory, exist_ok=True)
 
-    CI_range = range(12, 40)
-    CF_range = range(30, 70)
+    CI_range = range(30, 70)
+    CF_range = range(35, 65)
 
     # Small range fot testing
-    # CI_range = range(15, 18)
+    # CI_range = range(18, 20)
     # CF_range = range(40, 43)
 
     activity_args_to_scenario(settings_file, args)
@@ -115,7 +136,7 @@ if __name__ == '__main__':
         daily_meals = np.abs(daily_meals)
 
         # Save the generated meal_carb magnitudes into a CSV file
-        csv_filename = f"patient_{patient_idx + 1}_meal_carb_magnitudes.csv"
+        csv_filename = os.path.join(csv_directory, f"patient_{patient_idx + 1}_meal_carb_magnitudes.csv")
 
         if generate_new_meals:
             file = open(csv_filename, mode='w', newline='')
@@ -123,7 +144,7 @@ if __name__ == '__main__':
             writer.writerow(["Day", "Meal", "Carb Magnitude"])
         else:
             # Load the meal carb magnitudes from the CSV file
-            file = open(os.path.join(csv_directory, csv_filename), mode='r')
+            file = open(os.path.join(csv_filename), mode='r')
             reader = csv.reader(file)
             next(reader)
             for row in reader:
@@ -154,9 +175,9 @@ if __name__ == '__main__':
                 writer.writerow([day_idx + 1, "Lunch", settings_file.inputs.meal_carb.magnitude[patient_idx][3 * day_idx + 1]])
                 writer.writerow([day_idx + 1, "Dinner", settings_file.inputs.meal_carb.magnitude[patient_idx][3 * day_idx + 2]])
 
-            settings_file.inputs.meal_carb.start_time[patient_idx][3 * day_idx] = hardcoded_breakfast_start_times[day_idx]
-            settings_file.inputs.meal_carb.start_time[patient_idx][3 * day_idx + 1] = hardcoded_lunch_start_times[day_idx]
-            settings_file.inputs.meal_carb.start_time[patient_idx][3 * day_idx + 2] = hardcoded_dinner_start_times[day_idx]
+            settings_file.inputs.meal_carb.start_time[patient_idx][3 * day_idx] = day_idx * 1440 + hardcoded_breakfast_start_times[day_idx]
+            settings_file.inputs.meal_carb.start_time[patient_idx][3 * day_idx + 1] = day_idx * 1440 + hardcoded_lunch_start_times[day_idx]
+            settings_file.inputs.meal_carb.start_time[patient_idx][3 * day_idx + 2] = day_idx * 1440 + hardcoded_dinner_start_times[day_idx]
 
             settings_file.inputs.meal_carb.duration[patient_idx][3 * day_idx] = hardcoded_breakfast_durations[day_idx]
             settings_file.inputs.meal_carb.duration[patient_idx][3 * day_idx + 1] = hardcoded_lunch_durations[day_idx]
@@ -167,27 +188,17 @@ if __name__ == '__main__':
 
         
     GRI_matrix = np.zeros((len(CI_range), len(CF_range), settings_file.patient.number_of_subjects))
-    for i in tqdm(CI_range):
-        for j in CF_range:
-            settings_file.patient.demographic_info.carb_insulin_ratio = [i] * settings_file.patient.number_of_subjects
-            settings_file.patient.demographic_info.correction_bolus = [j] * settings_file.patient.number_of_subjects
-            model,_ = generate_results_main(scenario_instance = settings_file, args = vars(args), results_folder_path = results_folder_path)
-            
-            # Calculate GRI (Glycemia Risk Index) for all patients
-            GRI = []
-            patient_idx = 1
-            for glucose_values in model.glucose:
-                gri = glycemic_risk_index(glucose_values)
-                GRI.append(gri)
-                plt.plot(glucose_values)
-                plt.savefig(os.path.join(gluc_plots_directory, f'patient_{patient_idx}.png'), dpi=300)
-                plt.close()
-                patient_idx += 1
+    threads = []
+    for i in CI_range:
+        t = threading.Thread(
+            target=parallel_run_simulation,
+            args=(i, deepcopy(settings_file), args, results_folder_path, GRI_matrix)
+        )
+        threads.append(t)
+        t.start()
 
-            # Store the average GRI for the current CI and CF in the matrix
-            GRI_matrix[i - CI_range[0]][j - CF_range[0]] = GRI
-
-            # print(f"\rCI: {i}, CF: {j}, AVG GRI: {np.mean(GRI):.2f}%")
+    for t in threads:
+        t.join()
 
     # Select CI, CF value pair for each patient
     selected_CI_CF_pairs = []
@@ -219,6 +230,24 @@ if __name__ == '__main__':
     with open(selected_pairs_path, 'w') as json_file:
         json.dump(selected_CI_CF_dict, json_file, indent=4)
 
+    # Run simulation with selected CI, CF settings for each patient and plot results
+    print("\nRunning simulation with selected CI, CF settings for each patient...")
+
+    # Set up a new scenario/settings for each patient with their selected CI, CF
+    for patient_idx, (ci, cf) in enumerate(selected_CI_CF_pairs):
+        # Set only the current patient's CI and CF, keep others unchanged
+        settings_file.patient.demographic_info.carb_insulin_ratio[patient_idx] = ci
+        settings_file.patient.demographic_info.correction_bolus[patient_idx] = cf
+
+        # Run simulation for this patient only
+        model, _ = generate_results_main(
+            scenario_instance=settings_file,
+            args=vars(args),
+            results_folder_path=results_folder_path
+        )
+        args.plot_patient = patient_idx
+        figures = generate_plots_main(results_folder_path, args)
+
     # Convert CI_range and CF_range to numpy arrays
     CI_range_array = np.array(list(CI_range))
     CF_range_array = np.array(list(CF_range))
@@ -245,12 +274,12 @@ if __name__ == '__main__':
         # ax.set_xlabel('Correction Factor (CF)')
         # ax.set_ylabel('Carb Insulin Ratio (CI)')
         # ax.set_zlabel('Glycemic Risk Index (GRI)')
-        ax.set_title(f'GRI Surface Plot for Patient {patient_idx + 1}')
+        # ax.set_title(f'GRI Surface Plot for Patient {patient_idx + 1}')
 
         # Add a color bar for each subplot
-        mappable = plt.cm.ScalarMappable(cmap='viridis')
-        mappable.set_array(GRI_matrix_array[:, :, patient_idx])
-        fig.colorbar(mappable, ax=ax, shrink=0.5, aspect=10)
+        # mappable = plt.cm.ScalarMappable(cmap='viridis')
+        # mappable.set_array(GRI_matrix_array[:, :, patient_idx])
+        # fig.colorbar(mappable, ax=ax, shrink=0.5, aspect=10)
 
     # Adjust layout and show the plot
     plt.tight_layout()
@@ -270,9 +299,9 @@ if __name__ == '__main__':
         ax.set_title(f'GRI Surface Plot for Patient {patient_idx + 1}')
 
         # Add a color bar for the plot
-        mappable = plt.cm.ScalarMappable(cmap='viridis')
-        mappable.set_array(GRI_matrix_array[:, :, patient_idx])
-        fig.colorbar(mappable, ax=ax, shrink=0.5, aspect=10)
+        # mappable = plt.cm.ScalarMappable(cmap='viridis')
+        # mappable.set_array(GRI_matrix_array[:, :, patient_idx])
+        # fig.colorbar(mappable, ax=ax, shrink=0.5, aspect=10)
 
         # Save the plot to the subdirectory
         plot_filename = os.path.join(plots_directory, f'GRI_surface_plot_patient_{patient_idx + 1}.png')
