@@ -36,7 +36,7 @@ class NMPC:
         # Create containers
 
         self.verbose = True
-        self.use_built_in_plot = True
+        self.use_built_in_plot = False
         # self.control_horizon = 5 # Single injection works fine
         self.control_horizon = 30 # Change control horizon time to use single/multiple injection. (1 injection / controller sampling time)
         self.prediction_horizon = 360
