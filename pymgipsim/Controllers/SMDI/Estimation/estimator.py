@@ -98,7 +98,7 @@ class Estimator:
         self.upper_bounds = np.concatenate((self.upper_bounds, [IVP.CONSTANTS.MAX_EGP, IVP.CONSTANTS.MAX_GEZI, IVP.CONSTANTS.MAX_SI]))
 
         # Create initial parameter population with Latin Hypercube Sampling.
-        sampler = qmc.LatinHypercube(len(self.lower_bounds))
+        sampler = qmc.LatinHypercube(len(self.lower_bounds),seed=np.random.default_rng(42))
         self.parameter_array_init = np.add(np.multiply(sampler.random(self.population_size),
                                     np.expand_dims(self.upper_bounds - self.lower_bounds, 0)),
                                          np.expand_dims(self.lower_bounds, 0))
