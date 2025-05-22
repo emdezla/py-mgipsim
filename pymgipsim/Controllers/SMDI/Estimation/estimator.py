@@ -135,11 +135,11 @@ class Estimator:
         # Last state:
         # self.solver.model.states.as_array[0, :, -1]
         self.avg_carb_time = np.asarray(self.optimized_params[4:4 + self.no_meals]).mean()
-
-        # plt.plot(measurements)
-        # plt.plot(self.solver.model.states.as_array[0,0,:])
-        # plt.legend(["CGM","Base solver with fitted params"])
-        # plt.show()
+        plt.figure()
+        plt.plot(measurements)
+        plt.plot(self.solver.model.states.as_array[0,0,:])
+        plt.legend(["CGM","Base solver with fitted params"])
+        plt.show()
 
     def cost_function(self, optimization_params: List[float]):
         """ Cost function of the identification.

@@ -1,3 +1,5 @@
+from numba import jit, config
+#config.DISABLE_JIT = True
 import subprocess
 from pymgipsim.Utilities.paths import results_path
 from pymgipsim.Utilities import simulation_folder
@@ -323,13 +325,14 @@ def call_simulation_with_CI_CF_pairs(args, old_results, settings_file = None):
 
     i :int = 0
     for patient_name, pairs in selected_CI_CF_dict.items():
-        ci = pairs['Selected_CI']
-        cf = pairs['Selected_CF']
+        if patient_name in settings_file.patient.files:
+            ci = pairs['Selected_CI']
+            cf = pairs['Selected_CF']
 
-        # Set the CI and CF for the current patient
-        settings_file.patient.demographic_info.carb_insulin_ratio[i] = ci
-        settings_file.patient.demographic_info.correction_bolus[i] = cf
-        i += 1
+            # Set the CI and CF for the current patient
+            settings_file.patient.demographic_info.carb_insulin_ratio[i] = ci
+            settings_file.patient.demographic_info.correction_bolus[i] = cf
+            i += 1
     # Run the simulation
     model, _ = generate_results_main(scenario_instance=settings_file, args=vars(args), results_folder_path=results_folder_path)
     for patient_idx in range(settings_file.patient.number_of_subjects):
@@ -347,7 +350,7 @@ if __name__ == '__main__':
     # Programatically define scenario
     args.controller_name = "MDI" # Select controller folder in pymgipsim/Controller/...
     args.model_name = "T1DM.ExtHovorka" # Select Hovorka model
-    # args.patient_names = ["Patient_1"] # Select Patient in pymgipsim/VirtualPatient/Models/T1DM/ExtHovorka/Patients
+    args.patient_names = ["Patient_1"] # Select Patient in pymgipsim/VirtualPatient/Models/T1DM/ExtHovorka/Patients
     # args.patient_names = ["Patient_1", "Patient_2"] # Select Patient in pymgipsim/VirtualPatient/Models/T1DM/ExtHovorka/Patients
     args.running_speed = 0.0 # Turn off physical activity
     args.plot_all = True

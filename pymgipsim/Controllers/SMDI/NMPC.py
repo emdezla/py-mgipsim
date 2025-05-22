@@ -36,7 +36,7 @@ class NMPC:
         # Create containers
 
         self.verbose = True
-        self.use_built_in_plot = False
+        self.use_built_in_plot = True
         # self.control_horizon = 5 # Single injection works fine
         self.control_horizon = 30 # Change control horizon time to use single/multiple injection. (1 injection / controller sampling time)
         self.prediction_horizon = 360
@@ -71,9 +71,11 @@ class NMPC:
         self.check_settings()
 
         self.observer_preds = np.zeros(0,)
+        self.observer_preds_openloop = np.zeros(0,)
         self.observer_insulin = np.zeros(0,)
         self.last_measurement = 0
         self.ivp_last_state = np.zeros(0,)
+        self.ivp_last_state_open_loop = np.zeros(0, )
         self.ivp_params = np.zeros(0,)
         self.ivp_carb_time = 40
 
@@ -122,6 +124,24 @@ class NMPC:
         self.observer_scenario.settings.sampling_time = self.ctrl_sampling_time
         self.observer_scenario.patient.model.parameters = self.ivp_params
 
+
+        observer_solver = BaseSolver(self.observer_scenario, IVP.Model.from_scenario(self.observer_scenario))
+        observer_solver.model.preprocessing()
+        observer_solver.model.initial_conditions.as_array = self.ivp_last_state_open_loop
+        # observer_solver.model.initial_conditions.as_array[0] = self.last_measurement
+        observer_solver.model.inputs.basal_insulin.sampled_signal[:, :] = UnitConversion.insulin.Uhr_to_uUmin(self.basal_rate)
+        # Add past boluses to basal insulin sampled signal
+        for bolus in self.past_boluses:
+            if bolus[0] >= self.observer_scenario.settings.start_time and bolus[0] < self.observer_scenario.settings.end_time and bolus[1] > 0:
+                observer_solver.model.inputs.basal_insulin.sampled_signal[:, (bolus[0] - self.observer_scenario.settings.start_time) // self.observer_scenario.settings.sampling_time] \
+                    += UnitConversion.insulin.Uhr_to_uUmin(bolus[1])
+
+        observer_states = np.copy(observer_solver.do_simulation(True))
+        self.ivp_last_state_open_loop = np.copy(observer_states[0, :, -1])
+        self.observer_preds_openloop = np.concatenate((self.observer_preds_openloop, observer_states[0, 0, 1:]))
+        # self.observer_insulin = np.concatenate((self.observer_insulin, observer_states[0][2][1:]))
+        # self.last_measurement = measured_glucose
+
         observer_solver = BaseSolver(self.observer_scenario, IVP.Model.from_scenario(self.observer_scenario))
         observer_solver.model.preprocessing()
         observer_solver.model.initial_conditions.as_array = self.ivp_last_state
@@ -139,6 +159,9 @@ class NMPC:
         self.observer_insulin = np.concatenate((self.observer_insulin, observer_states[0][2][1:]))
         self.last_measurement = measured_glucose
 
+
+
+
     def create_horizon_scenario(self, sample, patient_idx):
         """ Creates scenario for horizon simulation.
         
@@ -150,7 +173,9 @@ class NMPC:
         hor_scenario = deepcopy(self.scenario)
         hor_scenario.settings.start_time = sample
         hor_scenario.settings.end_time = sample + self.prediction_horizon
-        binmap = np.asarray(self.announced_meal_starts)<sample
+        binmap = (np.asarray(self.announced_meal_starts) < hor_scenario.settings.end_time) & \
+             (np.asarray(self.announced_meal_starts) >= hor_scenario.settings.start_time - 60*10)
+        # binmap = np.asarray(self.announced_meal_starts)<sample
         meals_ctrl = np.asarray(self.announced_meal_amounts)[binmap]
         meal_times_ctrl = np.asarray(self.announced_meal_starts)[binmap]
         meal_durations_ctrl = 15.0*np.ones_like(meal_times_ctrl)
@@ -176,6 +201,7 @@ class NMPC:
         inputs = self.solver.model.inputs
 
         self.solver.model.preprocessing()
+        print(self.solver.model.inputs.Ra.sampled_signal)
 
         if self.assume_basal:
             self.basal_equilibrium = self.solver.model.get_basal_equilibrium(self.solver.model.parameters.as_array, self.glucose_init)
@@ -360,7 +386,7 @@ class NMPC:
         """ Plots prediction results.
     
         """
-        fig = plt.figure()
+        plt.figure()
         plt.subplot(2, 1, 1)
         match self.model_name:
             case T1DM.ExtHovorka.Model.name:
@@ -372,6 +398,7 @@ class NMPC:
         obs_start = UnitConversion.time.convert_hour_to_min(30)
         observer_time = np.linspace(obs_start, len(gluc)-1, len(self.observer_preds))
         plt.plot(observer_time, self.observer_preds, label='Observer Gluc.', linestyle='--', color='red')
+        plt.plot(observer_time, self.observer_preds_openloop, label='Observer Gluc. OL', linestyle='--', color='orange')
 
         # Plot glucose hyper- and hypoglycemia levels
         plt.axhline(self.hypo_hyper_range[0], color='red', linewidth=0.5)
@@ -435,5 +462,5 @@ class NMPC:
         plt.grid()
         plt.legend()
         plt.ylabel('Insulin [mU/min]')
-        fig.canvas.manager.full_screen_toggle() # Fullscreen
+        #fig.canvas.manager.full_screen_toggle() # Fullscreen
         plt.show()

@@ -13,6 +13,7 @@ class Controller:
     def __init__(self, scenario_instance):
         self.model_name = scenario_instance.patient.model.name
         self.scenario = scenario_instance
+        self.mdi_interval = 30
         self.control_sampling = int(5/scenario_instance.settings.sampling_time)
         self.controllers = [NMPC(scenario_instance, patient_idx) for patient_idx in range(scenario_instance.patient.number_of_subjects)]
         self.estimators = [Estimator(scenario_instance, patient_idx) for patient_idx in range(scenario_instance.patient.number_of_subjects)]
@@ -42,15 +43,16 @@ class Controller:
             for patient_idx, controller, estimator in zip(range(len(self.controllers),), self.controllers, self.estimators):
                 measurements_mgdl = self.to_mgdl(measurements[patient_idx])
                 
-                if sample == UnitConversion.time.convert_hour_to_min(30):
+                if sample == UnitConversion.time.convert_hour_to_min(self.mdi_interval):
                     # Run estimator once
                     estimator.run(sample, patient_idx, self.measurements[patient_idx], self.insulins[patient_idx])
                     controller.ivp_carb_time = np.copy(estimator.avg_carb_time)
                     controller.ivp_params = np.copy(estimator.scenario.patient.model.parameters)
                     controller.ivp_last_state = np.copy(estimator.solver.model.states.as_array[0, :, -1])
+                    controller.ivp_last_state_open_loop = np.copy(estimator.solver.model.states.as_array[0, :, -1])
                     controller.last_measurement = measurements_mgdl
                 # Simulate 5 min with Observer
-                if sample >= UnitConversion.time.convert_hour_to_min(30):
+                if sample >= UnitConversion.time.convert_hour_to_min(self.mdi_interval):
                     controller.update_observer(measurements_mgdl, sample)
 
                 bolus = np.zeros((1,))
@@ -59,12 +61,12 @@ class Controller:
                 # Next meal announced
                 if np.any(binmap):
                     # Open-loop MDI therapy until patient parameters are not estimated
-                    if sample <= UnitConversion.time.convert_hour_to_min(30):
+                    if sample <= UnitConversion.time.convert_hour_to_min(self.mdi_interval):
                         # controller.carb_insulin_ratio = random.uniform(0.95, 1.05) * controller.carb_insulin_ratio # Randomize C:I ratio (unstable)
                         bolus = UnitConversion.insulin.U_to_mU(controller.announced_meal_amounts[
                                                                binmap] / controller.carb_insulin_ratio / self.control_sampling)
                     # SMDI therapy after patient parameters are estimated
-                    if sample>=UnitConversion.time.convert_hour_to_min(30):
+                    if sample>=UnitConversion.time.convert_hour_to_min(self.mdi_interval):
                         # Call NMPC for bolus calculation
                         bolus, gluc_pred = controller.run(sample, states, measurements_mgdl, patient_idx)
                     for i in range(bolus.shape[0]):
