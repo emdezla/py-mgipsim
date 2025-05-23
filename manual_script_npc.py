@@ -350,7 +350,7 @@ if __name__ == '__main__':
     # Programatically define scenario
     args.controller_name = "MDI" # Select controller folder in pymgipsim/Controller/...
     args.model_name = "T1DM.ExtHovorka" # Select Hovorka model
-    args.patient_names = ["Patient_1"] # Select Patient in pymgipsim/VirtualPatient/Models/T1DM/ExtHovorka/Patients
+    args.patient_names = ["Patient_9"] # Select Patient in pymgipsim/VirtualPatient/Models/T1DM/ExtHovorka/Patients
     # args.patient_names = ["Patient_1", "Patient_2"] # Select Patient in pymgipsim/VirtualPatient/Models/T1DM/ExtHovorka/Patients
     args.running_speed = 0.0 # Turn off physical activity
     args.plot_all = True

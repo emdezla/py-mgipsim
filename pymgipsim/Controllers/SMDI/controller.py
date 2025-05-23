@@ -13,7 +13,8 @@ class Controller:
     def __init__(self, scenario_instance):
         self.model_name = scenario_instance.patient.model.name
         self.scenario = scenario_instance
-        self.mdi_interval = 30
+        self.observer_finished = False
+        self.mdi_interval = 48
         self.control_sampling = int(5/scenario_instance.settings.sampling_time)
         self.controllers = [NMPC(scenario_instance, patient_idx) for patient_idx in range(scenario_instance.patient.number_of_subjects)]
         self.estimators = [Estimator(scenario_instance, patient_idx) for patient_idx in range(scenario_instance.patient.number_of_subjects)]
@@ -42,8 +43,14 @@ class Controller:
 
             for patient_idx, controller, estimator in zip(range(len(self.controllers),), self.controllers, self.estimators):
                 measurements_mgdl = self.to_mgdl(measurements[patient_idx])
-                
-                if sample == UnitConversion.time.convert_hour_to_min(self.mdi_interval):
+
+                bolus = np.zeros((1,))
+                binmap = np.logical_and(controller.announced_meal_starts <= sample,
+                                        sample < controller.announced_meal_starts + 4)
+
+                if sample >= UnitConversion.time.convert_hour_to_min(self.mdi_interval) and np.any(binmap) and not self.observer_finished:
+                    self.mdi_interval = sample/60.0
+                    self.observer_finished = True
                     # Run estimator once
                     estimator.run(sample, patient_idx, self.measurements[patient_idx], self.insulins[patient_idx])
                     controller.ivp_carb_time = np.copy(estimator.avg_carb_time)
@@ -52,12 +59,9 @@ class Controller:
                     controller.ivp_last_state_open_loop = np.copy(estimator.solver.model.states.as_array[0, :, -1])
                     controller.last_measurement = measurements_mgdl
                 # Simulate 5 min with Observer
-                if sample >= UnitConversion.time.convert_hour_to_min(self.mdi_interval):
+                if sample >= UnitConversion.time.convert_hour_to_min(self.mdi_interval) and self.observer_finished:
                     controller.update_observer(measurements_mgdl, sample)
 
-                bolus = np.zeros((1,))
-                binmap = np.logical_and(controller.announced_meal_starts <= sample,
-                                        sample < controller.announced_meal_starts + 4)
                 # Next meal announced
                 if np.any(binmap):
                     # Open-loop MDI therapy until patient parameters are not estimated
@@ -75,7 +79,7 @@ class Controller:
 
                 # Plot past predictions at last sample
                 if sample >= self.scenario.settings.end_time - self.control_sampling and controller.use_built_in_plot:
-                    controller.plot_prediction(states, None, None, None, patient_idx)
+                    controller.plot_prediction(states, None, None, None, patient_idx, self.mdi_interval)
 
                 inputs[patient_idx, self.insulin_idx, sample:sample + self.control_sampling] = self.to_rate(controller.basal_rate, self.boluses[patient_idx, sample//self.control_sampling])
                 self.insulins[patient_idx].append(self.rate_to_uUmin(inputs[patient_idx, self.insulin_idx, sample]))

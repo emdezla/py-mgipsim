@@ -382,7 +382,7 @@ class NMPC:
             inputs.basal_insulin.sampled_signal[:,i] += insulins_in[i]
         return
     
-    def plot_prediction(self, states, prediction, controlled, ivp_basal, patient_idx):
+    def plot_prediction(self, states, prediction, controlled, ivp_basal, patient_idx, obs_start):
         """ Plots prediction results.
     
         """
@@ -395,7 +395,7 @@ class NMPC:
                 gluc = states[patient_idx, 0, :]
         gluc = gluc[gluc > 0]
         plt.plot(gluc, label='Simulator Gluc.')
-        obs_start = UnitConversion.time.convert_hour_to_min(30)
+        obs_start = UnitConversion.time.convert_hour_to_min(obs_start)
         observer_time = np.linspace(obs_start, len(gluc)-1, len(self.observer_preds))
         plt.plot(observer_time, self.observer_preds, label='Observer Gluc.', linestyle='--', color='red')
         plt.plot(observer_time, self.observer_preds_openloop, label='Observer Gluc. OL', linestyle='--', color='orange')
