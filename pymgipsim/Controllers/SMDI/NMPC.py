@@ -67,7 +67,7 @@ class NMPC:
 
         # Select to use target range or ideal glucose as target value
         self.use_target_range = False
-        self.assume_basal = False
+        self.assume_basal = True
         self.check_settings()
 
         self.observer_preds = np.zeros(0,)
