@@ -42,16 +42,14 @@ def parallel_run_simulation(i : int, settings_file : scenario, args, results_fol
         
         # Calculate GRI (Glycemia Risk Index) for all patients
         GRI = []
-        patient_idx = 1
         for glucose_values in model.glucose:
             gri = glycemic_risk_index(glucose_values)
             GRI.append(gri)
-            patient_idx += 1
 
         # Store the average GRI for the current CI and CF in the matrix
         GRI_matrix[i - CI_range[0]][j - CF_range[0]] = GRI
 
-def generate_or_read_meals(settings_file, args, csv_directory, meal_tir_stats : dict = None, generate_new_meals = False):
+def generate_or_read_meals(settings_file : scenario, args, csv_directory, meal_tir_stats : dict = None, generate_new_meals = False):
 
     # Hardcode random start_time arrays for breakfast, lunch, and dinner
     hardcoded_breakfast_start_times = [400, 410, 420, 430, 440, 450, 460, 470, 480, 360, 370, 380, 390, 400, 410, 420, 430, 440, 450, 460]
@@ -63,15 +61,16 @@ def generate_or_read_meals(settings_file, args, csv_directory, meal_tir_stats : 
     hardcoded_dinner_durations = [20, 5, 10, 15, 20, 5, 10, 15, 20, 5, 10, 15, 20, 5, 10, 15, 20, 5, 10, 15]
 
     # Iterate over each patient in the settings_file
-    for patient_idx in range(settings_file.patient.number_of_subjects):
+    for i in range(settings_file.patient.number_of_subjects):
 
+        patient_name_idx = int(settings_file.patient.files[i].split('.')[0].split('_')[-1])  # Extract patient index from the file name
         # Save the generated meal_carb magnitudes into a CSV file
-        csv_filename = os.path.join(csv_directory, f"patient_{patient_idx + 1}_meal_carb_magnitudes.csv")
+        csv_filename = os.path.join(csv_directory, f"patient_{patient_name_idx}_meal_carb_magnitudes.csv")
 
         if generate_new_meals:
             # Get the mean and std for the current patient from the JSON file
-            mean_meals_per_day = list(meal_tir_stats.values())[patient_idx]['mean_carb_intake']
-            std_meals_per_day = list(meal_tir_stats.values())[patient_idx]['std_carb_intake']
+            mean_meals_per_day = list(meal_tir_stats.values())[patient_name_idx - 1]['mean_carb_intake']
+            std_meals_per_day = list(meal_tir_stats.values())[patient_name_idx - 1]['std_carb_intake']
 
             # Generate random meal values for each day such that the mean and std match the JSON values
             daily_meals = norm.rvs(loc=mean_meals_per_day, scale=std_meals_per_day, size=args.number_of_days)
@@ -95,11 +94,11 @@ def generate_or_read_meals(settings_file, args, csv_directory, meal_tir_stats : 
                 carb_magnitude = float(row[2])
 
                 if meal == "Breakfast":
-                    settings_file.inputs.meal_carb.magnitude[patient_idx][3 * (day - 1)] = carb_magnitude
+                    settings_file.inputs.meal_carb.magnitude[i][3 * (day - 1)] = carb_magnitude
                 elif meal == "Lunch":
-                    settings_file.inputs.meal_carb.magnitude[patient_idx][3 * (day - 1) + 1] = carb_magnitude
+                    settings_file.inputs.meal_carb.magnitude[i][3 * (day - 1) + 1] = carb_magnitude
                 elif meal == "Dinner":
-                    settings_file.inputs.meal_carb.magnitude[patient_idx][3 * (day - 1) + 2] = carb_magnitude
+                    settings_file.inputs.meal_carb.magnitude[i][3 * (day - 1) + 2] = carb_magnitude
 
         # Distribute the daily meal values across breakfast, lunch, and dinner
         for day_idx in range(args.number_of_days):
@@ -109,22 +108,22 @@ def generate_or_read_meals(settings_file, args, csv_directory, meal_tir_stats : 
                 lunch_carb = daily_meals[day_idx] * lunch_ratio
                 dinner_carb = daily_meals[day_idx] * dinner_ratio
 
-                settings_file.inputs.meal_carb.magnitude[patient_idx][3 * day_idx] = breakfast_carb
-                settings_file.inputs.meal_carb.magnitude[patient_idx][3 * day_idx + 1] = lunch_carb
-                settings_file.inputs.meal_carb.magnitude[patient_idx][3 * day_idx + 2] = dinner_carb
+                settings_file.inputs.meal_carb.magnitude[i][3 * day_idx] = breakfast_carb
+                settings_file.inputs.meal_carb.magnitude[i][3 * day_idx + 1] = lunch_carb
+                settings_file.inputs.meal_carb.magnitude[i][3 * day_idx + 2] = dinner_carb
                 
-                writer.writerow([day_idx + 1, "Breakfast", settings_file.inputs.meal_carb.magnitude[patient_idx][3 * day_idx]])
-                writer.writerow([day_idx + 1, "Lunch", settings_file.inputs.meal_carb.magnitude[patient_idx][3 * day_idx + 1]])
-                writer.writerow([day_idx + 1, "Dinner", settings_file.inputs.meal_carb.magnitude[patient_idx][3 * day_idx + 2]])
-                print(f"Patient {patient_idx + 1} daily carbs \nmean: generated: {np.mean(daily_meals):.2f} g in study: {mean_meals_per_day:.2f} g, \nstd: generated: {np.std(daily_meals):.2f} g in study: {std_meals_per_day:.2f} g")
+                writer.writerow([day_idx + 1, "Breakfast", settings_file.inputs.meal_carb.magnitude[i][3 * day_idx]])
+                writer.writerow([day_idx + 1, "Lunch", settings_file.inputs.meal_carb.magnitude[i][3 * day_idx + 1]])
+                writer.writerow([day_idx + 1, "Dinner", settings_file.inputs.meal_carb.magnitude[i][3 * day_idx + 2]])
+                print(f"Patient {patient_name_idx} daily carbs \nmean: generated: {np.mean(daily_meals):.2f} g in study: {mean_meals_per_day:.2f} g, \nstd: generated: {np.std(daily_meals):.2f} g in study: {std_meals_per_day:.2f} g")
 
-            settings_file.inputs.meal_carb.start_time[patient_idx][3 * day_idx] = day_idx * 1440 + hardcoded_breakfast_start_times[day_idx]
-            settings_file.inputs.meal_carb.start_time[patient_idx][3 * day_idx + 1] = day_idx * 1440 + hardcoded_lunch_start_times[day_idx]
-            settings_file.inputs.meal_carb.start_time[patient_idx][3 * day_idx + 2] = day_idx * 1440 + hardcoded_dinner_start_times[day_idx]
+            settings_file.inputs.meal_carb.start_time[i][3 * day_idx] = day_idx * 1440 + hardcoded_breakfast_start_times[day_idx]
+            settings_file.inputs.meal_carb.start_time[i][3 * day_idx + 1] = day_idx * 1440 + hardcoded_lunch_start_times[day_idx]
+            settings_file.inputs.meal_carb.start_time[i][3 * day_idx + 2] = day_idx * 1440 + hardcoded_dinner_start_times[day_idx]
 
-            settings_file.inputs.meal_carb.duration[patient_idx][3 * day_idx] = hardcoded_breakfast_durations[day_idx]
-            settings_file.inputs.meal_carb.duration[patient_idx][3 * day_idx + 1] = hardcoded_lunch_durations[day_idx]
-            settings_file.inputs.meal_carb.duration[patient_idx][3 * day_idx + 2] = hardcoded_dinner_durations[day_idx]
+            settings_file.inputs.meal_carb.duration[i][3 * day_idx] = hardcoded_breakfast_durations[day_idx]
+            settings_file.inputs.meal_carb.duration[i][3 * day_idx + 1] = hardcoded_lunch_durations[day_idx]
+            settings_file.inputs.meal_carb.duration[i][3 * day_idx + 2] = hardcoded_dinner_durations[day_idx]
         # Close the CSV file
         file.close()
 
@@ -148,12 +147,9 @@ def generate_CI_CF_pairs(args, settings_file, results_folder_path):
     # Create a subdirectory for csv files
     csv_directory = os.path.join(resources_directory, "meal_carb_magnitudes")
 
-    if meal_stats_path is not None and generate_new_meals:
-        # Load meal statistics from mpc_meal_stats.json
-        with open(meal_stats_path, 'r') as f:
-            meal_tir_stats: dict = json.load(f)
-    else:
-        meal_tir_stats = None
+    # Load meal statistics from mpc_meal_stats.json
+    with open(meal_stats_path, 'r') as f:
+        meal_tir_stats: dict = json.load(f)
 
     # Ensure the resources directories exist
     os.makedirs(resources_directory, exist_ok=True)
@@ -161,8 +157,8 @@ def generate_CI_CF_pairs(args, settings_file, results_folder_path):
     # os.makedirs(gluc_plots_directory, exist_ok=True)
     os.makedirs(csv_directory, exist_ok=True)
 
-    CI_range = range(30, 70)
-    CF_range = range(35, 65)
+    CI_range = range(30, 81)
+    CF_range = range(35, 71)
 
     # Small range fot testing
     # CI_range = range(18, 20)
@@ -212,10 +208,18 @@ def generate_CI_CF_pairs(args, settings_file, results_folder_path):
 
     # Print the selected CI, CF pairs for each patient
     for patient_idx, (ci, cf) in enumerate(selected_CI_CF_pairs):
-        print(f"Patient {patient_idx + 1}: Selected CI = {ci}, CF = {cf}, GRI from simulation = {GRI_matrix[ci - CI_range[0], cf - CF_range[0], patient_idx]:.2f}, Mean GRI from study = {list(meal_tir_stats.values())[patient_idx]['mean_gri']:.2f}")
-    # Save the selected CI, CF pairs into a JSON file
+        stat_str = f"Patient {patient_idx + 1}: Selected CI = {ci}, CF = {cf}, GRI from simulation = {GRI_matrix[ci - CI_range[0], cf - CF_range[0], patient_idx]:.2f}, Mean GRI from study = {list(meal_tir_stats.values())[patient_idx]['mean_gri']:.2f}"
+        print(stat_str)
+        gris_txt_path = os.path.join(results_folder_path, "GRIs.txt")
+        with open(gris_txt_path, "a") as gris_file:
+            gris_file.write(stat_str + "\n")
+    # Save the selected CI, CF pairs and GRI into a JSON file
     selected_CI_CF_dict = {
-        list(meal_tir_stats.keys())[patient_idx]: {"Selected_CI": ci, "Selected_CF": cf}
+        list(meal_tir_stats.keys())[patient_idx]: {
+            "Selected_CI": ci,
+            "Selected_CF": cf,
+            "GRI": float(GRI_matrix[ci - CI_range[0], cf - CF_range[0], patient_idx])
+        }
         for patient_idx, (ci, cf) in enumerate(selected_CI_CF_pairs)
     }
 
@@ -308,6 +312,14 @@ def call_simulation_with_CI_CF_pairs(args, old_results, settings_file = None):
     with open(selected_pairs_path, 'r') as json_file:
         selected_CI_CF_dict = json.load(json_file)
 
+    resources_directory = "mpc_test"
+    # Define paths for reading and writing resources
+    meal_stats_path = os.path.join(resources_directory, 'meal_tir_stats.json')
+
+    # Load meal statistics from mpc_meal_stats.json
+    with open(meal_stats_path, 'r') as f:
+        meal_tir_stats: dict = json.load(f)
+
     if settings_file is None:
         # Load settings from the JSON file
         settings_file = simulation_folder.load_settings_file(args, old_results)
@@ -323,22 +335,36 @@ def call_simulation_with_CI_CF_pairs(args, old_results, settings_file = None):
     csv_directory = os.path.join("mpc_test", "meal_carb_magnitudes")
     generate_or_read_meals(settings_file, args, csv_directory, generate_new_meals = False)
 
-    i :int = 0
-    for patient_name, pairs in selected_CI_CF_dict.items():
-        if patient_name in settings_file.patient.files:
-            ci = pairs['Selected_CI']
-            cf = pairs['Selected_CF']
+    for i in range(settings_file.patient.number_of_subjects):
 
-            # Set the CI and CF for the current patient
-            settings_file.patient.demographic_info.carb_insulin_ratio[i] = ci
-            settings_file.patient.demographic_info.correction_bolus[i] = cf
-            i += 1
+        patient_name_idx = int(settings_file.patient.files[i].split('.')[0].split('_')[-1])  # Extract patient index from the file name
+        ci = list(selected_CI_CF_dict.values())[patient_name_idx - 1]['Selected_CI']
+        cf = list(selected_CI_CF_dict.values())[patient_name_idx - 1]['Selected_CF']
+
+        # Set the CI and CF for the current patient
+        settings_file.patient.demographic_info.carb_insulin_ratio[i] = ci
+        settings_file.patient.demographic_info.correction_bolus[i] = cf
     # Run the simulation
+    args.no_progress_bar = False
     model, _ = generate_results_main(scenario_instance=settings_file, args=vars(args), results_folder_path=results_folder_path)
-    for patient_idx in range(settings_file.patient.number_of_subjects):
+
+    # Calculate GRI (Glycemia Risk Index) for all patients
+    GRI = []
+    patient_idx = 0
+    for glucose_values in model.glucose:
+        ci = list(selected_CI_CF_dict.values())[patient_idx]['Selected_CI']
+        cf = list(selected_CI_CF_dict.values())[patient_idx]['Selected_CF']
+        gri = glycemic_risk_index(glucose_values)
+        GRI.append(gri)
         args.plot_patient = patient_idx
         figures = generate_plots_main(results_folder_path, args)
-
+        patient_idx += 1
+        stat_str = f"Patient {patient_idx}: Selected CI = {ci}, CF = {cf}, GRI from simulation = {gri:.2f}, Mean GRI from study = {list(meal_tir_stats.values())[patient_idx]['mean_gri']:.2f}"
+        print(stat_str)
+        # Write to GRIs.txt
+        gris_txt_path = os.path.join(results_folder_path, "GRIs.txt")
+        with open(gris_txt_path, "a") as gris_file:
+            gris_file.write(stat_str + "\n")
 
 if __name__ == '__main__':
     """ Parse Arguments  """

@@ -12,14 +12,17 @@ class Controller:
         time = np.arange(scenario_instance.settings.start_time,scenario_instance.settings.end_time,scenario_instance.settings.sampling_time)
         self.model_name = scenario_instance.patient.model.name
         self.scenario = deepcopy(scenario_instance)
+        self.add_meal_error = False
 
-        rng = np.random.default_rng(42)
-        ground_truth_meals = np.asarray(self.scenario.inputs.meal_carb.magnitude)
-        # Draw 5 samples from a normal distribution with mean=0 and std=1
-        # Very rough estimation from https://www.liebertpub.com/doi/10.1089/dia.2019.0502
-        samples = rng.normal(loc=0.0, scale=1.0, size=ground_truth_meals.shape)
-        self.scenario.inputs.meal_carb.magnitude = ground_truth_meals + ground_truth_meals/5.0*samples
-        self.scenario.inputs.meal_carb.magnitude[self.scenario.inputs.meal_carb.magnitude<0.0] = 0.0
+        # Random error in meal announcements
+        if self.add_meal_error:
+            rng = np.random.default_rng(42)
+            ground_truth_meals = np.asarray(self.scenario.inputs.meal_carb.magnitude)
+            # Draw 5 samples from a normal distribution with mean=0 and std=1
+            # Very rough estimation from https://www.liebertpub.com/doi/10.1089/dia.2019.0502
+            samples = rng.normal(loc=0.0, scale=1.0, size=ground_truth_meals.shape)
+            self.scenario.inputs.meal_carb.magnitude = ground_truth_meals + ground_truth_meals/5.0*samples
+            self.scenario.inputs.meal_carb.magnitude[self.scenario.inputs.meal_carb.magnitude<0.0] = 0.0
 
         match self.model_name:
             case T1DM.ExtHovorka.Model.name:
@@ -41,7 +44,7 @@ class Controller:
 
         insulin = []
         for patient_idx in range(len(measurements)):
-            basal = self.scenario.patient.demographic_info.basal[patient_idx]
+            basal = self.scenario.patient.demographic_info.basal[patient_idx] * 0.9 # Basal rate is set 10% lower to be more realistic
             bolus_magnitude = 0.0
 
             measurements_mgdl = self.to_mgdl(measurements[patient_idx])

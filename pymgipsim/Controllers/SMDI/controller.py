@@ -13,8 +13,8 @@ class Controller:
     def __init__(self, scenario_instance):
         self.model_name = scenario_instance.patient.model.name
         self.scenario = scenario_instance
-        self.observer_finished = False
         self.mdi_interval = 48
+        self.add_meal_error = False
         self.control_sampling = int(5/scenario_instance.settings.sampling_time)
         self.controllers = [NMPC(scenario_instance, patient_idx) for patient_idx in range(scenario_instance.patient.number_of_subjects)]
         self.estimators = [Estimator(scenario_instance, patient_idx) for patient_idx in range(scenario_instance.patient.number_of_subjects)]
@@ -23,6 +23,17 @@ class Controller:
         self.boluses = np.zeros((scenario_instance.patient.number_of_subjects, scenario_instance.settings.end_time // scenario_instance.settings.sampling_time))
         [setattr(controller, 'control_horizon', 5) for controller in self.controllers]
         [setattr(controller, 'assume_basal', True) for controller in self.controllers]
+
+        # Random error in meal announcements
+        if self.add_meal_error:
+            rng = np.random.default_rng(42)
+            ground_truth_meals = np.asarray(self.scenario.inputs.meal_carb.magnitude)
+            # Draw 5 samples from a normal distribution with mean=0 and std=1
+            # Very rough estimation from https://www.liebertpub.com/doi/10.1089/dia.2019.0502
+            samples = rng.normal(loc=0.0, scale=1.0, size=ground_truth_meals.shape)
+            self.scenario.inputs.meal_carb.magnitude = ground_truth_meals + ground_truth_meals/5.0*samples
+            self.scenario.inputs.meal_carb.magnitude[self.scenario.inputs.meal_carb.magnitude<0.0] = 0.0
+
         match self.model_name:
             case T1DM.ExtHovorka.Model.name:
                 self.to_mgdl = UnitConversion.glucose.concentration_mmolL_to_mgdL
@@ -48,9 +59,8 @@ class Controller:
                 binmap = np.logical_and(controller.announced_meal_starts <= sample,
                                         sample < controller.announced_meal_starts + 4)
 
-                if sample >= UnitConversion.time.convert_hour_to_min(self.mdi_interval) and np.any(binmap) and not self.observer_finished:
+                if sample == UnitConversion.time.convert_hour_to_min(self.mdi_interval):
                     self.mdi_interval = sample/60.0
-                    self.observer_finished = True
                     # Run estimator once
                     estimator.run(sample, patient_idx, self.measurements[patient_idx], self.insulins[patient_idx])
                     controller.ivp_carb_time = np.copy(estimator.avg_carb_time)
@@ -59,7 +69,7 @@ class Controller:
                     controller.ivp_last_state_open_loop = np.copy(estimator.solver.model.states.as_array[0, :, -1])
                     controller.last_measurement = measurements_mgdl
                 # Simulate 5 min with Observer
-                if sample >= UnitConversion.time.convert_hour_to_min(self.mdi_interval) and self.observer_finished:
+                if sample >= UnitConversion.time.convert_hour_to_min(self.mdi_interval):
                     controller.update_observer(measurements_mgdl, sample)
 
                 # Next meal announced

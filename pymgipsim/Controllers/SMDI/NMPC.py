@@ -35,8 +35,8 @@ class NMPC:
         self.hypo_hyper_range = [70, 180]
         # Create containers
 
-        self.verbose = True
-        self.use_built_in_plot = True
+        self.verbose = False
+        self.use_built_in_plot = False
         # self.control_horizon = 5 # Single injection works fine
         self.control_horizon = 30 # Change control horizon time to use single/multiple injection. (1 injection / controller sampling time)
         self.prediction_horizon = 360
@@ -201,7 +201,7 @@ class NMPC:
         inputs = self.solver.model.inputs
 
         self.solver.model.preprocessing()
-        print(self.solver.model.inputs.Ra.sampled_signal)
+        # print(self.solver.model.inputs.Ra.sampled_signal)
 
         if self.assume_basal:
             self.basal_equilibrium = self.solver.model.get_basal_equilibrium(self.solver.model.parameters.as_array, self.glucose_init)
@@ -462,5 +462,6 @@ class NMPC:
         plt.grid()
         plt.legend()
         plt.ylabel('Insulin [mU/min]')
-        #fig.canvas.manager.full_screen_toggle() # Fullscreen
+        # fig.canvas.manager.full_screen_toggle() # Fullscreen
+        # plt.savefig(f"pat_{patient_idx+1}_SMDI.png", dpi=600)
         plt.show()

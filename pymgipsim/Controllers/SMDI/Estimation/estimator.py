@@ -42,7 +42,7 @@ class Estimator:
         self.optimization_threads = np.inf
         self.is_historical_init_state = False
         self.population_size = 150
-        self.verbose = True
+        self.verbose = False
         self.is_multiple_taud = True
         self.is_interval_estimation = True
         self.no_meals = 0
@@ -135,11 +135,11 @@ class Estimator:
         # Last state:
         # self.solver.model.states.as_array[0, :, -1]
         self.avg_carb_time = np.asarray(self.optimized_params[4:4 + self.no_meals]).mean()
-        plt.figure()
-        plt.plot(measurements)
-        plt.plot(self.solver.model.states.as_array[0,0,:])
-        plt.legend(["CGM","Base solver with fitted params"])
-        plt.show()
+        # plt.figure()
+        # plt.plot(measurements)
+        # plt.plot(self.solver.model.states.as_array[0,0,:])
+        # plt.legend(["CGM","Base solver with fitted params"])
+        # plt.show()
 
     def cost_function(self, optimization_params: List[float]):
         """ Cost function of the identification.
@@ -165,7 +165,7 @@ class Estimator:
         hor_scenario.inputs = ivp_inputs
 
         model = IVP.Model.from_scenario(hor_scenario)
-        print(self.insulins.shape)
+        # print(self.insulins.shape)
         model.inputs.basal_insulin.sampled_signal = self.insulins[None,:]
 
         self.solver = BaseSolver(hor_scenario, model)

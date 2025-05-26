@@ -121,7 +121,7 @@ class DifferentialEvolution:
             # if observer.verbose:
                 # print("Generation:",str(i)," Best:", str(np.min(fitnesses)), " Constaint ratio:",str(constraint_ratio))
         minidx = np.argmin(fitnesses)
-        print("Cost achieved:", str(np.min(fitnesses)))
+        #print("Cost achieved:", str(np.min(fitnesses)))
         #print(glucose_array)
         #print(self.sim_glucose[minidx])
         try:
