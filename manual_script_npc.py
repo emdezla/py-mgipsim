@@ -296,6 +296,7 @@ def generate_CI_CF_pairs(args, settings_file, results_folder_path):
 
     # Generate and save separate 3D plots for each patient
     for i in range(num_patients):
+        patient_name_idx = int(settings_file.patient.files[i].split('.')[0].split('_')[-1])  # Extract patient index from the file name
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         surf = ax.plot_surface(CF, CI, GRI_matrix_array[:, :, i], cmap='viridis', alpha=0.7)
@@ -304,7 +305,7 @@ def generate_CI_CF_pairs(args, settings_file, results_folder_path):
         ax.set_xlabel('Correction Factor (CF)')
         ax.set_ylabel('Carb Insulin Ratio (CI)')
         ax.set_zlabel('Glycemic Risk Index (GRI)')
-        ax.set_title(f'GRI Surface Plot for Patient {i + 1}')
+        ax.set_title(f'GRI Surface Plot for Patient {patient_name_idx}')
 
         # Add a color bar for the plot
         # mappable = plt.cm.ScalarMappable(cmap='viridis')
@@ -312,7 +313,7 @@ def generate_CI_CF_pairs(args, settings_file, results_folder_path):
         # fig.colorbar(mappable, ax=ax, shrink=0.5, aspect=10)
 
         # Save the plot to the subdirectory
-        plot_filename = os.path.join(plots_directory, f'GRI_surface_plot_patient_{i + 1}.png')
+        plot_filename = os.path.join(plots_directory, f'GRI_surface_plot_patient_{patient_name_idx}.png')
         plt.savefig(plot_filename, dpi=300)
         plt.close(fig)
 
