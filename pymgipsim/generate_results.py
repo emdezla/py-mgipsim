@@ -16,6 +16,7 @@ from pymgipsim.generate_settings import generate_simulation_settings_main
 from pymgipsim.generate_inputs import generate_inputs_main
 from pymgipsim.generate_subjects import generate_virtual_subjects_main
 from pymgipsim.Utilities.simulation_folder import save_to_xls
+from dataclasses import asdict
 from pymgipsim.VirtualPatient import Models
 from pymgipsim.Utilities.units_conversions_constants import UnitConversion
 from py_agata.py_agata import Agata
@@ -72,6 +73,8 @@ def generate_results_main(scenario_instance, args, results_folder_path):
 
 			with open(os.path.join(results_folder_path, "model.pkl"), 'wb') as f:
 				pickle.dump(model, f)
+
+			simulation_folder.save_scenario(os.path.join(results_folder_path, "simulation_settings.json"), asdict(scenario_instance))
 
 			# [subjects x states x samples]
 			state_results = cohort.model_solver.model.states.as_array

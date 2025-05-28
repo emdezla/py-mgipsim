@@ -35,7 +35,7 @@ class VirtualCohort:
 
     @property
     def glucose(self):
-        return self.singlescale_model_solver.model.states.as_array[:,self.model_solver.model.glucose_state,:]
+        return self.singlescale_model_solver.model.states.as_array[:,self.model_solver.model.output_state,:]
 
     @staticmethod
     def generate_demographic_info(scenario_instance: scenario):

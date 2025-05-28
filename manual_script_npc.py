@@ -12,6 +12,7 @@ from pymgipsim.generate_inputs import generate_inputs_main
 from pymgipsim.generate_subjects import generate_virtual_subjects_main
 from pymgipsim.generate_plots import generate_plots_main
 from pymgipsim.generate_results import generate_results_main
+from pymgipsim.Utilities.units_conversions_constants import UnitConversion
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
@@ -26,7 +27,7 @@ from copy import deepcopy
 
 def glycemic_risk_index(values):
     """
-    Calculate the Glycemic Risk Index (GRI) for a list/Series of glucose values (mmol/L).
+    Calculate the Glycemic Risk Index (GRI) for a list/Series of glucose values (mg/dl).
     GRI = LBGI + HBGI
     """
     f = (np.log(values) ** 1.084 - 5.381)
@@ -34,15 +35,16 @@ def glycemic_risk_index(values):
     hbgi = np.mean(np.where(f > 0, f, 0) ** 2) * 22.77
     return lbgi + hbgi
 
-def parallel_run_simulation(i : int, settings_file : scenario, args, results_folder_path, GRI_matrix : np.ndarray, CI_range : range, CF_range : range):
+def parallel_run_simulation(i : int, settings_file : scenario, args, results_folder_path, GRI_matrix : np.ndarray, CI_range : range, CF_range : range, original_CI : list, original_CF : list):
     for j in tqdm(CF_range, disable = (not i == CI_range[0])):
-        settings_file.patient.demographic_info.carb_insulin_ratio = [i] * settings_file.patient.number_of_subjects
-        settings_file.patient.demographic_info.correction_bolus = [j] * settings_file.patient.number_of_subjects
+        settings_file.patient.demographic_info.carb_insulin_ratio = [x * (1+0.1*i) for x in original_CI]
+        settings_file.patient.demographic_info.correction_bolus = [x * (1+0.1*j) for x in original_CF]
         model,_ = generate_results_main(scenario_instance = settings_file, args = vars(args), results_folder_path = results_folder_path)
         
         # Calculate GRI (Glycemia Risk Index) for all patients
         GRI = []
         for glucose_values in model.glucose:
+            glucose_values = UnitConversion.glucose.concentration_mmolL_to_mgdL(glucose_values)
             gri = glycemic_risk_index(glucose_values)
             GRI.append(gri)
 
@@ -150,6 +152,7 @@ def generate_CI_CF_pairs(args, settings_file, results_folder_path):
     # Load meal statistics from mpc_meal_stats.json
     with open(meal_stats_path, 'r') as f:
         meal_tir_stats: dict = json.load(f)
+        patient_ids = list(meal_tir_stats.keys()) # Patient_1 --> first id in meal_tir_stats, etc...
 
     # Ensure the resources directories exist
     os.makedirs(resources_directory, exist_ok=True)
@@ -157,8 +160,12 @@ def generate_CI_CF_pairs(args, settings_file, results_folder_path):
     # os.makedirs(gluc_plots_directory, exist_ok=True)
     os.makedirs(csv_directory, exist_ok=True)
 
-    CI_range = range(30, 81)
-    CF_range = range(35, 71)
+    # CI_range = range(30, 81)
+    # CF_range = range(35, 71)
+
+    # Increase up to 300%
+    CI_range = range(0, 31)
+    CF_range = range(0, 31)
 
     # Small range fot testing
     # CI_range = range(18, 20)
@@ -174,13 +181,16 @@ def generate_CI_CF_pairs(args, settings_file, results_folder_path):
         settings_file = generate_inputs_main(scenario_instance = settings_file, args = args, results_folder_path=results_folder_path)
 
     generate_or_read_meals(settings_file, args, csv_directory, meal_tir_stats, generate_new_meals)
+
+    original_CI = deepcopy(settings_file.patient.demographic_info.carb_insulin_ratio)
+    original_CF = deepcopy(settings_file.patient.demographic_info.correction_bolus)
         
     GRI_matrix = np.zeros((len(CI_range), len(CF_range), settings_file.patient.number_of_subjects))
     threads = []
     for i in CI_range:
         t = threading.Thread(
             target=parallel_run_simulation,
-            args=(i, deepcopy(settings_file), args, results_folder_path, GRI_matrix, CI_range, CF_range)
+            args=(i, deepcopy(settings_file), args, results_folder_path, GRI_matrix, CI_range, CF_range, original_CI, original_CF)
         )
         threads.append(t)
         t.start()
@@ -190,38 +200,41 @@ def generate_CI_CF_pairs(args, settings_file, results_folder_path):
 
     # Select CI, CF value pair for each patient
     selected_CI_CF_pairs = []
-    for patient_idx in range(settings_file.patient.number_of_subjects):
-        mean_gri = list(meal_tir_stats.values())[patient_idx]['mean_gri']
+    for i in range(settings_file.patient.number_of_subjects):
+        patient_name_idx = int(settings_file.patient.files[i].split('.')[0].split('_')[-1])  # Extract patient index from the file name
+        mean_gri = list(meal_tir_stats.values())[patient_name_idx - 1]['mean_gri']
 
         # Find the CI, CF pair where GRI matches the mean_gri
         closest_match = None
         closest_diff = float('inf')
         for ci_idx, ci in enumerate(CI_range):
             for cf_idx, cf in enumerate(CF_range):
-                gri_value = GRI_matrix[ci_idx, cf_idx, patient_idx]
+                gri_value = GRI_matrix[ci_idx, cf_idx, i]
                 diff = abs(gri_value - mean_gri)
                 if diff < closest_diff:
                     closest_diff = diff
-                    closest_match = (ci, cf)
+                    closest_match = (ci_idx * 0.1, cf_idx * 0.1)
 
         selected_CI_CF_pairs.append(closest_match)
 
     # Print the selected CI, CF pairs for each patient
-    for patient_idx, (ci, cf) in enumerate(selected_CI_CF_pairs):
-        stat_str = f"Patient {patient_idx + 1}: Selected CI = {ci}, CF = {cf}, GRI from simulation = {GRI_matrix[ci - CI_range[0], cf - CF_range[0], patient_idx]:.2f}, Mean GRI from study = {list(meal_tir_stats.values())[patient_idx]['mean_gri']:.2f}"
+    for i, (ci, cf) in enumerate(selected_CI_CF_pairs):
+        patient_name_idx = int(settings_file.patient.files[i].split('.')[0].split('_')[-1])  # Extract patient index from the file name
+        stat_str = f"Patient {patient_name_idx}: Selected CI = +{ci*100}%, CF = +{cf*100}%, GRI from simulation = {GRI_matrix[int(ci * 10), int(cf * 10), i]:.2f}, Mean GRI from study = {list(meal_tir_stats.values())[patient_name_idx - 1]['mean_gri']:.2f}"
         print(stat_str)
         gris_txt_path = os.path.join(results_folder_path, "GRIs.txt")
         with open(gris_txt_path, "a") as gris_file:
             gris_file.write(stat_str + "\n")
     # Save the selected CI, CF pairs and GRI into a JSON file
-    selected_CI_CF_dict = {
-        list(meal_tir_stats.keys())[patient_idx]: {
+    selected_CI_CF_dict = {}
+    for i, (ci, cf) in enumerate(selected_CI_CF_pairs):
+        patient_name_idx = int(settings_file.patient.files[i].split('.')[0].split('_')[-1])  # Extract patient index from the file name
+        patient_id = patient_ids[patient_name_idx - 1]  # Get the patient ID from the meal_tir_stats dictionary
+        selected_CI_CF_dict[patient_id] = {
             "Selected_CI": ci,
             "Selected_CF": cf,
-            "GRI": float(GRI_matrix[ci - CI_range[0], cf - CF_range[0], patient_idx])
+            "GRI": float(GRI_matrix[int(ci * 10), int(cf * 10), i])
         }
-        for patient_idx, (ci, cf) in enumerate(selected_CI_CF_pairs)
-    }
 
     with open(selected_pairs_path, 'w') as json_file:
         json.dump(selected_CI_CF_dict, json_file, indent=4)
@@ -230,10 +243,10 @@ def generate_CI_CF_pairs(args, settings_file, results_folder_path):
     print("\nRunning simulation with selected CI, CF settings for each patient...")
 
     # Set up a new scenario/settings for each patient with their selected CI, CF
-    for patient_idx, (ci, cf) in enumerate(selected_CI_CF_pairs):
+    for i, (ci, cf) in enumerate(selected_CI_CF_pairs):
         # Set only the current patient's CI and CF, keep others unchanged
-        settings_file.patient.demographic_info.carb_insulin_ratio[patient_idx] = ci
-        settings_file.patient.demographic_info.correction_bolus[patient_idx] = cf
+        settings_file.patient.demographic_info.carb_insulin_ratio[i] = ci
+        settings_file.patient.demographic_info.correction_bolus[i] = cf
 
         # Run simulation for this patient only
         model, _ = generate_results_main(
@@ -244,8 +257,8 @@ def generate_CI_CF_pairs(args, settings_file, results_folder_path):
     figures = generate_plots_main(results_folder_path, args)
 
     # Convert CI_range and CF_range to numpy arrays
-    CI_range_array = np.array(list(CI_range))
-    CF_range_array = np.array(list(CF_range))
+    CI_range_array = np.arange(0, len(CI_range))
+    CF_range_array = np.arange(0, len(CF_range))
 
     # Convert GRI_matrix to a numpy array
     GRI_matrix_array = np.array(GRI_matrix)
@@ -259,11 +272,11 @@ def generate_CI_CF_pairs(args, settings_file, results_folder_path):
     # fig.canvas.manager.full_screen_toggle() # Fullscreen
     # Set the figure to full screen
     # fig.set_size_inches(18.5, 10.5, forward=True)
-    for patient_idx in range(num_patients):
+    for i in range(num_patients):
         rows = int(np.ceil(np.sqrt(num_patients)))
         cols = int(np.ceil(num_patients / rows))
-        ax = fig.add_subplot(rows, cols, patient_idx + 1, projection='3d')
-        surf = ax.plot_surface(CF, CI, GRI_matrix_array[:, :, patient_idx], cmap='viridis', alpha=0.7)
+        ax = fig.add_subplot(rows, cols, i + 1, projection='3d')
+        surf = ax.plot_surface(CF, CI, GRI_matrix_array[:, :, i], cmap='viridis', alpha=0.7)
 
         # Add labels and title for each subplot
         # ax.set_xlabel('Correction Factor (CF)')
@@ -282,16 +295,16 @@ def generate_CI_CF_pairs(args, settings_file, results_folder_path):
     # plt.show()
 
     # Generate and save separate 3D plots for each patient
-    for patient_idx in range(num_patients):
+    for i in range(num_patients):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-        surf = ax.plot_surface(CF, CI, GRI_matrix_array[:, :, patient_idx], cmap='viridis', alpha=0.7)
+        surf = ax.plot_surface(CF, CI, GRI_matrix_array[:, :, i], cmap='viridis', alpha=0.7)
 
         # Add labels and title for each plot
         ax.set_xlabel('Correction Factor (CF)')
         ax.set_ylabel('Carb Insulin Ratio (CI)')
         ax.set_zlabel('Glycemic Risk Index (GRI)')
-        ax.set_title(f'GRI Surface Plot for Patient {patient_idx + 1}')
+        ax.set_title(f'GRI Surface Plot for Patient {i + 1}')
 
         # Add a color bar for the plot
         # mappable = plt.cm.ScalarMappable(cmap='viridis')
@@ -299,11 +312,11 @@ def generate_CI_CF_pairs(args, settings_file, results_folder_path):
         # fig.colorbar(mappable, ax=ax, shrink=0.5, aspect=10)
 
         # Save the plot to the subdirectory
-        plot_filename = os.path.join(plots_directory, f'GRI_surface_plot_patient_{patient_idx + 1}.png')
+        plot_filename = os.path.join(plots_directory, f'GRI_surface_plot_patient_{i + 1}.png')
         plt.savefig(plot_filename, dpi=300)
         plt.close(fig)
 
-def call_simulation_with_CI_CF_pairs(args, old_results, settings_file = None):
+def call_simulation_with_CI_CF_pairs(args, old_results, settings_file : scenario = None):
     """
     Call the simulation with the selected CI and CF pairs for each patient.
     """
@@ -319,6 +332,7 @@ def call_simulation_with_CI_CF_pairs(args, old_results, settings_file = None):
     # Load meal statistics from mpc_meal_stats.json
     with open(meal_stats_path, 'r') as f:
         meal_tir_stats: dict = json.load(f)
+        patient_ids = list(meal_tir_stats.keys())
 
     if settings_file is None:
         # Load settings from the JSON file
@@ -338,28 +352,30 @@ def call_simulation_with_CI_CF_pairs(args, old_results, settings_file = None):
     for i in range(settings_file.patient.number_of_subjects):
 
         patient_name_idx = int(settings_file.patient.files[i].split('.')[0].split('_')[-1])  # Extract patient index from the file name
-        ci = list(selected_CI_CF_dict.values())[patient_name_idx - 1]['Selected_CI']
-        cf = list(selected_CI_CF_dict.values())[patient_name_idx - 1]['Selected_CF']
+        ci = selected_CI_CF_dict[patient_ids[patient_name_idx - 1]]['Selected_CI']
+        cf = selected_CI_CF_dict[patient_ids[patient_name_idx - 1]]['Selected_CF']
 
         # Set the CI and CF for the current patient
-        settings_file.patient.demographic_info.carb_insulin_ratio[i] = ci
-        settings_file.patient.demographic_info.correction_bolus[i] = cf
+        settings_file.patient.demographic_info.carb_insulin_ratio[i] *= 1 + ci
+        settings_file.patient.demographic_info.correction_bolus[i] *= 1 + cf
     # Run the simulation
     args.no_progress_bar = False
     model, _ = generate_results_main(scenario_instance=settings_file, args=vars(args), results_folder_path=results_folder_path)
 
     # Calculate GRI (Glycemia Risk Index) for all patients
     GRI = []
-    patient_idx = 0
+    i = 0
     for glucose_values in model.glucose:
-        ci = list(selected_CI_CF_dict.values())[patient_idx]['Selected_CI']
-        cf = list(selected_CI_CF_dict.values())[patient_idx]['Selected_CF']
+        patient_name_idx = int(settings_file.patient.files[i].split('.')[0].split('_')[-1])  # Extract patient index from the file name
+        ci = settings_file.patient.demographic_info.carb_insulin_ratio[i]
+        cf = settings_file.patient.demographic_info.correction_bolus[i]
+        glucose_values = UnitConversion.glucose.concentration_mmolL_to_mgdL(glucose_values)
         gri = glycemic_risk_index(glucose_values)
         GRI.append(gri)
-        args.plot_patient = patient_idx
+        args.plot_patient = i
         figures = generate_plots_main(results_folder_path, args)
-        patient_idx += 1
-        stat_str = f"Patient {patient_idx}: Selected CI = {ci}, CF = {cf}, GRI from simulation = {gri:.2f}, Mean GRI from study = {list(meal_tir_stats.values())[patient_idx]['mean_gri']:.2f}"
+        i += 1
+        stat_str = f"Patient {patient_name_idx}: Selected CI = {ci}, CF = {cf}, GRI from simulation = {gri:.2f}, Mean GRI from study = {list(meal_tir_stats.values())[patient_name_idx - 1]['mean_gri']:.2f}"
         print(stat_str)
         # Write to GRIs.txt
         gris_txt_path = os.path.join(results_folder_path, "GRIs.txt")
@@ -376,8 +392,8 @@ if __name__ == '__main__':
     # Programatically define scenario
     args.controller_name = "MDI" # Select controller folder in pymgipsim/Controller/...
     args.model_name = "T1DM.ExtHovorka" # Select Hovorka model
-    args.patient_names = ["Patient_9"] # Select Patient in pymgipsim/VirtualPatient/Models/T1DM/ExtHovorka/Patients
-    # args.patient_names = ["Patient_1", "Patient_2"] # Select Patient in pymgipsim/VirtualPatient/Models/T1DM/ExtHovorka/Patients
+    # args.patient_names = ["Patient_1"] # Select Patient in pymgipsim/VirtualPatient/Models/T1DM/ExtHovorka/Patients
+    # args.patient_names = ["Patient_1", "Patient_2", "Patient_3", "Patient_9"] # Select Patient in pymgipsim/VirtualPatient/Models/T1DM/ExtHovorka/Patients
     args.running_speed = 0.0 # Turn off physical activity
     args.plot_all = True
     args.am_snack_carb_range = [0, 0] # Set to 0 to disable snack
@@ -386,13 +402,17 @@ if __name__ == '__main__':
     args.number_of_days = 7
     args.no_progress_bar = True
     args.no_print = True
-    results_folder_path = "mpc_test/test_results"
+    results_folder_path = "SimulationResults/" # Define the results folder path where CI CF pairs have been generated or generate new ones with the next line
 
     # UNCOMMENT TO GENERATE CI CF PAIRS
-    # _, _, _, results_folder_path = simulation_folder.create_simulation_results_folder(results_path)
-    # generate_CI_CF_pairs(args, settings_file = None, results_folder_path = results_folder_path)
+    _, _, _, results_folder_path = simulation_folder.create_simulation_results_folder(results_path)
+    generate_CI_CF_pairs(args, settings_file = None, results_folder_path = results_folder_path)
 
-    args.controller_name = "SMDI" # Select controller
+    # Plot the MDI controlled 7 day simulation with selected CI CF pairs to see how the GRI was calculated
+    args.controller_name = "MDI" # Select controller
+    call_simulation_with_CI_CF_pairs(args, results_folder_path)
     
+    # Simulate with SMDI using the CI CF parameters with the predefined meals to simulate in realistic conditions
     # Old results: Results folder of the CI CF pairs
+    args.controller_name = "SMDI" # Select controller
     call_simulation_with_CI_CF_pairs(args, results_folder_path)
