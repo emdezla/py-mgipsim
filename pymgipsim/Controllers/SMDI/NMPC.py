@@ -36,7 +36,7 @@ class NMPC:
         # Create containers
 
         self.verbose = False
-        self.use_built_in_plot = False
+        self.use_built_in_plot = True
         # self.control_horizon = 5 # Single injection works fine
         self.control_horizon = 30 # Change control horizon time to use single/multiple injection. (1 injection / controller sampling time)
         self.prediction_horizon = 360
@@ -450,7 +450,7 @@ class NMPC:
             plt.arrow(0, 0, 0, 0, fc='red', ec='red', label='Boluses')
         
         plt.grid()
-        plt.legend()
+        # plt.legend()
 
         # Plot insulin
         plt.subplot(2, 1, 2)
@@ -460,8 +460,11 @@ class NMPC:
         if prediction is not None:
             plt.plot(horizon_time, ivp_basal/1000, label='IVP basal', linestyle='--')
         plt.grid()
-        plt.legend()
+        # plt.legend()
         plt.ylabel('Insulin [mU/min]')
         # fig.canvas.manager.full_screen_toggle() # Fullscreen
-        # plt.savefig(f"pat_{patient_idx+1}_SMDI.png", dpi=600)
-        plt.show()
+        patient_name_idx = int(self.scenario.patient.files[patient_idx].split('.')[0].split('_')[-1]) 
+        # plt.tight_layout(rect=[0, 0, 0.95, 1])
+        plt.savefig(f"Patient_{patient_name_idx}_SMDI.png", dpi=600)
+        plt.title(f"Patient_{patient_name_idx}_SMDI.png")
+        # plt.show()
