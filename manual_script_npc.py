@@ -243,17 +243,17 @@ def generate_CI_CF_pairs(args, settings_file, results_folder_path):
     print("\nRunning simulation with selected CI, CF settings for each patient...")
 
     # Set up a new scenario/settings for each patient with their selected CI, CF
-    for i, (ci, cf) in enumerate(selected_CI_CF_pairs):
+    for i in range(settings_file.patient.number_of_subjects):
+        patient_name_idx = int(settings_file.patient.files[i].split('.')[0].split('_')[-1])  # Extract patient index from the file name
+        patient_id = patient_ids[patient_name_idx - 1]  # Get the patient ID from the meal_tir_stats dictionary
+        ci = selected_CI_CF_dict[patient_id]['Selected_CI']
+        cf = selected_CI_CF_dict[patient_id]['Selected_CF']
         # Set only the current patient's CI and CF, keep others unchanged
         settings_file.patient.demographic_info.carb_insulin_ratio[i] = ci
         settings_file.patient.demographic_info.correction_bolus[i] = cf
 
-        # Run simulation for this patient only
-        model, _ = generate_results_main(
-            scenario_instance=settings_file,
-            args=vars(args),
-            results_folder_path=results_folder_path
-        )
+    # Run simulation with the selected CI, CF pairs
+    model, _ = generate_results_main(scenario_instance=settings_file, args=vars(args), results_folder_path=results_folder_path)
     figures = generate_plots_main(results_folder_path, args)
 
     # Convert CI_range and CF_range to numpy arrays
@@ -365,6 +365,8 @@ def call_simulation_with_CI_CF_pairs(args, old_results, settings_file : scenario
 
     # Calculate GRI (Glycemia Risk Index) for all patients
     GRI = []
+    gris_txt_path = os.path.join(results_folder_path, "GRIs.txt")
+    gris_file = open(gris_txt_path, "w")
     i = 0
     for glucose_values in model.glucose:
         patient_name_idx = int(settings_file.patient.files[i].split('.')[0].split('_')[-1])  # Extract patient index from the file name
@@ -379,9 +381,8 @@ def call_simulation_with_CI_CF_pairs(args, old_results, settings_file : scenario
         stat_str = f"Patient {patient_name_idx}: Selected CI = {ci}, CF = {cf}, GRI from simulation = {gri:.2f}, Mean GRI from study = {list(meal_tir_stats.values())[patient_name_idx - 1]['mean_gri']:.2f}"
         print(stat_str)
         # Write to GRIs.txt
-        gris_txt_path = os.path.join(results_folder_path, "GRIs.txt")
-        with open(gris_txt_path, "a") as gris_file:
-            gris_file.write(stat_str + "\n")
+        gris_file.write(stat_str + "\n")
+    gris_file.close()
 
 if __name__ == '__main__':
     """ Parse Arguments  """
