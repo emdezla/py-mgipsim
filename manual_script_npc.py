@@ -384,6 +384,35 @@ def call_simulation_with_CI_CF_pairs(args, old_results, settings_file : scenario
         gris_file.write(stat_str + "\n")
     gris_file.close()
 
+    # Calculate the difference between study GRI and simulation GRI for each patient
+    sim_gris = []
+    study_gris = []
+    patient_indices = []
+    for i, glucose_values in enumerate(model.glucose):
+        patient_name_idx = int(settings_file.patient.files[i].split('.')[0].split('_')[-1])
+        study_gri = list(meal_tir_stats.values())[patient_name_idx - 1]['mean_gri']
+        sim_gri = GRI[i]
+        sim_gris.append(sim_gri)
+        study_gris.append(study_gri)
+        patient_indices.append(patient_name_idx)
+
+    # Plot the simulation GRI and study GRI for each patient
+    plt.figure(figsize=(8, 5))
+    width = 0.35
+    indices = np.arange(len(patient_indices))
+    plt.bar(indices - width/2, sim_gris, width, label='Simulation GRI')
+    plt.bar(indices + width/2, study_gris, width, label='Study GRI')
+    plt.xlabel('Patient Index')
+    plt.ylabel('GRI')
+    plt.title('Simulation vs Study GRI for Each Patient')
+    plt.xticks(indices, patient_indices)
+    plt.legend()
+    plt.grid(True, axis='y', linestyle='--', alpha=0.5)
+    plt.tight_layout()
+    plot_path = os.path.join(results_folder_path, "GRI_sim_vs_study.png")
+    plt.savefig(plot_path, dpi=200)
+    plt.close()
+
 if __name__ == '__main__':
     """ Parse Arguments  """
     args = generate_parser_cli().parse_args()
@@ -394,7 +423,7 @@ if __name__ == '__main__':
     # Programatically define scenario
     args.controller_name = "MDI" # Select controller folder in pymgipsim/Controller/...
     args.model_name = "T1DM.ExtHovorka" # Select Hovorka model
-    # args.patient_names = ["Patient_1"] # Select Patient in pymgipsim/VirtualPatient/Models/T1DM/ExtHovorka/Patients
+    args.patient_names = ["Patient_19"] # Select Patient in pymgipsim/VirtualPatient/Models/T1DM/ExtHovorka/Patients
     # args.patient_names = ["Patient_1", "Patient_2", "Patient_3", "Patient_9"] # Select Patient in pymgipsim/VirtualPatient/Models/T1DM/ExtHovorka/Patients
     args.running_speed = 0.0 # Turn off physical activity
     args.plot_all = True
@@ -404,15 +433,15 @@ if __name__ == '__main__':
     args.number_of_days = 7
     args.no_progress_bar = True
     args.no_print = True
-    results_folder_path = "SimulationResults/" # Define the results folder path where CI CF pairs have been generated or generate new ones with the next line
+    results_folder_path = "SimulationResults/Simulation 05_30_2025_17_29_14" # Define the results folder path where CI CF pairs have been generated or generate new ones with the next line
 
     # UNCOMMENT TO GENERATE CI CF PAIRS
-    _, _, _, results_folder_path = simulation_folder.create_simulation_results_folder(results_path)
-    generate_CI_CF_pairs(args, settings_file = None, results_folder_path = results_folder_path)
+    # _, _, _, results_folder_path = simulation_folder.create_simulation_results_folder(results_path)
+    # generate_CI_CF_pairs(args, settings_file = None, results_folder_path = results_folder_path)
 
     # Plot the MDI controlled 7 day simulation with selected CI CF pairs to see how the GRI was calculated
-    args.controller_name = "MDI" # Select controller
-    call_simulation_with_CI_CF_pairs(args, results_folder_path)
+    # args.controller_name = "MDI" # Select controller
+    # call_simulation_with_CI_CF_pairs(args, results_folder_path)
     
     # Simulate with SMDI using the CI CF parameters with the predefined meals to simulate in realistic conditions
     # Old results: Results folder of the CI CF pairs

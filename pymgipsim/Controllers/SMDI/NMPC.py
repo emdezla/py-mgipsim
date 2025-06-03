@@ -30,15 +30,15 @@ class NMPC:
         self.patient_idx = 0
         self.ctrl_sampling_time = 5
         self.steps = int((scenario.settings.end_time - scenario.settings.start_time) / scenario.settings.sampling_time)
-        self.ideal_glucose = 100
+        self.ideal_glucose = 110
         self.glucose_target_range = [80, 140]
         self.hypo_hyper_range = [70, 180]
         # Create containers
 
-        self.verbose = False
+        self.verbose = True
         self.use_built_in_plot = True
-        # self.control_horizon = 5 # Single injection works fine
-        self.control_horizon = 30 # Change control horizon time to use single/multiple injection. (1 injection / controller sampling time)
+        self.control_horizon = 5 # Single injection
+        # self.control_horizon = 30 # Change control horizon time to use single/multiple injection. (1 injection / controller sampling time)
         self.prediction_horizon = 360
         self.max_grad_counter = 500
         self.epsilon = 1e-3
@@ -57,6 +57,7 @@ class NMPC:
         self.announced_meal_starts = np.array(self.scenario.inputs.meal_carb.start_time[patient_idx])
         self.announced_meal_amounts = np.array(self.scenario.inputs.meal_carb.magnitude[patient_idx])
         self.carb_insulin_ratio = self.scenario.patient.demographic_info.carb_insulin_ratio[patient_idx]
+        self.correction_bolus = self.scenario.patient.demographic_info.correction_bolus[patient_idx]
         self.create_observer_scenario(scenario, patient_idx)
         # Hardcoded init values for testing before identification algoritm
         self.glucose_init = 108
@@ -69,6 +70,11 @@ class NMPC:
         self.use_target_range = False
         self.assume_basal = True
         self.check_settings()
+
+        if self.assume_basal:
+            self.assumed_basal_rate = UnitConversion.insulin.Uhr_to_uUmin(self.basal_rate)
+        else:
+            self.assumed_basal_rate = 0
 
         self.observer_preds = np.zeros(0,)
         self.observer_preds_openloop = np.zeros(0,)
@@ -203,9 +209,7 @@ class NMPC:
         self.solver.model.preprocessing()
         # print(self.solver.model.inputs.Ra.sampled_signal)
 
-        if self.assume_basal:
-            self.basal_equilibrium = self.solver.model.get_basal_equilibrium(self.solver.model.parameters.as_array, self.glucose_init)
-            inputs.basal_insulin.sampled_signal[:, 0:sample-1] = self.basal_equilibrium
+        inputs.basal_insulin.sampled_signal[:, 0:sample-1] = self.assumed_basal_rate
 
         self.solver.model.initial_conditions.as_array = np.copy(self.ivp_last_state)
         self.solver.model.initial_conditions.as_array[0] = self.glucose_init
@@ -242,11 +246,7 @@ class NMPC:
         bolus_Uhr = UnitConversion.insulin.mUmin_to_Uhr(bolus_mUmin)
 
         # Reset IVP basal insulin and add injected insulin history
-        if self.assume_basal:
-            inputs.basal_insulin.sampled_signal[:, 0:sample-1] = self.basal_equilibrium
-        else:
-            inputs.basal_insulin.sampled_signal[:, 0:sample-1] = 0
-            self.basal_rate = np.zeros_like(self.basal_rate)
+        inputs.basal_insulin.sampled_signal[:, 0:sample-1] = self.assumed_basal_rate
         
         # Simulate approximated patient in horizon
         prediction = np.copy(self.solver.do_simulation(True))
@@ -288,7 +288,7 @@ class NMPC:
         bolus_insulins = np.zeros((num_of_bolus,))
         grad_counter = 0
         gradient = self.epsilon + 1 
-        while grad_counter < self.max_grad_counter and np.any(abs(gradient) - self.epsilon > 0) or grad_counter < 2:
+        while grad_counter < self.max_grad_counter:# and np.any(abs(gradient) - self.epsilon > 0) or grad_counter < 2:
             gradient, cost_array[grad_counter] = self.get_gradient(bolus_insulins, inputs)
             gradient = gradient * 10 ** -3
         
@@ -298,7 +298,7 @@ class NMPC:
             
             # Gradient descent
             max_grad_idx = np.argmax(gradient)
-            bolus_insulins[max_grad_idx] = bolus_insulins[max_grad_idx] + min(self.grad_max_stepsize, self.grad_stepsize / gradient[max_grad_idx])
+            bolus_insulins[max_grad_idx] = bolus_insulins[max_grad_idx] + 10000 #min(self.grad_max_stepsize, self.grad_stepsize / gradient[max_grad_idx])
 
             # Applying saturation
             bolus_insulins[max_grad_idx] = np.clip(bolus_insulins[max_grad_idx], 0, self.insulin_limit)
@@ -346,10 +346,7 @@ class NMPC:
         shift = 100
     
         # Simulate glyc trajecory with insulin_in injected, store cost to cost_in
-        if self.assume_basal:
-            inputs.basal_insulin.sampled_signal[:, :] = self.basal_equilibrium
-        else:
-            inputs.basal_insulin.sampled_signal[:, :] = 0
+        inputs.basal_insulin.sampled_signal[:, :] = self.assumed_basal_rate
         self.set_bolus_insulins(insulin_in, inputs)
         gluc_estimation = self.solver.do_simulation(True)[0][0]
         cost_in = self.quadratic_cost(gluc_estimation)
