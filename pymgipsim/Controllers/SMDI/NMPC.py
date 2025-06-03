@@ -14,6 +14,7 @@ from pymgipsim.VirtualPatient.Models.T1DM.IVP import Parameters
 from pymgipsim.InputGeneration.carb_energy_settings import generate_carb_absorption
 from pymgipsim.Utilities.units_conversions_constants import UnitConversion
 from pymgipsim.VirtualPatient.Models import T1DM
+from scipy.optimize import fmin_cg
 import matplotlib
 try:
     matplotlib.use('MacOSX')
@@ -35,7 +36,7 @@ class NMPC:
         self.hypo_hyper_range = [70, 180]
         # Create containers
 
-        self.verbose = True
+        self.verbose = False
         self.use_built_in_plot = True
         self.control_horizon = 5 # Single injection
         # self.control_horizon = 30 # Change control horizon time to use single/multiple injection. (1 injection / controller sampling time)
@@ -236,9 +237,8 @@ class NMPC:
         # Model Predictive Control
         start_time = timeit.default_timer()
         self.estimations = []
-        cost_array = np.zeros((self.max_grad_counter,))
 
-        insulin_optimal, grad_counter = self.gradient_descent(inputs, cost_array)
+        insulin_optimal, grad_counter, min_cost = self.gradient_descent(inputs)
         
         elapsed_time = timeit.default_timer() - start_time
 
@@ -261,7 +261,7 @@ class NMPC:
             print("MPC prediction results-----------------------------------")
             print(f"Step: {sample}/{self.steps}   Elapsed time: {elapsed_time:.4f} [s] \033[92m CGM: {measured_glucose:.4f} [mg/dL] \033[0m")
             print(f"\033[91m Insulins: {bolus_Uhr} [U/hr] \033[0m")
-            print(f"First cost: {cost_array[0]:.4f} Last cost: {cost_array[-1]:.4f} Min cost: {np.min(cost_array):.4f} Iterations: {grad_counter}")
+            print(f"Min cost: {min_cost:.4f} Iterations: {grad_counter}")
             print(f"Patient Basal: {states[patient_idx, 0, 0]:.4f} IVP def Basal: {inputs.basal_insulin.sampled_signal[:, 0:sample-1][0][-1]:.4f}")  # Print array
             print("---------------------------------------------------------")
 
@@ -278,32 +278,31 @@ class NMPC:
                 self.past_est_plots.append([horizon_time, controlled_pred[0, 0, :]])
             for i in range(len(bolus_Uhr)):
                 self.past_boluses.append([sample + i * self.ctrl_sampling_time, bolus_Uhr[i]])
-            # Plot current prediction
-            # self.plot_prediction(states, prediction, controlled_pred, inputs.bolus_insulin.sampled_signal[0, :], patient_idx)
             
         return bolus_mUmin, prediction
     
-    def gradient_descent(self, inputs, cost_array):
-        num_of_bolus = int(self.control_horizon/self.ctrl_sampling_time)
-        bolus_insulins = np.zeros((num_of_bolus,))
-        grad_counter = 0
-        gradient = self.epsilon + 1 
-        while grad_counter < self.max_grad_counter:# and np.any(abs(gradient) - self.epsilon > 0) or grad_counter < 2:
-            gradient, cost_array[grad_counter] = self.get_gradient(bolus_insulins, inputs)
-            gradient = gradient * 10 ** -3
-        
-            if not grad_counter or cost_array[grad_counter] < cost_optimal:
-                cost_optimal = cost_array[grad_counter]
-                insulin_optimal = np.copy(bolus_insulins)
-            
-            # Gradient descent
-            max_grad_idx = np.argmax(gradient)
-            bolus_insulins[max_grad_idx] = bolus_insulins[max_grad_idx] + 10000 #min(self.grad_max_stepsize, self.grad_stepsize / gradient[max_grad_idx])
+    def gradient_descent(self, inputs):
+        num_of_bolus = int(self.control_horizon / self.ctrl_sampling_time)
+        bolus_insulins_init = np.zeros((num_of_bolus,))
 
-            # Applying saturation
-            bolus_insulins[max_grad_idx] = np.clip(bolus_insulins[max_grad_idx], 0, self.insulin_limit)
-            grad_counter += 1
-        return insulin_optimal, grad_counter
+        def cost_func(insulin_vec):
+            inputs.basal_insulin.sampled_signal[:, :] = self.assumed_basal_rate
+            self.set_bolus_insulins(insulin_vec, inputs)
+            gluc_estimation = self.solver.do_simulation(True)[0][0]
+            return self.quadratic_cost(gluc_estimation)
+
+        # Use scipy's conjugate gradient optimizer
+        result = fmin_cg(
+            f=cost_func,
+            x0=bolus_insulins_init,
+            maxiter=self.max_grad_counter,
+            full_output=True,
+            disp=False
+        )
+        insulin_optimal = np.clip(result[0], 0, self.insulin_limit)
+        min_cost = result[1]
+        grad_counter = result[2]
+        return insulin_optimal, grad_counter, min_cost
 
     def quadratic_cost(self, glucose: np.ndarray):
         """ Quadratic cost function: delivers asymmetric quadratic cost consisting of input and output costs.
@@ -331,37 +330,6 @@ class NMPC:
                     cost += ((self.ideal_glucose - glucose[i]) / delta_hyper) ** 2
     
         return cost
-    
-    def get_gradient(self, insulin_in: np.ndarray, inputs):
-        """ Calculates gradient of insulin vector.
-    
-            Args:
-                insulin_in (ndarray): insulin input.
-                scenario (scenario): data needed for simulating of the virtual patient.
-    
-            Returns:
-                tuple[ndarray, float]: gradient of insulin vector, cost calculated with insulin_in.
-        """
-        gradient = np.zeros((len(insulin_in),))
-        shift = 100
-    
-        # Simulate glyc trajecory with insulin_in injected, store cost to cost_in
-        inputs.basal_insulin.sampled_signal[:, :] = self.assumed_basal_rate
-        self.set_bolus_insulins(insulin_in, inputs)
-        gluc_estimation = self.solver.do_simulation(True)[0][0]
-        cost_in = self.quadratic_cost(gluc_estimation)
-
-        # Simulate glyc trajectory with insulin_in + shift and compare costs: cost_shift - const_in and store gradient
-        for i in range(len(insulin_in)):
-            insulin_in[i] = insulin_in[i] + shift
-            if i > 0:
-                insulin_in[i-1] = insulin_in[i-1] - shift
-            self.set_bolus_insulins(insulin_in, inputs)
-            gluc_estimation = self.solver.do_simulation(True)[0][0]
-            cost_shift = self.quadratic_cost(gluc_estimation)
-            gradient[i] = (cost_in - cost_shift) / shift
-        insulin_in[-1] = insulin_in[-1] - shift
-        return gradient, cost_in
     
     def set_bolus_insulins(self, insulins_in: np.ndarray, inputs):
         """ Sets bolus insulin values for virtual patient simulation.
